@@ -1,0 +1,86 @@
+#######################################
+# Syntax Coloring Map For UNI
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+OdometryData	KEYWORD1
+UniBase	KEYWORD1
+UniDev	KEYWORD1
+TrafficLightColor	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+motors	KEYWORD2
+motorLeft	KEYWORD2
+motorRight	KEYWORD2
+motorsArc	KEYWORD2
+moveDist	KEYWORD2
+moveTime	KEYWORD2
+moveArcDist	KEYWORD2
+moveArcTime	KEYWORD2
+rotate	KEYWORD2
+stop	KEYWORD2
+stopLeft	KEYWORD2
+stopRight	KEYWORD2
+resetDistance	KEYWORD2
+getDistance	KEYWORD2
+resetAngle	KEYWORD2
+getAngle	KEYWORD2
+getOdometry	KEYWORD2
+getAbsX	KEYWORD2
+getAbsY	KEYWORD2
+getAbsAngle	KEYWORD2
+getLeftTicks	KEYWORD2
+getRightTicks	KEYWORD2
+displayPrint	KEYWORD2
+displayClear	KEYWORD2
+printOdometry	KEYWORD2
+blinkLED	KEYWORD2
+getBatteryPower	KEYWORD2
+ultraSonic	KEYWORD2
+lineSensor	KEYWORD2
+digitalSensor	KEYWORD2
+analogSensor	KEYWORD2
+getPinMode	KEYWORD2
+waitButton	KEYWORD2
+getButtonState	KEYWORD2
+servo	KEYWORD2
+pixel	KEYWORD2
+pixelsAll	KEYWORD2
+pixelsClear	KEYWORD2
+pixelsShow	KEYWORD2
+pixelsBrightness	KEYWORD2
+pixelsRainbow	KEYWORD2
+pixelsRunning	KEYWORD2
+pixelsBreathing	KEYWORD2
+pixelsFill	KEYWORD2
+pixelsSparkle	KEYWORD2
+pixelsRotating	KEYWORD2
+pixelsSpinner	KEYWORD2
+setTrafficLight	KEYWORD2
+trafficLightSequence	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+SMOOTH	LITERAL1
+HARD	LITERAL1
+TRAFFIC_GREEN	LITERAL1
+TRAFFIC_OFF	LITERAL1
+TRAFFIC_RED	LITERAL1
+TRAFFIC_YELLOW	LITERAL1
+P1	LITERAL1
+P2	LITERAL1
+P3	LITERAL1
+P4	LITERAL1
+P5	LITERAL1
+P6	LITERAL1
+P7	LITERAL1
+P8	LITERAL1
