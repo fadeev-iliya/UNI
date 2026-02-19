@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examples - UNI Library</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="index.html" class="logo">UNI Docs</a>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="getting-started.html">Getting Started</a></li>
+                </ul>
+
+                <div class="sidebar-section-title">Reference</div>
+                <ul>
+                    <li>
+                        <a href="unibase.html">UniBase</a>
+                        
+                        <ul class="sidebar-subnav">
+                            <li><a href="unibase.html#constants">Constants</a></li>
+                            <li><a href="unibase.html#initialization">Initialization</a></li>
+                            <li><a href="unibase.html#motor-control">Motor Control</a></li>
+                            <li><a href="unibase.html#movement">Movement</a></li>
+                            <li><a href="unibase.html#odometry">Odometry</a></li>
+                            <li><a href="unibase.html#display">Display</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="unidev.html">UniDev</a>
+                        
+                         <ul class="sidebar-subnav">
+                            <li><a href="unidev.html#constants">Port Definitions</a></li>
+                            <li><a href="unidev.html#dev-init">Initialization</a></li>
+                            <li><a href="unidev.html#sensors">Sensors</a></li>
+                            <li><a href="unidev.html#inputs">Inputs</a></li>
+                            <li><a href="unidev.html#light-ring-basic">Light Ring (Basic)</a></li>
+                            <li><a href="unidev.html#light-ring-effects">Light Ring (Effects)</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            <div class="sidebar-section-title">Guides</div>
+                <ul>
+                    <li>
+                        <a href="examples.html" class="active">Examples</a>
+                        <ul class="sidebar-subnav">
+                            <li><a href="examples.html#basic">Basic Init</a></li>
+                            <li><a href="examples.html#distance">Distance Sensors</a></li>
+                            <li><a href="examples.html#line">Line Sensor</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <button id="mobile-menu-toggle" class="mobile-menu-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="search-container">
+                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" class="search-input" placeholder="Search documentation...">
+                </div>
+                <button id="theme-toggle" class="theme-toggle" title="Toggle Theme"></button>
+            </header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <h1>Examples</h1>
+                <p class="lead">Learn by example. Here are some common snippets from the library examples to get you
+                    started.</p>
+
+                <div class="api-card static" id="basic">
+                    <h3>Basic Initialization</h3>
+                    <p>The simplest way to initialize the robot (from Start.ino).</p>
+                    <pre><code>#include &lt;UNI.h&gt;
+
+UniBase robot;
+UniDev module;
+
+void setup() {
+  robot.begin("UNI");
+}
+
+void loop() {
+  
+}</code></pre>
+                </div>
+
+                <div class="api-card static" id="distance">
+                    <h3>Distance Sensors</h3>
+                    <p>Reading values from ultrasonic sensors (from DistanceSensors.ino).</p>
+                    <pre><code>#include &lt;UNI.h&gt;
+
+UniBase robot;
+UniDev module;
+
+void setup() {
+  Serial.begin(115200);
+  robot.begin("Dist");
+}
+
+void loop() {
+  // Получаем значения с датчиков
+  int front = module.ultraSonic(P6, P7);
+  int side = module.ultraSonic(P3, P4);
+  
+  // Выводим в Serial Monitor
+  Serial.print("Front: ");
+  Serial.print(front);
+  Serial.print(" mm, Side: ");
+  Serial.print(side);
+  Serial.println(" mm");
+}</code></pre>
+                </div>
+
+                <div class="api-card static" id="line">
+                    <h3>Line Sensor</h3>
+                    <p>Reading values from a line sensor (from LineSensor.ino).</p>
+                    <pre><code>#include &lt;UNI.h&gt;
+
+UniBase robot;
+UniDev module;
+
+void setup() {
+  robot.begin();
+}
+
+void loop() {
+  // Считываем значение с датчика линии на пине P2
+  int sensorValue = module.lineSensor(P2);
+  
+  // Выводим значение в монитор порта
+  Serial.print("Line sensor: ");
+  Serial.println(sensorValue);
+}</code></pre>
+                </div>
+
+            </div>
+        </main>
+        <script src="script.js"></script>
+</body>
+
+</html>

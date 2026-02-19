@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ & Troubleshooting - UNI Library</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="index.html" class="logo">UNI Docs</a>
+            </div>
+
+                        <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="getting-started.html">Getting Started</a></li>
+                    <li><a href="library-overview.html">Library Overview</a></li>
+                </ul>
+
+                <div class="sidebar-section-title">Reference</div>
+                <ul>
+                    <li><a href="unibase.html">UniBase</a></li>
+                    <li><a href="unidev.html">UniDev</a></li>
+                    <li><a href="uart-control.html">UART Control</a></li>
+                </ul>
+
+                <div class="sidebar-section-title">Guides</div>
+                <ul>
+                    <li><a href="examples.html">Examples</a></li>
+                    <li><a href="faq.html">FAQ & Troubleshooting</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <button id="mobile-menu-toggle" class="mobile-menu-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="search-container">
+                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" class="search-input" placeholder="Search documentation...">
+                </div>
+                <button id="theme-toggle" class="theme-toggle" title="Toggle Theme"></button>
+            </header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <h1>FAQ & Troubleshooting</h1>
+
+                <h2>Common Issues</h2>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Robot doesn't move but screen is on</h3>
+                    <p><strong>Possible Cause:</strong> Battery switch is off, or low battery.</p>
+                    <p><strong>Solution:</strong> Check the physical switch on the UniBase. Ensure the battery icon
+                        shows a charged state.</p>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Compilation Error: "UniBase.h: No such file"</h3>
+                    <p><strong>Possible Cause:</strong> Library not installed correctly.</p>
+                    <p><strong>Solution:</strong> Verify that the <code>UNI</code> folder is inside your
+                        <code>Arduino/libraries</code> directory. Restart Arduino IDE.</p>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">UART commands are ignored</h3>
+                    <p><strong>Possible Cause:</strong> Wiring issue or incorrect baud rate.</p>
+                    <p><strong>Solution:</strong>
+                    <ul>
+                        <li>Ensure RX connects to TX, and TX connects to RX.</li>
+                        <li>Check if you are calling <code>robot.UniBaseControl()</code> in the ESP32 loop.</li>
+                        <li>Verify GND is shared between boards.</li>
+                    </ul>
+                    </p>
+                </div>
+
+                <h2>Debug Tips</h2>
+                <ul>
+                    <li>Use <code>robot.displayPrint("Debug Info")</code> to show status on the OLED if Serial monitor
+                        is unavailable.</li>
+                    <li>In UART mode, the ESP32 logs received commands to its main Serial monitor (USB) if
+                        <code>DEBUG_MODE</code> is enabled in `UniBase.h`.</li>
+                </ul>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

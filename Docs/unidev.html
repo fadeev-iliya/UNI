@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniDev Reference - UNI Library</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="index.html" class="logo">UNI Docs</a>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="getting-started.html">Getting Started</a></li>
+                </ul>
+
+                <div class="sidebar-section-title">Reference</div>
+                <ul>
+                    <li>
+                        <a href="unibase.html">UniBase</a>
+
+                        <ul class="sidebar-subnav">
+                            <li><a href="unibase.html#constants">Constants</a></li>
+                            <li><a href="unibase.html#initialization">Initialization</a></li>
+                            <li><a href="unibase.html#motor-control">Motor Control</a></li>
+                            <li><a href="unibase.html#movement">Movement</a></li>
+                            <li><a href="unibase.html#odometry">Odometry</a></li>
+                            <li><a href="unibase.html#display">Display</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="unidev.html" class="active">UniDev</a>
+
+                        <ul class="sidebar-subnav">
+                            <li><a href="unidev.html#constants">Port Definitions</a></li>
+                            <li><a href="unidev.html#dev-init">Initialization</a></li>
+                            <li><a href="unidev.html#sensors">Sensors</a></li>
+                            <li><a href="unidev.html#inputs">Inputs</a></li>
+                            <li><a href="unidev.html#light-ring-basic">Light Ring (Basic)</a></li>
+                            <li><a href="unidev.html#light-ring-effects">Light Ring (Effects)</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <div class="sidebar-section-title">Guides</div>
+                <ul>
+                    <li>
+                        <a href="examples.html">Examples</a>
+                        <ul class="sidebar-subnav">
+                            <li><a href="examples.html#basic">Basic Init</a></li>
+                            <li><a href="examples.html#distance">Distance Sensors</a></li>
+                            <li><a href="examples.html#line">Line Sensor</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <button id="mobile-menu-toggle" class="mobile-menu-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="search-container">
+                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" class="search-input" placeholder="Search documentation...">
+                </div>
+                <button id="theme-toggle" class="theme-toggle" title="Toggle Theme"></button>
+            </header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <h1>UniDev Reference</h1>
+                <p class="lead">Class for controlling sensors, addressable LEDs (Light Ring), and other peripherals.</p>
+
+                <h2 id="constants">Port Definitions</h2>
+                <p>Pre-defined constants for connecting modules to correct ports.</p>
+                <table class="constants-table">
+                    <thead>
+                        <tr>
+                            <th>Constant</th>
+                            <th>GPIO Pin</th>
+                            <th>Usage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>P1</code></td>
+                            <td>12</td>
+                            <td>Traffic light red</td>
+                        </tr>
+                        <tr>
+                            <td><code>P2</code></td>
+                            <td>13</td>
+                            <td>Traffic light yellow</td>
+                        </tr>
+                        <tr>
+                            <td><code>P3</code></td>
+                            <td>14</td>
+                            <td>Traffic light green / Side Trig</td>
+                        </tr>
+                        <tr>
+                            <td><code>P4</code></td>
+                            <td>15</td>
+                            <td>Side ultrasonic Echo</td>
+                        </tr>
+                        <tr>
+                            <td><code>P5</code></td>
+                            <td>17</td>
+                            <td>Button</td>
+                        </tr>
+                        <tr>
+                            <td><code>P6</code></td>
+                            <td>16</td>
+                            <td>Front ultrasonic Trig</td>
+                        </tr>
+                        <tr>
+                            <td><code>P7</code></td>
+                            <td>32</td>
+                            <td>Front ultrasonic Echo</td>
+                        </tr>
+                        <tr>
+                            <td><code>P8</code></td>
+                            <td>23</td>
+                            <td>Light Ring</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2 id="dev-init">Initialization</h2>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">begin</span>
+                            <span class="api-signature">void begin()</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Initializes the UniDev instance, creating the NeoPixel object and setting pin modes. But it
+                            is not necessary to call this function, because it is called automatically when the UniDev
+                            object is created. </p>
+                        <h4>Example</h4>
+                        <pre><code>UniDev module;
+void setup() {
+    module.begin();
+}</code></pre>
+                    </div>
+                </div>
+
+                <h2 id="sensors">Sensors</h2>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">ultraSonic</span>
+                            <span class="api-signature">int ultraSonic(int trig, int echo)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Reads distance from an ultrasonic sensor (HC-SR04).</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>trig</code>: Trigger pin (<code>P1</code>-<code>P8</code>)</li>
+                            <li><code>echo</code>: Echo pin (<code>P1</code>-<code>P8</code>)</li>
+                        </ul>
+                        <h4>Returns</h4>
+                        <p>Distance in millimeters.</p>
+                        <h4>Example</h4>
+                        <pre><code>int dist = module.ultraSonic(P6, P7);
+if (dist < 100) {
+    // Obstacle detected
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">lineSensor</span>
+                            <span class="api-signature">int lineSensor(int port)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Reads an analog value from a line sensor.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>port</code>: Sensor port definition (<code>P1</code>-<code>P8</code>).
+                            </li>
+                        </ul>
+                        <h4>Returns</h4>
+                        <p>Analog value (0-4095).
+                        </p>
+                        <h4>Example</h4>
+                        <pre><code>int val = module.lineSensor(P3);</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">digitalSensor</span>
+                            <span class="api-signature">int digitalSensor(int port)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Reads a generic digital value from a port.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>port</code>: Port definition (<code>P1</code>-<code>P8</code>).</li>
+                        </ul>
+                        <h4>Returns</h4>
+                        <p>0 (LOW) or 1 (HIGH).</p>
+                        <h4>Example</h4>
+                        <pre><code>if (module.digitalSensor(P5) == 1) {
+    // Sensor Active
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">analogSensor</span>
+                            <span class="api-signature">int analogSensor(int port)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Reads a generic analog value from a port.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>port</code>: Port definition (<code>P1</code>-<code>P8</code>).</li>
+                        </ul>
+                        <h4>Returns</h4>
+                        <p>Analog value (0-4095).</p>
+                        <h4>Example</h4>
+                        <pre><code>int lightLevel = module.analogSensor(P4);</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">getPinMode</span>
+                            <span class="api-signature">int getPinMode(uint8_t pin)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Returns the current configured mode of a GPIO pin.</p>
+                        <h4>Returns</h4>
+                        <p><code>OUTPUT</code>, <code>INPUT</code>, <code>INPUT_PULLUP</code>,
+                            <code>INPUT_PULLDOWN</code>, or <code>-1</code> on error.
+                        </p>
+                        <h4>Example</h4>
+                        <pre><code>int mode = module.getPinMode(P2);</code></pre>
+                    </div>
+                </div>
+
+                <h2 id="inputs">Inputs</h2>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">waitButton</span>
+                            <span class="api-signature">void waitButton(int port)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Blocking function that halts program execution until the specified button is pressed and
+                            released.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>port</code>: Port where button is connected (e.g.,
+                                <code>P5</code>).
+                            </li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>// Wait for button press
+module.waitButton(P5);</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">getButtonState</span>
+                            <span class="api-signature">bool getButtonState(int port)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Checks if a button is currently pressed.</p>
+                        <h4>Returns</h4>
+                        <p><code>true</code> if pressed, <code>false</code> otherwise.
+                        </p>
+                        <h4>Example</h4>
+                        <pre><code>if (module.getButtonState(P5)) {
+    Serial.println("Button Pressed!");
+}</code></pre>
+                    </div>
+                </div>
+
+                <h2 id="light-ring-basic">Light Ring (Basic)</h2>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">pixel</span>
+                            <span class="api-signature">void pixel(int index, int r, int g, int b)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Sets the color of a single pixel.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>index</code>: LED index (0-23).</li>
+                            <li><code>r, g, b</code>: Color components (0-255).</li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>// Set 1st LED to Blue
+module.pixel(0, 0, 0, 255);</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">pixelsAll</span>
+                            <span class="api-signature">void pixelsAll(int r, int g, int b)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Sets all LEDs in the ring to the specified RGB color. Implicitly calls <code>show()</code>.
+                        </p>
+                        <h4>Example</h4>
+                        <pre><code>module.pixelsAll(255, 0, 0); // All Red</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">pixelsClear</span>
+                            <span class="api-signature">void pixelsClear()</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Turns off all LEDs.</p>
+                        <h4>Example</h4>
+                        <pre><code>module.pixelsClear();</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">pixelsShow</span>
+                            <span class="api-signature">void pixelsShow()</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Sends the current buffer to the LED strip.</p>
+                        <h4>Example</h4>
+                        <pre><code>module.pixelsShow();</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">pixelsBrightness</span>
+                            <span class="api-signature">void pixelsBrightness(int brightness)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Sets the global brightness scaling.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>brightness</code>: from 0 to 100.</li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>module.pixelsBrightness(50); // Dim the LEDs</code></pre>
+                    </div>
+                </div>
+
+                <h2 id="light-ring-effects">Light Ring (Effects)</h2>
+                <p>These are blocking animations.</p>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">pixelsRainbow</span>
+                            <span class="api-signature">void pixelsRainbow(int speed, int duration)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Displays a rotating rainbow animation.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>speed</code>: Speed of rotation (0-100). Higher values mean faster rotation.</li>
+                            <li><code>duration</code>: Total duration of the animation in milliseconds.</li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>module.pixelsRainbow(50, 2000); // 2 seconds</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">pixelsRunning</span>
+                            <span class="api-signature">void pixelsRunning(int r, int g, int b, int duration)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Running light effect: a single pixel moves around the ring once.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>r, g, b</code>: Color of the running pixel (0-255).</li>
+                            <li><code>duration</code>: Time in milliseconds to complete one full circle.</li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>module.pixelsRunning(255, 0, 0, 1000); // Red pixel circles in 1s</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">pixelsBreathing</span>
+                            <span class="api-signature">void pixelsBreathing(int r, int g, int b, int duration)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Smoothly fades the LEDs up and down (breathing effect).</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>r, g, b</code>: Target color at maximum brightness (0-255).</li>
+                            <li><code>duration</code>: Total duration of one full breath cycle (fade in + fade out) in
+                                milliseconds.</li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>module.pixelsBreathing(0, 0, 255, 3000); // Blue breath over 3s</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">pixelsFill</span>
+                            <span class="api-signature">void pixelsFill(int r, int g, int b, int duration)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Gradually fills the ring with color, then gradually clears it.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>r, g, b</code>: Fill color (0-255).</li>
+                            <li><code>duration</code>: Total duration for the fill AND clear sequence in milliseconds.
+                            </li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>module.pixelsFill(0, 255, 0, 1000); // Green fill+clear in 1s</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">pixelsSparkle</span>
+                            <span class="api-signature">void pixelsSparkle(int r, int g, int b, int duration, int
+                                count)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Randomly flashes individual pixels.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>r, g, b</code>: Color of the sparkles (0-255).</li>
+                            <li><code>duration</code>: Total duration of the effect in milliseconds.</li>
+                            <li><code>count</code>: Number of sparkles to generate within that duration.</li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>module.pixelsSparkle(255, 255, 255, 2000, 20); // 20 white flashes in 2s</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">pixelsRotating</span>
+                            <span class="api-signature">void pixelsRotating(int r, int g, int b, int duration, int
+                                segmentLength, int rotations)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Rotates a segment of lit LEDs around the ring multiple times.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>r, g, b</code>: Color of the segment (0-255).</li>
+                            <li><code>duration</code>: Total duration for ALL rotations in milliseconds.</li>
+                            <li><code>segmentLength</code>: Number of LEDs in the rotating segment (e.g., 5).</li>
+                            <li><code>rotations</code>: Number of full 360-degree turns to complete.</li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>// Rotate a segment of 5 red LEDs 3 times over 2 seconds
+module.pixelsRotating(255, 0, 0, 2000, 5, 3);</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">pixelsSpinner</span>
+                            <span class="api-signature">void pixelsSpinner(int r, int g, int b, int duration)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>A spinner animation that lights up one pixel at a time until the ring is full, then restarts.
+                        </p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>r, g, b</code>: Color of the spinner (0-255).</li>
+                            <li><code>duration</code>: Time in milliseconds for one full rotation.</li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>module.pixelsSpinner(255, 255, 0, 1000);</code></pre>
+                    </div>
+                </div>
+
+                <h2 id="traffic-light">Traffic Light</h2>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">setTrafficLight</span>
+                            <span class="api-signature">void setTrafficLight(TrafficLightColor color)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Sets the traffic light module state.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>color</code>: <code>TRAFFIC_RED</code>,
+                                <code>TRAFFIC_YELLOW</code>, <code>TRAFFIC_GREEN</code>, or
+                                <code>TRAFFIC_OFF</code>.
+                            </li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>module.setTrafficLight(TRAFFIC_GREEN);</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">trafficLightSequence</span>
+                            <span class="api-signature">void trafficLightSequence()</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Runs a standard standard traffic light sequence (Green -> Yellow -> Red -> Yellow -> Green).
+                        </p>
+                        <h4>Example</h4>
+                        <pre><code>module.trafficLightSequence();</code></pre>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
