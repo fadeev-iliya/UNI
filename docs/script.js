@@ -1,3 +1,38 @@
+// Language Management
+// -------------------
+const currentPath = window.location.pathname;
+const isRuPage = currentPath.includes('_ru.html');
+const systemLang = navigator.language || navigator.userLanguage;
+const storedLang = localStorage.getItem('lang');
+
+// Determine desired language
+// 1. Stored preference
+// 2. Browser language (default)
+// But we only auto-redirect if there is a MISMATCH and we are on a "content" page.
+let desiredLang = storedLang || (systemLang.startsWith('ru') ? 'ru' : 'en');
+
+// Redirect Logic
+// We only redirect if we are confident the target exists. For now, we assume symmetry.
+// We avoid redirecting if we are just opening the file mostly.
+// But for the user request "Default by region", we need this.
+
+if (storedLang || systemLang.startsWith('ru')) {
+    // If explicitly stored OR system is RU (and we are on EN), try to switch.
+    if (desiredLang === 'ru' && !isRuPage) {
+        let target = '';
+        if (currentPath.endsWith('/') || currentPath.endsWith('index.html')) {
+            target = currentPath.endsWith('/') ? 'index_ru.html' : currentPath.replace('.html', '_ru.html');
+        } else if (currentPath.endsWith('.html')) {
+            target = currentPath.replace('.html', '_ru.html');
+        }
+        if (target) window.location.replace(target);
+    } else if (desiredLang === 'en' && isRuPage) {
+        let target = currentPath.replace('_ru.html', '.html');
+        window.location.replace(target);
+    }
+}
+
+
 // Theme Toggle
 const themeToggleBtn = document.getElementById('theme-toggle');
 const body = document.body;
@@ -24,6 +59,42 @@ function updateThemeIcon(theme) {
         themeToggleBtn.innerHTML = iconSun;
     } else {
         themeToggleBtn.innerHTML = iconMoon;
+    }
+}
+
+// Language Toggle Injector
+const header = document.querySelector('.top-header'); // Parent of theme-toggle
+if (header) {
+    const langBtn = document.createElement('button');
+    langBtn.className = 'theme-toggle'; // Reuse style
+    langBtn.style.marginLeft = '10px';
+    langBtn.style.fontSize = '14px';
+    langBtn.style.fontWeight = 'bold';
+    langBtn.title = isRuPage ? 'Switch to English' : 'Переключить на Русский';
+    langBtn.innerText = isRuPage ? 'RU' : 'EN';
+
+    langBtn.addEventListener('click', () => {
+        const newLang = isRuPage ? 'en' : 'ru';
+        localStorage.setItem('lang', newLang);
+
+        // Reload/Redirect
+        if (newLang === 'ru') {
+            if (currentPath.endsWith('/') || currentPath.endsWith('index.html')) {
+                window.location.href = currentPath.endsWith('/') ? 'index_ru.html' : currentPath.replace('.html', '_ru.html');
+            } else {
+                window.location.href = currentPath.replace('.html', '_ru.html');
+            }
+        } else {
+            window.location.href = currentPath.replace('_ru.html', '.html');
+        }
+    });
+
+    // Insert before theme toggle or append
+    const themeBtn = document.getElementById('theme-toggle');
+    if (themeBtn) {
+        header.insertBefore(langBtn, themeBtn);
+    } else {
+        header.appendChild(langBtn);
     }
 }
 
@@ -142,14 +213,13 @@ function highlightCode(element) {
 }
 
 // Sidebar Active Link & TOC
-const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+// currentPath is already defined at the top
 const sidebarLinks = document.querySelectorAll('.sidebar-nav a');
 
 sidebarLinks.forEach(link => {
-    if (link.getAttribute('href') === currentPath) {
+    const href = link.getAttribute('href');
+    if (href && (currentPath === href || currentPath.endsWith('/' + href) || currentPath.endsWith(href))) {
         link.classList.add('active');
-        // TOC generation removed to prevent duplication with manual sidebar-subnav
-        // if (currentPath === 'unibase.html' || currentPath === 'unidev.html') { ... }
     }
 });
 
@@ -611,6 +681,69 @@ const searchIndex = [
         "title": "Line Sensor",
         "id": "line",
         "text": "Reading values from a line sensor (from LineSensor.ino). Includes serial output."
+    },
+    {
+        "page": "index_ru.html",
+        "title": "Главная",
+        "url": "index_ru.html",
+        "text": "Добро пожаловать в документацию библиотеки UNI для роботов.",
+        "lang": "ru"
+    },
+    {
+        "page": "getting-started_ru.html",
+        "title": "Начало работы",
+        "id": "",
+        "text": "Следуйте этим шагам, чтобы настроить библиотеку UNI и начать программировать вашего робота.",
+        "lang": "ru"
+    },
+    {
+        "page": "getting-started_ru.html",
+        "title": "Установка",
+        "id": "installation",
+        "text": "Инструкции по установке библиотеки через Arduino Library Manager или вручную.",
+        "lang": "ru"
+    },
+    {
+        "page": "examples_ru.html",
+        "title": "Примеры",
+        "id": "",
+        "text": "Учитесь на примерах. Комментарии к коду переведены.",
+        "lang": "ru"
+    },
+    {
+        "page": "library-overview_ru.html",
+        "title": "Обзор библиотеки",
+        "id": "",
+        "text": "Поймите архитектуру и основные концепции библиотеки UNI (UniBase, UniDev).",
+        "lang": "ru"
+    },
+    {
+        "page": "faq_ru.html",
+        "title": "FAQ и Устранение неполадок",
+        "id": "",
+        "text": "Частые проблемы и решения. Робот не двигается, ошибки компиляции.",
+        "lang": "ru"
+    },
+    {
+        "page": "unibase_ru.html",
+        "title": "Справочник UniBase",
+        "id": "",
+        "text": "Основной класс для управления шасси робота, моторами и дисплеем.",
+        "lang": "ru"
+    },
+    {
+        "page": "unibase_ru.html",
+        "title": "Инициализация (UniBase)",
+        "id": "initialization",
+        "text": "void begin(String robotName)",
+        "lang": "ru"
+    },
+    {
+        "page": "unidev_ru.html",
+        "title": "Справочник UniDev",
+        "id": "",
+        "text": "Класс для управления датчиками, световым кольцом и периферией.",
+        "lang": "ru"
     }
 ];
 const searchInput = document.querySelector('.search-input');
@@ -632,10 +765,15 @@ if (searchInput) {
             return;
         }
 
-        const matches = searchIndex.filter(item =>
-            item.title.toLowerCase().includes(query) ||
-            item.text.toLowerCase().includes(query)
-        );
+        const matches = searchIndex.filter(item => {
+            // Filter by language
+            const itemLang = item.lang || 'en'; // Default to EN if not specified
+            const pageLang = isRuPage ? 'ru' : 'en';
+            if (itemLang !== pageLang) return false;
+
+            return item.title.toLowerCase().includes(query) ||
+                item.text.toLowerCase().includes(query);
+        });
 
         if (matches.length > 0) {
             resultsContainer.innerHTML = '';

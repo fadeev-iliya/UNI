@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Справочник UniDev - Библиотека UNI</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="index_ru.html" class="logo">UNI Docs</a>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="index_ru.html">Главная</a></li>
+                    <li><a href="getting-started_ru.html">Начало работы</a></li>
+                </ul>
+
+                <div class="sidebar-section-title">Справочник</div>
+                <ul>
+                    <li>
+                        <a href="unibase_ru.html">UniBase</a>
+                        <ul class="sidebar-subnav">
+                            <li><a href="unibase_ru.html#constants">Константы</a></li>
+                            <li><a href="unibase_ru.html#initialization">Инициализация</a></li>
+                            <li><a href="unibase_ru.html#motor-control">Управление моторами</a></li>
+                            <li><a href="unibase_ru.html#movement">Движение</a></li>
+                            <li><a href="unibase_ru.html#odometry">Одометрия</a></li>
+                            <li><a href="unibase_ru.html#display">Дисплей</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="unidev_ru.html" class="active">UniDev</a>
+
+                        <ul class="sidebar-subnav">
+                            <li><a href="unidev_ru.html#constants">Определения портов</a></li>
+                            <li><a href="unidev_ru.html#dev-init">Инициализация</a></li>
+                            <li><a href="unidev_ru.html#sensors">Датчики</a></li>
+                            <li><a href="unidev_ru.html#inputs">Входы</a></li>
+                            <li><a href="unidev_ru.html#light-ring-basic">Световое кольцо (Баз.)</a></li>
+                            <li><a href="unidev_ru.html#light-ring-effects">Световое кольцо (Эфф.)</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <div class="sidebar-section-title">Руководства</div>
+                <ul>
+                    <li>
+                        <a href="examples_ru.html">Примеры</a>
+                        <ul class="sidebar-subnav">
+                            <li><a href="examples_ru.html#basic">Базовая иниц.</a></li>
+                            <li><a href="examples_ru.html#distance">Датчики расстояния</a></li>
+                            <li><a href="examples_ru.html#line">Датчик линии</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <button id="mobile-menu-toggle" class="mobile-menu-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="search-container">
+                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" class="search-input" placeholder="Поиск...">
+                </div>
+                <button id="theme-toggle" class="theme-toggle" title="Переключить тему"></button>
+            </header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <h1>Справочник UniDev</h1>
+                <p class="lead">Класс для управления датчиками, адресными светодиодами (Световое кольцо) и другой
+                    периферией.</p>
+
+                <h2 id="constants">Определения портов</h2>
+                <p>Предопределенные константы для подключения модулей к правильным портам.</p>
+                <table class="constants-table">
+                    <thead>
+                        <tr>
+                            <th>Константа</th>
+                            <th>GPIO Пин</th>
+                            <th>Использование</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>P1</code></td>
+                            <td>12</td>
+                            <td>Красный сигнал светофора</td>
+                        </tr>
+                        <tr>
+                            <td><code>P2</code></td>
+                            <td>13</td>
+                            <td>Желтый сигнал светофора</td>
+                        </tr>
+                        <tr>
+                            <td><code>P3</code></td>
+                            <td>14</td>
+                            <td>Зеленый сигнал светофора / Боковой ультразвук Trig</td>
+                        </tr>
+                        <tr>
+                            <td><code>P4</code></td>
+                            <td>15</td>
+                            <td>Боковой ультразвук Echo</td>
+                        </tr>
+                        <tr>
+                            <td><code>P5</code></td>
+                            <td>17</td>
+                            <td>Кнопка</td>
+                        </tr>
+                        <tr>
+                            <td><code>P6</code></td>
+                            <td>16</td>
+                            <td>Передний ультразвук Trig</td>
+                        </tr>
+                        <tr>
+                            <td><code>P7</code></td>
+                            <td>32</td>
+                            <td>Передний ультразвук Echo</td>
+                        </tr>
+                        <tr>
+                            <td><code>P8</code></td>
+                            <td>23</td>
+                            <td>Светодиодное кольцо</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2 id="dev-init">Инициализация</h2>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">begin</span>
+                            <span class="api-signature">void begin()</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Инициализирует экземпляр UniDev, создавая объект NeoPixel и настраивая режимы пинов. Эту
+                            функцию вызывать не обязательно, так как она вызывается автоматически при создании объекта
+                            UniDev. </p>
+                        <h4>Пример</h4>
+                        <pre><code>UniDev module;
+void setup() {
+    module.begin();
+}</code></pre>
+                    </div>
+                </div>
+
+                <h2 id="sensors">Датчики</h2>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">ultraSonic</span>
+                            <span class="api-signature">int ultraSonic(int trig, int echo)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Считывает расстояние с ультразвукового датчика (HC-SR04).</p>
+                        <h4>Параметры</h4>
+                        <ul>
+                            <li><code>trig</code>: Trigger пин (<code>P1</code>-<code>P8</code>)</li>
+                            <li><code>echo</code>: Echo пин (<code>P1</code>-<code>P8</code>)</li>
+                        </ul>
+                        <h4>Возвращает</h4>
+                        <p>Расстояние в миллиметрах.</p>
+                        <h4>Пример</h4>
+                        <pre><code>int dist = module.ultraSonic(P6, P7);
+if (dist < 100) {
+    // Препятствие обнаружено
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">lineSensor</span>
+                            <span class="api-signature">int lineSensor(int port)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Считывает аналоговое значение с датчика линии.</p>
+                        <h4>Параметры</h4>
+                        <ul>
+                            <li><code>port</code>: Определение порта сенсора (<code>P1</code>-<code>P8</code>).
+                            </li>
+                        </ul>
+                        <h4>Возвращает</h4>
+                        <p>Аналоговое значение (0-4095).
+                        </p>
+                        <h4>Пример</h4>
+                        <pre><code>int val = module.lineSensor(P3);</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">digitalSensor</span>
+                            <span class="api-signature">int digitalSensor(int port)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Считывает цифровое значение с порта.</p>
+                        <h4>Параметры</h4>
+                        <ul>
+                            <li><code>port</code>: Определение порта (<code>P1</code>-<code>P8</code>).</li>
+                        </ul>
+                        <h4>Возвращает</h4>
+                        <p>0 (LOW) или 1 (HIGH).</p>
+                        <h4>Пример</h4>
+                        <pre><code>if (module.digitalSensor(P5) == 1) {
+    // Датчик активен
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">analogSensor</span>
+                            <span class="api-signature">int analogSensor(int port)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Считывает общее аналоговое значение с порта.</p>
+                        <h4>Параметры</h4>
+                        <ul>
+                            <li><code>port</code>: Определение порта (<code>P1</code>-<code>P8</code>).</li>
+                        </ul>
+                        <h4>Возвращает</h4>
+                        <p>Аналоговое значение (0-4095).</p>
+                        <h4>Пример</h4>
+                        <pre><code>int lightLevel = module.analogSensor(P4);</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">getPinMode</span>
+                            <span class="api-signature">int getPinMode(uint8_t pin)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Возвращает текущий настроенный режим GPIO пина.</p>
+                        <h4>Возвращает</h4>
+                        <p><code>OUTPUT</code>, <code>INPUT</code>, <code>INPUT_PULLUP</code>,
+                            <code>INPUT_PULLDOWN</code>, или <code>-1</code> при ошибке.
+                        </p>
+                        <h4>Пример</h4>
+                        <pre><code>int mode = module.getPinMode(P2);</code></pre>
+                    </div>
+                </div>
+
+                <h2 id="inputs">Входы</h2>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">waitButton</span>
+                            <span class="api-signature">void waitButton(int port)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Блокирующая функция, останавливающая выполнение программы до тех пор, пока кнопка не будет
+                            нажата и отпущена.</p>
+                        <h4>Параметры</h4>
+                        <ul>
+                            <li><code>port</code>: Порт, к которому подключена кнопка (например,
+                                <code>P5</code>).
+                            </li>
+                        </ul>
+                        <h4>Пример</h4>
+                        <pre><code>// Ждать нажатия кнопки
+module.waitButton(P5);</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">getButtonState</span>
+                            <span class="api-signature">bool getButtonState(int port)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Проверяет, нажата ли кнопка в данный момент.</p>
+                        <h4>Возвращает</h4>
+                        <p><code>true</code> если нажата, <code>false</code> в противном случае.
+                        </p>
+                        <h4>Пример</h4>
+                        <pre><code>if (module.getButtonState(P5)) {
+    Serial.println("Button Pressed!");
+}</code></pre>
+                    </div>
+                </div>
+
+                <h2 id="light-ring-basic">Световое кольцо (Базовое)</h2>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">pixel</span>
+                            <span class="api-signature">void pixel(int index, int r, int g, int b)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Устанавливает цвет одного пикселя.</p>
+                        <h4>Параметры</h4>
+                        <ul>
+                            <li><code>index</code>: Индекс светодиода (0-23).</li>
+                            <li><code>r, g, b</code>: Компоненты цвета (0-255).</li>
+                        </ul>
+                        <h4>Пример</h4>
+                        <pre><code>// Установить 1-й светодиод в Синий
+module.pixel(0, 0, 0, 255);</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">pixelsAll</span>
+                            <span class="api-signature">void pixelsAll(int r, int g, int b)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Устанавливает все светодиоды кольца в указанный RGB цвет.
+                        </p>
+                        <h4>Пример</h4>
+                        <pre><code>module.pixelsAll(255, 0, 0); // Все Красные</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">pixelsClear</span>
+                            <span class="api-signature">void pixelsClear()</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Выключает все светодиоды.</p>
+                        <h4>Пример</h4>
+                        <pre><code>module.pixelsClear();</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">pixelsShow</span>
+                            <span class="api-signature">void pixelsShow()</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Отправляет текущий буфер на светодиодную ленту.</p>
+                        <h4>Пример</h4>
+                        <pre><code>module.pixelsShow();</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">pixelsBrightness</span>
+                            <span class="api-signature">void pixelsBrightness(int brightness)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Устанавливает глобальное масштабирование яркости.</p>
+                        <h4>Параметры</h4>
+                        <ul>
+                            <li><code>brightness</code>: от 0 до 100.</li>
+                        </ul>
+                        <h4>Пример</h4>
+                        <pre><code>module.pixelsBrightness(50); // Приглушить светодиоды</code></pre>
+                    </div>
+                </div>
+
+                <h2 id="light-ring-effects">Световое кольцо (Эффекты)</h2>
+                <p>Это блокирующие анимации.</p>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">pixelsRainbow</span>
+                            <span class="api-signature">void pixelsRainbow(int speed, int duration)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Отображает вращающуюся радугу.</p>
+                        <h4>Параметры</h4>
+                        <ul>
+                            <li><code>speed</code>: Скорость вращения (0-100). Большие значения означают более быстрое
+                                вращение.</li>
+                            <li><code>duration</code>: Общая длительность анимации в миллисекундах.</li>
+                        </ul>
+                        <h4>Пример</h4>
+                        <pre><code>module.pixelsRainbow(50, 2000); // 2 секунды</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">pixelsRunning</span>
+                            <span class="api-signature">void pixelsRunning(int r, int g, int b, int duration)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Эффект бегущего огня: один пиксель пробегает по кругу один раз.</p>
+                        <h4>Параметры</h4>
+                        <ul>
+                            <li><code>r, g, b</code>: Цвет бегущего пикселя (0-255).</li>
+                            <li><code>duration</code>: Время в миллисекундах для завершения одного полного круга.</li>
+                        </ul>
+                        <h4>Пример</h4>
+                        <pre><code>module.pixelsRunning(255, 0, 0, 1000); // Красный пиксель пробегает круг за 1с</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">pixelsBreathing</span>
+                            <span class="api-signature">void pixelsBreathing(int r, int g, int b, int duration)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Плавно меняет яркость светодиодов (эффект дыхания).</p>
+                        <h4>Параметры</h4>
+                        <ul>
+                            <li><code>r, g, b</code>: Целевой цвет при максимальной яркости (0-255).</li>
+                            <li><code>duration</code>: Общая длительность одного цикла дыхания (возрастание + затухание)
+                                в миллисекундах.</li>
+                        </ul>
+                        <h4>Пример</h4>
+                        <pre><code>module.pixelsBreathing(0, 0, 255, 3000); // Синее дыхание в течение 3с</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">pixelsFill</span>
+                            <span class="api-signature">void pixelsFill(int r, int g, int b, int duration)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Постепенно заполняет кольцо цветом, затем постепенно очищает его.</p>
+                        <h4>Параметры</h4>
+                        <ul>
+                            <li><code>r, g, b</code>: Цвет заполнения (0-255).</li>
+                            <li><code>duration</code>: Общая длительность последовательности заполнения и очистки в
+                                миллисекундах.
+                            </li>
+                        </ul>
+                        <h4>Пример</h4>
+                        <pre><code>module.pixelsFill(0, 255, 0, 1000); // Зеленое заполнение+очистка за 1с</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">pixelsSparkle</span>
+                            <span class="api-signature">void pixelsSparkle(int r, int g, int b, int duration, int
+                                count)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Случайным образом мигает отдельными пикселями.</p>
+                        <h4>Параметры</h4>
+                        <ul>
+                            <li><code>r, g, b</code>: Цвет вспышек (0-255).</li>
+                            <li><code>duration</code>: Общая длительность эффекта в миллисекундах.</li>
+                            <li><code>count</code>: Количество вспышек за указанную длительность.</li>
+                        </ul>
+                        <h4>Пример</h4>
+                        <pre><code>module.pixelsSparkle(255, 255, 255, 2000, 20); // 20 белых вспышек за 2с</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">pixelsRotating</span>
+                            <span class="api-signature">void pixelsRotating(int r, int g, int b, int duration, int
+                                segmentLength, int rotations)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Вращает сегмент зажженных светодиодов вокруг кольца несколько раз.</p>
+                        <h4>Параметры</h4>
+                        <ul>
+                            <li><code>r, g, b</code>: Цвет сегмента (0-255).</li>
+                            <li><code>duration</code>: Общая длительность ВСЕХ вращений в миллисекундах.</li>
+                            <li><code>segmentLength</code>: Количество светодиодов во вращающемся сегменте (например,
+                                5).</li>
+                            <li><code>rotations</code>: Количество полных оборотов на 360 градусов.</li>
+                        </ul>
+                        <h4>Пример</h4>
+                        <pre><code>// Вращать сегмент из 5 красных светодиодов 3 раза за 2 секунды
+module.pixelsRotating(255, 0, 0, 2000, 5, 3);</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">pixelsSpinner</span>
+                            <span class="api-signature">void pixelsSpinner(int r, int g, int b, int duration)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Анимация спиннера, зажигающая по одному пикселю, пока кольцо не заполнится, затем
+                            перезапускается.
+                        </p>
+                        <h4>Параметры</h4>
+                        <ul>
+                            <li><code>r, g, b</code>: Цвет спиннера (0-255).</li>
+                            <li><code>duration</code>: Время в миллисекундах для одного полного оборота.</li>
+                        </ul>
+                        <h4>Пример</h4>
+                        <pre><code>module.pixelsSpinner(255, 255, 0, 1000);</code></pre>
+                    </div>
+                </div>
+
+                <h2 id="traffic-light">Светофор</h2>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">setTrafficLight</span>
+                            <span class="api-signature">void setTrafficLight(TrafficLightColor color)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Устанавливает состояние модуля светофора.</p>
+                        <h4>Параметры</h4>
+                        <ul>
+                            <li><code>color</code>: <code>TRAFFIC_RED</code>,
+                                <code>TRAFFIC_YELLOW</code>, <code>TRAFFIC_GREEN</code>, или
+                                <code>TRAFFIC_OFF</code>.
+                            </li>
+                        </ul>
+                        <h4>Пример</h4>
+                        <pre><code>module.setTrafficLight(TRAFFIC_GREEN);</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">trafficLightSequence</span>
+                            <span class="api-signature">void trafficLightSequence()</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Запускает стандартную последовательность светофора (Зеленый -> Желтый -> Красный -> Желтый ->
+                            Зеленый).
+                        </p>
+                        <h4>Пример</h4>
+                        <pre><code>module.trafficLightSequence();</code></pre>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

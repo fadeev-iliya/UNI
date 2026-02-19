@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Документация библиотеки UNI</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="index_ru.html" class="logo">UNI Docs</a>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="index_ru.html">Главная</a></li>
+                    <li><a href="getting-started_ru.html">Начало работы</a></li>
+                </ul>
+
+                <div class="sidebar-section-title">Справочник</div>
+                <ul>
+                    <li>
+                        <a href="unibase_ru.html">UniBase</a>
+
+                        <ul class="sidebar-subnav">
+                            <li><a href="unibase_ru.html#constants">Константы</a></li>
+                            <li><a href="unibase_ru.html#initialization">Инициализация</a></li>
+                            <li><a href="unibase_ru.html#motor-control">Управление моторами</a></li>
+                            <li><a href="unibase_ru.html#movement">Движение</a></li>
+                            <li><a href="unibase_ru.html#odometry">Одометрия</a></li>
+                            <li><a href="unibase_ru.html#display">Дисплей</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="unidev_ru.html">UniDev</a>
+
+                        <ul class="sidebar-subnav">
+                            <li><a href="unidev_ru.html#constants">Определения портов</a></li>
+                            <li><a href="unidev_ru.html#dev-init">Инициализация</a></li>
+                            <li><a href="unidev_ru.html#sensors">Датчики</a></li>
+                            <li><a href="unidev_ru.html#inputs">Входы</a></li>
+                            <li><a href="unidev_ru.html#light-ring-basic">Световое кольцо (Баз.)</a></li>
+                            <li><a href="unidev_ru.html#light-ring-effects">Световое кольцо (Эфф.)</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <div class="sidebar-section-title">Руководства</div>
+                <ul>
+                    <li>
+                        <a href="examples_ru.html">Примеры</a>
+                        <ul class="sidebar-subnav">
+                            <li><a href="examples_ru.html#basic">Базовая иниц.</a></li>
+                            <li><a href="examples_ru.html#distance">Датчики расстояния</a></li>
+                            <li><a href="examples_ru.html#line">Датчик линии</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <button id="mobile-menu-toggle" class="mobile-menu-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+
+                <div class="search-container">
+                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" class="search-input" placeholder="Поиск...">
+                </div>
+
+                <button id="theme-toggle" class="theme-toggle" title="Переключить тему">
+                    <!-- Icon injected by JS -->
+                </button>
+            </header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <h1>Библиотека UNI</h1>
+                <p class="lead" style="font-size: 1.25rem; color: var(--text-muted); margin-bottom: 2rem;">
+                    Библиотека Arduino для управления платформами UniBase.
+                </p>
+
+                <div class="flex-gap" style="margin-bottom: 3rem;">
+                    <a href="getting-started_ru.html" class="btn btn-primary">Начало работы</a><br>
+                    <a href="unibase_ru.html" class="btn btn-secondary">API Справочник</a>
+                </div>
+                <h2>Что такое UNI?</h2>
+                <p>
+                    Библиотека UNI разработана для обучения робототехнике и создания проектов на платформе
+                    UniBase. Она предоставляет интуитивно понятный C++ API высокого уровня для управления
+                    роботом (моторы, энкодеры, OLED-дисплей, датчики).
+                </p>
+                <p>
+                    Будь вы студент, изучающий робототехнику, или ученик, создающий свой первый проект, UNI
+                    предоставляет инструменты, чтобы ваш UniBase поехал за считанные минуты.
+                </p>
+
+                <h2>Поддерживаемые платформы</h2>
+                <ul>
+                    <li><strong>ESP32</strong>: Основной контроллер для робота UniBase (управление моторами, датчиками и
+                        дисплеем).</li>
+                </ul>
+
+                <h2>Ключевые особенности</h2>
+                <ul>
+                    <li><strong>Точное управление моторами</strong>: Движение со стабилизацией PID с использованием
+                        энкодеров.</li>
+                    <li><strong>Одометрия</strong>: Отслеживание положения (X, Y) и ориентации (Theta) в реальном
+                        времени.</li>
+                    <li><strong>Интеграция OLED</strong>: Простые методы для отладки и отображения статуса.</li>
+                    <li><strong>Модульность</strong>: Бесшовная интеграция с платами расширения UniDev.</li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

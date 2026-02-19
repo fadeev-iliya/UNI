@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Обзор библиотеки - Библиотека UNI</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="index_ru.html" class="logo">UNI Docs</a>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="index_ru.html">Главная</a></li>
+                    <li><a href="getting-started_ru.html">Начало работы</a></li>
+                    <li><a href="library-overview_ru.html">Обзор библиотеки</a></li>
+                </ul>
+
+                <div class="sidebar-section-title">Справочник</div>
+                <ul>
+                    <li><a href="unibase_ru.html">UniBase</a></li>
+                    <li><a href="unidev_ru.html">UniDev</a></li>
+                    <li><a href="uart-control_ru.html">UART Control</a></li>
+                </ul>
+
+                <div class="sidebar-section-title">Руководства</div>
+                <ul>
+                    <li><a href="examples_ru.html">Примеры</a></li>
+                    <li><a href="faq_ru.html">FAQ и Устранение неполадок</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <button id="mobile-menu-toggle" class="mobile-menu-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="search-container">
+                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" class="search-input" placeholder="Поиск...">
+                </div>
+                <button id="theme-toggle" class="theme-toggle" title="Переключить тему"></button>
+            </header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <h1>Обзор библиотеки</h1>
+                <p class="lead">Поймите архитектуру и основные концепции библиотеки UNI.</p>
+
+                <h2 id="architecture">Архитектура</h2>
+                <p>Экосистема UNI разработана для робототехнической платформы UniBase. Она состоит из двух основных
+                    компонентов:
+                </p>
+
+                <div
+                    style="background: var(--bg-sidebar); padding: 1.5rem; border-radius: 0.5rem; border: 1px solid var(--border-color); margin-bottom: 2rem;">
+                    <h3 style="margin-top: 0;">1. UniBase (ESP32)</h3>
+                    <p>Основная библиотека работает на микроконтроллере ESP32 на борту робота. Она управляет:</p>
+                    <ul>
+                        <li><strong>PID контроль моторов</strong>: Обеспечивает точную скорость и дистанцию, используя
+                            энкодеры.</li>
+                        <li><strong>Одометрия</strong>: Вычисляет положение (X, Y) относительно точки старта.</li>
+                        <li><strong>Абстракция оборудования</strong>: Управляет OLED, светодиодами, датчиками напряжения
+                            и IMU.</li>
+                    </ul>
+                </div>
+
+                <div
+                    style="background: var(--bg-sidebar); padding: 1.5rem; border-radius: 0.5rem; border: 1px solid var(--border-color); margin-bottom: 2rem;">
+                    <h3 style="margin-top: 0;">2. UniBaseControl (Arduino Nano / Удаленное)</h3>
+                    <p>Дополнительная библиотека для управления роботом с вторичного процессора через UART.</p>
+                    <ul>
+                        <li>Отправляет высокоуровневые команды (например, "move 100mm") на ESP32.</li>
+                        <li>Получает данные с датчиков (одометрия, батарея) от ESP32.</li>
+                        <li>Идеально подходит для образовательных наборов, где студенты программируют Arduino Nano,
+                            подключенную к роботу.
+                        </li>
+                    </ul>
+                </div>
+
+                <h2 id="core-concepts">Основные концепции</h2>
+
+                <h3>Неблокирующие операции</h3>
+                <p>
+                    Большинство команд движения в библиотеке UNI (такие как <code>moveDist</code> или
+                    <code>rotate</code>) разработаны так, чтобы быть интуитивно понятными.
+                    Однако, под капотом ESP32 использует задачи FreeRTOS для обработки высокочастотных PID-циклов, не
+                    блокируя ваш основной код.
+                </p>
+
+                <h3>Система координат</h3>
+                <p>
+                    Робот использует стандартную 2D декартову систему координат:
+                </p>
+                <ul>
+                    <li><strong>Ось X</strong>: Направление вперед от стартовой точки.</li>
+                    <li><strong>Ось Y</strong>: Направление влево от стартовой точки.</li>
+                    <li><strong>Угол (Theta)</strong>: 0 градусов - направление вперед. Положительные углы - поворот
+                        <strong>ПРОТИВ часовой стрелки</strong> (Left), отрицательные - <strong>ПО часовой
+                            стрелке</strong>
+                        (Right).</li>
+                </ul>
+
+                <h3>Имя робота</h3>
+                <p>
+                    Вы можете назначить пользовательское имя вашему роботу при инициализации. Это имя отображается на
+                    OLED-экране при запуске.
+                </p>
+                <pre><code>robot.begin("WALL-E");</code></pre>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

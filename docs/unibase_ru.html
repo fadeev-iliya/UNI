@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="ru" data-theme="light">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UniBase Reference - UNI Library</title>
+    <title>Справочник UniBase - Библиотека UNI</title>
     <link rel="stylesheet" href="styles.css">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,50 +20,50 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <a href="index.html" class="logo">UNI Docs</a>
+                <a href="index_ru.html" class="logo">UNI Docs</a>
             </div>
 
             <nav class="sidebar-nav">
                 <ul>
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="getting-started.html">Getting Started</a></li>
+                    <li><a href="index_ru.html">Главная</a></li>
+                    <li><a href="getting-started_ru.html">Начало работы</a></li>
                 </ul>
 
-                <div class="sidebar-section-title">Reference</div>
+                <div class="sidebar-section-title">Справочник</div>
                 <ul>
                     <li>
-                        <a href="unibase.html" class="active">UniBase</a>
+                        <a href="unibase_ru.html" class="active">UniBase</a>
 
                         <ul class="sidebar-subnav">
-                            <li><a href="unibase.html#constants">Constants</a></li>
-                            <li><a href="unibase.html#initialization">Initialization</a></li>
-                            <li><a href="unibase.html#motor-control">Motor Control</a></li>
-                            <li><a href="unibase.html#movement">Movement</a></li>
-                            <li><a href="unibase.html#odometry">Odometry</a></li>
-                            <li><a href="unibase.html#display">Display</a></li>
+                            <li><a href="unibase_ru.html#constants">Константы</a></li>
+                            <li><a href="unibase_ru.html#initialization">Инициализация</a></li>
+                            <li><a href="unibase_ru.html#motor-control">Управление моторами</a></li>
+                            <li><a href="unibase_ru.html#movement">Движение</a></li>
+                            <li><a href="unibase_ru.html#odometry">Одометрия</a></li>
+                            <li><a href="unibase_ru.html#display">Дисплей</a></li>
                         </ul>
                     </li>
                     <li>
-                        <a href="unidev.html">UniDev</a>
+                        <a href="unidev_ru.html">UniDev</a>
 
                         <ul class="sidebar-subnav">
-                            <li><a href="unidev.html#constants">Port Definitions</a></li>
-                            <li><a href="unidev.html#dev-init">Initialization</a></li>
-                            <li><a href="unidev.html#sensors">Sensors</a></li>
-                            <li><a href="unidev.html#inputs">Inputs</a></li>
-                            <li><a href="unidev.html#light-ring-basic">Light Ring (Basic)</a></li>
-                            <li><a href="unidev.html#light-ring-effects">Light Ring (Effects)</a></li>
+                            <li><a href="unidev_ru.html#constants">Определения портов</a></li>
+                            <li><a href="unidev_ru.html#dev-init">Инициализация</a></li>
+                            <li><a href="unidev_ru.html#sensors">Датчики</a></li>
+                            <li><a href="unidev_ru.html#inputs">Входы</a></li>
+                            <li><a href="unidev_ru.html#light-ring-basic">Световое кольцо (Баз.)</a></li>
+                            <li><a href="unidev_ru.html#light-ring-effects">Световое кольцо (Эфф.)</a></li>
                         </ul>
                     </li>
                 </ul>
-                <div class="sidebar-section-title">Guides</div>
+                <div class="sidebar-section-title">Руководства</div>
                 <ul>
                     <li>
-                        <a href="examples.html">Examples</a>
+                        <a href="examples_ru.html">Примеры</a>
                         <ul class="sidebar-subnav">
-                            <li><a href="examples.html#basic">Basic Init</a></li>
-                            <li><a href="examples.html#distance">Distance Sensors</a></li>
-                            <li><a href="examples.html#line">Line Sensor</a></li>
+                            <li><a href="examples_ru.html#basic">Базовая иниц.</a></li>
+                            <li><a href="examples_ru.html#distance">Датчики расстояния</a></li>
+                            <li><a href="examples_ru.html#line">Датчик линии</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -89,41 +89,41 @@
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
-                    <input type="text" class="search-input" placeholder="Search documentation...">
+                    <input type="text" class="search-input" placeholder="Поиск...">
                 </div>
-                <button id="theme-toggle" class="theme-toggle" title="Toggle Theme"></button>
+                <button id="theme-toggle" class="theme-toggle" title="Переключить тему"></button>
             </header>
 
             <!-- Page Content -->
             <div class="page-content">
-                <h1>UniBase Reference</h1>
-                <p class="lead">Core class for controlling the robot chassis, motors, and display.</p>
+                <h1>Справочник UniBase</h1>
+                <p class="lead">Основной класс для управления шасси робота, моторами и дисплеем.</p>
 
-                <h2 id="constants">Constants</h2>
-                <p>Public constants available for control functions.</p>
+                <h2 id="constants">Константы</h2>
+                <p>Публичные константы, доступные для функций управления.</p>
                 <table class="constants-table">
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th>Value</th>
-                            <th>Description</th>
+                            <th>Имя</th>
+                            <th>Значение</th>
+                            <th>Описание</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td><code>SMOOTH</code></td>
                             <td>0</td>
-                            <td>Used in <code>stop()</code> for gradual deceleration (coasting).</td>
+                            <td>Используется в <code>stop()</code> для плавного замедления (движение по инерции).</td>
                         </tr>
                         <tr>
                             <td><code>HARD</code></td>
                             <td>1</td>
-                            <td>Used in <code>stop()</code> for immediate braking.</td>
+                            <td>Используется в <code>stop()</code> для немедленного торможения.</td>
                         </tr>
                     </tbody>
                 </table>
 
-                <h2 id="initialization">Initialization</h2>
+                <h2 id="initialization">Инициализация</h2>
 
                 <div class="api-card">
                     <div class="api-header">
@@ -134,16 +134,17 @@
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Initializes all robot components (Motors, Encoders, OLED, Sensors). This function starts the
-                            background tasks for odometry and motor control. It should be called once in
+                        <p>Инициализирует все компоненты робота (Моторы, Энкодеры, OLED, Датчики). Эта функция запускает
+                            фоновые задачи для одометрии и управления моторами. Должна быть вызвана один раз в
                             <code>setup()</code>.
                         </p>
-                        <h4>Parameters</h4>
+                        <h4>Параметры</h4>
                         <ul>
-                            <li><code>robotName</code> (optional): Name to display on the OLED splash screen. Defaults
-                                to "UNI".</li>
+                            <li><code>robotName</code> (опционально): Имя для отображения на экране загрузки OLED. По
+                                умолчанию
+                                "UNI".</li>
                         </ul>
-                        <h4>Example</h4>
+                        <h4>Пример</h4>
                         <pre><code>#include &lt;UNI.h&gt;
 
 UniBase robot;
@@ -159,7 +160,7 @@ void loop() {
                     </div>
                 </div>
 
-                <h2 id="motor-control">Motor Control</h2>
+                <h2 id="motor-control">Управление моторами</h2>
 
                 <div class="api-card">
                     <div class="api-header">
@@ -170,17 +171,18 @@ void loop() {
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Sets the power for both motors directly. Positive values match forward direction, negative
-                            match backward.</p>
-                        <h4>Parameters</h4>
+                        <p>Устанавливает мощность для обоих моторов напрямую. Положительные значения - движение вперед,
+                            отрицательные -
+                            назад.</p>
+                        <h4>Параметры</h4>
                         <ul>
-                            <li><code>powerLeft</code>: Power for left motor (-100 to 100).</li>
-                            <li><code>powerRight</code>: Power for right motor (-100 to 100).</li>
+                            <li><code>powerLeft</code>: Мощность левого мотора (-100 до 100).</li>
+                            <li><code>powerRight</code>: Мощность правого мотора (-100 до 100).</li>
                         </ul>
-                        <h4>Example</h4>
-                        <pre><code>// Full speed forward
+                        <h4>Пример</h4>
+                        <pre><code>// Полная скорость вперед
 robot.motors(100, 100);
-// Turn left in place
+// Поворот влево на месте
 robot.motors(-50, 50);</code></pre>
                     </div>
                 </div>
@@ -194,13 +196,13 @@ robot.motors(-50, 50);</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Sets power for the left motor only.</p>
-                        <h4>Parameters</h4>
+                        <p>Устанавливает мощность только для левого мотора.</p>
+                        <h4>Параметры</h4>
                         <ul>
-                            <li><code>power</code>: Motor power (-100 to 100).</li>
+                            <li><code>power</code>: Мощность мотора (-100 до 100).</li>
                         </ul>
-                        <h4>Example</h4>
-                        <pre><code>// Turn the left motor backward at half speed
+                        <h4>Пример</h4>
+                        <pre><code>// Вращать левый мотор назад на половины скорости
 robot.motorLeft(-50);</code></pre>
                     </div>
                 </div>
@@ -214,13 +216,13 @@ robot.motorLeft(-50);</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Sets power for the right motor only.</p>
-                        <h4>Parameters</h4>
+                        <p>Устанавливает мощность только для правого мотора.</p>
+                        <h4>Параметры</h4>
                         <ul>
-                            <li><code>power</code>: Motor power (-100 to 100).</li>
+                            <li><code>power</code>: Мощность мотора (-100 до 100).</li>
                         </ul>
-                        <h4>Example</h4>
-                        <pre><code>// Turn the right motor forward at full speed
+                        <h4>Пример</h4>
+                        <pre><code>// Вращать правый мотор вперед на полной скорости
 robot.motorRight(100);</code></pre>
                     </div>
                 </div>
@@ -234,16 +236,17 @@ robot.motorRight(100);</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Moves the robot along an arc with a specific turn intensity. This is a non-blocking control
-                            function.</p>
-                        <h4>Parameters</h4>
+                        <p>Перемещает робота по дуге с заданной интенсивностью поворота. Это неблокирующая функция
+                            управления.</p>
+                        <h4>Параметры</h4>
                         <ul>
-                            <li><code>power</code>: Base motor power (-100 to 100).</li>
-                            <li><code>angle</code>: Turn sharpness (-90 to 90). Positive = Turn Left, Negative = Turn
-                                Right.</li>
+                            <li><code>power</code>: Базовая мощность моторов (-100 до 100).</li>
+                            <li><code>angle</code>: Резкость поворота (-90 до 90). Положительное = Поворот Влево,
+                                Отрицательное = Поворот
+                                Вправо.</li>
                         </ul>
-                        <h4>Example</h4>
-                        <pre><code>// Drive forward while curving left
+                        <h4>Пример</h4>
+                        <pre><code>// Ехать вперед, поворачивая влево
 robot.motorsArc(80, 45);</code></pre>
                     </div>
                 </div>
@@ -257,13 +260,14 @@ robot.motorsArc(80, 45);</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Stops both motors. Can perform a smooth coast to stop or a hard brake.</p>
-                        <h4>Parameters</h4>
+                        <p>Останавливает оба мотора. Может выполнить плавную остановку (инерция) или жесткое торможение.
+                        </p>
+                        <h4>Параметры</h4>
                         <ul>
-                            <li><code>stopType</code>: <code>SMOOTH</code> (0) or <code>HARD</code> (1).</li>
+                            <li><code>stopType</code>: <code>SMOOTH</code> (0) или <code>HARD</code> (1).</li>
                         </ul>
-                        <h4>Example</h4>
-                        <pre><code>robot.stop(HARD); // Instant stop</code></pre>
+                        <h4>Пример</h4>
+                        <pre><code>robot.stop(HARD); // Мгновенная остановка</code></pre>
                     </div>
                 </div>
 
@@ -276,13 +280,13 @@ robot.motorsArc(80, 45);</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Stops the left motor only.</p>
-                        <h4>Parameters</h4>
+                        <p>Останавливает только левый мотор.</p>
+                        <h4>Параметры</h4>
                         <ul>
-                            <li><code>stopType</code>: <code>SMOOTH</code> (0) or <code>HARD</code> (1).</li>
+                            <li><code>stopType</code>: <code>SMOOTH</code> (0) или <code>HARD</code> (1).</li>
                         </ul>
-                        <h4>Example</h4>
-                        <pre><code>robot.stopLeft(SMOOTH); // Coast left motor to stop</code></pre>
+                        <h4>Пример</h4>
+                        <pre><code>robot.stopLeft(SMOOTH); // Плавно остановить левый мотор</code></pre>
                     </div>
                 </div>
 
@@ -295,19 +299,20 @@ robot.motorsArc(80, 45);</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Stops the right motor only.</p>
-                        <h4>Parameters</h4>
+                        <p>Останавливает только правый мотор.</p>
+                        <h4>Параметры</h4>
                         <ul>
-                            <li><code>stopType</code>: <code>SMOOTH</code> (0) or <code>HARD</code> (1).</li>
+                            <li><code>stopType</code>: <code>SMOOTH</code> (0) или <code>HARD</code> (1).</li>
                         </ul>
-                        <h4>Example</h4>
-                        <pre><code>robot.stopRight(HARD); // Brake right motor immediately</code></pre>
+                        <h4>Пример</h4>
+                        <pre><code>robot.stopRight(HARD); // Резко остановить правый мотор</code></pre>
                     </div>
                 </div>
 
-                <h2 id="movement">Movement (Blocking)</h2>
-                <p>These functions block execution until the movement is complete. They use encoder feedback for
-                    precision.</p>
+                <h2 id="movement">Движение (Блокирующее)</h2>
+                <p>Эти функции блокируют выполнение программы до завершения движения. Они используют обратную связь от
+                    энкодеров для
+                    точности.</p>
 
                 <div class="api-card">
                     <div class="api-header">
@@ -318,15 +323,15 @@ robot.motorsArc(80, 45);</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Moves the robot specific distance using PID control on encoders.</p>
-                        <h4>Parameters</h4>
+                        <p>Перемещает робота на определенное расстояние, используя PID-контроль энкодеров.</p>
+                        <h4>Параметры</h4>
                         <ul>
-                            <li><code>power</code>: Motor power (-100 to 100).</li>
-                            <li><code>millimeters</code>: Target distance.
+                            <li><code>power</code>: Мощность мотора (-100 до 100).</li>
+                            <li><code>millimeters</code>: Целевое расстояние.
                             </li>
                         </ul>
-                        <h4>Example</h4>
-                        <pre><code>// Move forward 50cm at 80% power
+                        <h4>Пример</h4>
+                        <pre><code>// Ехать вперед 50см на 80% мощности
 robot.moveDist(80, 500);</code></pre>
                     </div>
                 </div>
@@ -340,14 +345,14 @@ robot.moveDist(80, 500);</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Moves the motor for a specific duration of time.</p>
-                        <h4>Parameters</h4>
+                        <p>Включает моторы на определенное время.</p>
+                        <h4>Параметры</h4>
                         <ul>
-                            <li><code>power</code>: Motor power (-100 to 100).</li>
-                            <li><code>milliseconds</code>: Duration in ms.</li>
+                            <li><code>power</code>: Мощность мотора (-100 до 100).</li>
+                            <li><code>milliseconds</code>: Длительность в мс.</li>
                         </ul>
-                        <h4>Example</h4>
-                        <pre><code>// Move forward for 2 seconds
+                        <h4>Пример</h4>
+                        <pre><code>// Ехать вперед 2 секунды
 robot.moveTime(100, 2000);</code></pre>
                     </div>
                 </div>
@@ -361,15 +366,15 @@ robot.moveTime(100, 2000);</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Moves along a curved path for a specific distance.</p>
-                        <h4>Parameters</h4>
+                        <p>Движение по изогнутой траектории на определенное расстояние.</p>
+                        <h4>Параметры</h4>
                         <ul>
-                            <li><code>power</code>: Motor power (-100 to 100).</li>
-                            <li><code>angle</code>: Steering angle (-90 to 90).</li>
-                            <li><code>millimeters</code>: Distance traveled along the arc.</li>
+                            <li><code>power</code>: Мощность мотора (-100 до 100).</li>
+                            <li><code>angle</code>: Угол руления (-90 до 90).</li>
+                            <li><code>millimeters</code>: Пройденное расстояние по дуге.</li>
                         </ul>
-                        <h4>Example</h4>
-                        <pre><code>// Drive 1 meter in a wide left curve
+                        <h4>Пример</h4>
+                        <pre><code>// Проехать 1 метр по широкой левой дуге
 robot.moveArcDist(60, 20, 1000);</code></pre>
                     </div>
                 </div>
@@ -383,16 +388,16 @@ robot.moveArcDist(60, 20, 1000);</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Moves along a curved path for a specific duration.</p>
-                        <h4>Parameters</h4>
+                        <p>Движение по изогнутой траектории в течение определенного времени.</p>
+                        <h4>Параметры</h4>
                         <ul>
-                            <li><code>power</code>: Motor power (-100 to 100).</li>
-                            <li><code>angle</code>: Steering angle (-90 to 90).</li>
-                            <li><code>milliseconds</code>: Duration in ms.</li>
+                            <li><code>power</code>: Мощность мотора (-100 до 100).</li>
+                            <li><code>angle</code>: Угол руления (-90 до 90).</li>
+                            <li><code>milliseconds</code>: Длительность в мс.</li>
                         </ul>
-                        <h4>Example</h4>
-                        <pre><code>// Turn sharply right for 1.5 seconds
-robot.moveArcTime(80, -60, 1500);</code></pre>
+                        <h4>Пример</h4>
+                        <pre><code>// Резкий поворот влево в течение 1.5 секунд
+robot.moveArcTime(80, 60, 1500);</code></pre>
                     </div>
                 </div>
 
@@ -405,20 +410,20 @@ robot.moveArcTime(80, -60, 1500);</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Rotates the robot in place by a specific angle.</p>
-                        <h4>Parameters</h4>
+                        <p>Вращает робота на месте на заданный угол.</p>
+                        <h4>Параметры</h4>
                         <ul>
-                            <li><code>power</code>: Speed (0-100)</li>
-                            <li><code>angle</code>: Degrees. Positive = Left (CCW), Negative = Right (CW).</li>
+                            <li><code>power</code>: Скорость (0-100)</li>
+                            <li><code>angle</code>: Градусы. Положительный = Вправо, Отрицательный = Влево.</li>
                         </ul>
-                        <h4>Example</h4>
-                        <pre><code>// Turn 90 degrees left
+                        <h4>Пример</h4>
+                        <pre><code>// Поворот на 90 градусов вправо
 robot.rotate(60, 90);</code></pre>
                     </div>
                 </div>
 
-                <h2 id="odometry">Odometry</h2>
-                <p>Functions for tracking the robot's position relative to its starting point.</p>
+                <h2 id="odometry">Одометрия</h2>
+                <p>Функции для отслеживания положения робота относительно точки старта.</p>
 
                 <div class="api-card">
                     <div class="api-header">
@@ -429,12 +434,12 @@ robot.rotate(60, 90);</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Returns the current estimated position and orientation struct.</p>
-                        <h4>Returns</h4>
-                        <p>Struct <code>OdometryData</code> containing <code>float x</code>, <code>float y</code>, and
+                        <p>Возвращает текущую структуру оценки положения и ориентации.</p>
+                        <h4>Возвращает</h4>
+                        <p>Структура <code>OdometryData</code>, содержащая <code>float x</code>, <code>float y</code> и
                             <code>float angle</code>.
                         </p>
-                        <h4>Example</h4>
+                        <h4>Пример</h4>
                         <pre><code>OdometryData odom = robot.getOdometry();
 Serial.print("X: ");       Serial.println(odom.x);
 Serial.print("Y: ");       Serial.println(odom.y);
@@ -451,8 +456,8 @@ Serial.print("Angle: ");   Serial.println(odom.angle);</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Returns the absolute X coordinate in millimeters.</p>
-                        <h4>Example</h4>
+                        <p>Возвращает абсолютную координату X в миллиметрах.</p>
+                        <h4>Пример</h4>
                         <pre><code>float currentX = robot.getAbsX();
 Serial.println(currentX);</code></pre>
                     </div>
@@ -467,8 +472,8 @@ Serial.println(currentX);</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Returns the absolute Y coordinate in millimeters.</p>
-                        <h4>Example</h4>
+                        <p>Возвращает абсолютную координату Y в миллиметрах.</p>
+                        <h4>Пример</h4>
                         <pre><code>float currentY = robot.getAbsY();
 Serial.println(currentY);</code></pre>
                     </div>
@@ -483,8 +488,8 @@ Serial.println(currentY);</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Returns the absolute heading angle in degrees.</p>
-                        <h4>Example</h4>
+                        <p>Возвращает абсолютный угол курса в градусах.</p>
+                        <h4>Пример</h4>
                         <pre><code>float currentAngle = robot.getAbsAngle();
 Serial.println(currentAngle);</code></pre>
                     </div>
@@ -499,10 +504,10 @@ Serial.println(currentAngle);</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Resets the accumulated distance counter to 0. Used for relative measurements.</p>
-                        <h4>Example</h4>
+                        <p>Сбрасывает накопленный счетчик расстояния в 0. Используется для относительных измерений.</p>
+                        <h4>Пример</h4>
                         <pre><code>robot.resetDistance();
-// Now getDistance() will start from 0</code></pre>
+// Теперь getDistance() начнет отсчет с 0</code></pre>
                     </div>
                 </div>
 
@@ -515,8 +520,8 @@ Serial.println(currentAngle);</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Returns the distance traveled since the last reset in millimeters.</p>
-                        <h4>Example</h4>
+                        <p>Возвращает расстояние, пройденное с момента последнего сброса, в миллиметрах.</p>
+                        <h4>Пример</h4>
                         <pre><code>robot.resetDistance();
 robot.motorsArc(50, 0);
 while(robot.getDistance() < 1000) {
@@ -535,8 +540,8 @@ robot.stop(HARD);</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Resets the accumulated angle counter to 0.</p>
-                        <h4>Example</h4>
+                        <p>Сбрасывает накопленный счетчик угла в 0.</p>
+                        <h4>Пример</h4>
                         <pre><code>robot.resetAngle();</code></pre>
                     </div>
                 </div>
@@ -550,8 +555,8 @@ robot.stop(HARD);</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Returns the angle turned since the last reset in degrees.</p>
-                        <h4>Example</h4>
+                        <p>Возвращает угол поворота с момента последнего сброса, в градусах.</p>
+                        <h4>Пример</h4>
                         <pre><code>float currentAngle = robot.getAngle();
 Serial.println(currentAngle);</code></pre>
                     </div>
@@ -566,8 +571,8 @@ Serial.println(currentAngle);</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Returns the raw encoder tick count for the respective motor.</p>
-                        <h4>Example</h4>
+                        <p>Возвращает количество тиков энкодера для соответствующего мотора.</p>
+                        <h4>Пример</h4>
                         <pre><code>long l = robot.getLeftTicks();
 long r = robot.getRightTicks();
 Serial.printf("L: %ld, R: %ld\n", l, r);</code></pre>
@@ -583,8 +588,8 @@ Serial.printf("L: %ld, R: %ld\n", l, r);</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Prints the current X, Y, and Theta values to the Serial Monitor. Useful for debugging.</p>
-                        <h4>Example</h4>
+                        <p>Выводит текущие значения X, Y и Theta в Serial Monitor. Полезно для отладки.</p>
+                        <h4>Пример</h4>
                         <pre><code>void loop() {
     robot.printOdometry(); // Output: X: 10.5 Y: 5.2 Angle: 90.0
     delay(500);
@@ -592,27 +597,27 @@ Serial.printf("L: %ld, R: %ld\n", l, r);</code></pre>
                     </div>
                 </div>
 
-                <h2 id="display">Display</h2>
+                <h2 id="display">Дисплей</h2>
 
                 <div class="api-card">
                     <div class="api-header">
                         <div class="api-title-container">
-                            <span class="api-name">displayPrint (Simple)</span>
+                            <span class="api-name">displayPrint (Простой)</span>
                             <span class="api-signature">void displayPrint(ValueType value)</span>
                         </div>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Clears the OLED screen and prints the provided value in the center. Supports multiple types.
+                        <p>Очищает экран OLED и выводит переданное значение по центру.
                         </p>
-                        <h4>Supported Types</h4>
-                        <p>This function accepts various data types including <code>String</code>, <code>int</code>,
-                            <code>float</code>, <code>double</code>, and <code>bool</code>.
+                        <h4>Поддерживаемые типы</h4>
+                        <p>Эта функция принимает разные типы данных, включая <code>String</code>, <code>int</code>,
+                            <code>float</code>, <code>double</code> и <code>bool</code>.
                         </p>
-                        <h4>Example</h4>
-                        <pre><code>// Print text
+                        <h4>Пример</h4>
+                        <pre><code>// Вывод текста
 robot.displayPrint("Hello!");
-// Print a number
+// Вывод числа
 robot.displayPrint(123);</code></pre>
                     </div>
                 </div>
@@ -620,15 +625,15 @@ robot.displayPrint(123);</code></pre>
                 <div class="api-card">
                     <div class="api-header">
                         <div class="api-title-container">
-                            <span class="api-name">displayPrint (Named)</span>
+                            <span class="api-name">displayPrint (Именованный)</span>
                             <span class="api-signature">void displayPrint(const char* name, ValueType value)</span>
                         </div>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Prints a name label at the top of the screen and a large value in the center. Supports all
-                            simple types as the value.</p>
-                        <h4>Example</h4>
+                        <p>Выводит название вверху экрана и значение по центру. Поддерживает все
+                            типы данных, как в простом displayPrint.</p>
+                        <h4>Пример</h4>
                         <pre><code>robot.displayPrint("Battery", 85);
 robot.displayPrint("Mode", "Auto");</code></pre>
                     </div>
@@ -643,13 +648,13 @@ robot.displayPrint("Mode", "Auto");</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Clears the OLED screen.</p>
-                        <h4>Example</h4>
+                        <p>Возвращает экран OLED в обычное состояние.</p>
+                        <h4>Пример</h4>
                         <pre><code>robot.displayClear();</code></pre>
                     </div>
                 </div>
 
-                <h2 id="utility">Utility</h2>
+                <h2 id="utility">Утилиты</h2>
 
                 <div class="api-card">
                     <div class="api-header">
@@ -660,8 +665,9 @@ robot.displayPrint("Mode", "Auto");</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Returns current battery level percentage (0-100). Returns -1 if offline or error.</p>
-                        <h4>Example</h4>
+                        <p>Возвращает текущий уровень заряда батареи в процентах (0-100). Возвращает -1 при ошибке или
+                            отсутствии связи.</p>
+                        <h4>Пример</h4>
                         <pre><code>int power = robot.getBatteryPower();
 if (power < 10) {
     robot.displayPrint("LOW BATT");
@@ -678,14 +684,14 @@ if (power < 10) {
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Sets the background task to blink the onboard LED.</p>
+                        <p>Задает фоновую задачу мигания встроенным светодиодом.</p>
                         <ul>
-                            <li><code>interval</code>: Time in ms. Set to 0 to stop blinking.</li>
+                            <li><code>interval</code>: Время в мс. Установите 0, чтобы остановить мигание.</li>
                         </ul>
-                        <h4>Example</h4>
-                        <pre><code>// Blink twice per second
+                        <h4>Пример</h4>
+                        <pre><code>// Мигать дважды в секунду
 robot.blinkLED(500); 
-// Stop blinking
+// Остановить мигание
 robot.blinkLED(0);</code></pre>
                     </div>
                 </div>
@@ -699,10 +705,10 @@ robot.blinkLED(0);</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Activates the UART control loop. </p>
-                        <h4>Example</h4>
+                        <p>Активирует цикл управления через UART.</p>
+                        <h4>Пример</h4>
                         <pre><code>void loop() {
-    // Enter UART remote control mode forever
+    // Вход в режим удаленного управления UART
     robot.UniBaseControl();
 }</code></pre>
                     </div>

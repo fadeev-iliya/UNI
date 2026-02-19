@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Начало работы - Библиотека UNI</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="index_ru.html" class="logo">UNI Docs</a>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="index_ru.html">Главная</a></li>
+                    <li><a href="getting-started_ru.html">Начало работы</a></li>
+                </ul>
+
+                <div class="sidebar-section-title">Справочник</div>
+                <ul>
+                    <li>
+                        <a href="unibase_ru.html">UniBase</a>
+
+                        <ul class="sidebar-subnav">
+                            <li><a href="unibase_ru.html#constants">Константы</a></li>
+                            <li><a href="unibase_ru.html#initialization">Инициализация</a></li>
+                            <li><a href="unibase_ru.html#motor-control">Управление моторами</a></li>
+                            <li><a href="unibase_ru.html#movement">Движение</a></li>
+                            <li><a href="unibase_ru.html#odometry">Одометрия</a></li>
+                            <li><a href="unibase_ru.html#display">Дисплей</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="unidev_ru.html">UniDev</a>
+
+                        <ul class="sidebar-subnav">
+                            <li><a href="unidev_ru.html#constants">Определения портов</a></li>
+                            <li><a href="unidev_ru.html#dev-init">Инициализация</a></li>
+                            <li><a href="unidev_ru.html#sensors">Датчики</a></li>
+                            <li><a href="unidev_ru.html#inputs">Входы</a></li>
+                            <li><a href="unidev_ru.html#light-ring-basic">Световое кольцо (Баз.)</a></li>
+                            <li><a href="unidev_ru.html#light-ring-effects">Световое кольцо (Эфф.)</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <div class="sidebar-section-title">Руководства</div>
+                <ul>
+                    <li>
+                        <a href="examples_ru.html">Примеры</a>
+                        <ul class="sidebar-subnav">
+                            <li><a href="examples_ru.html#basic">Базовая иниц.</a></li>
+                            <li><a href="examples_ru.html#distance">Датчики расстояния</a></li>
+                            <li><a href="examples_ru.html#line">Датчик линии</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <button id="mobile-menu-toggle" class="mobile-menu-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="search-container">
+                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" class="search-input" placeholder="Поиск...">
+                </div>
+                <button id="theme-toggle" class="theme-toggle" title="Переключить тему"></button>
+            </header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <h1>Начало работы</h1>
+                <p class="lead">Следуйте этим шагам, чтобы настроить библиотеку UNI и начать программировать ваш
+                    UniBase.
+                </p>
+
+                <h2 id="installation">Установка</h2>
+
+                <h3>Метод 1: Менеджер библиотек Arduino (Рекомендуется)</h3>
+                <ol>
+                    <li>Откройте Arduino IDE.</li>
+                    <li>Перейдите в <strong>Скетч</strong> > <strong>Подключить библиотеку</strong> > <strong>Управлять
+                            библиотеками...</strong></li>
+                    <li>Введите в строку поиска <code>UNI</code> или <code>UniBase</code>.</li>
+                    <li>Нажмите <strong>Установить</strong>.</li>
+                </ol>
+
+                <h3>Метод 2: Ручная установка</h3>
+                <ol>
+                    <li>Скачайте последний ZIP-архив релиза из <a href="https://github.com/fadeev-iliya/UNI">репозитория
+                            GitHub</a>.</li>
+                    <li>В Arduino IDE, перейдите в <strong>Скетч</strong> > <strong>Подключить библиотеку</strong> >
+                        <strong>Добавить .ZIP библиотеку...</strong>
+                    </li>
+                    <li>Выберите скачанный ZIP-файл.</li>
+                </ol>
+
+                <h2 id="hello-robot">Hello Robot!</h2>
+                <p>Вот минимальный пример для проверки правильности настройки вашей среды. Этот скетч инициализирует
+                    робота и выводит "Hello Robot!" на OLED-дисплей.</p>
+
+                <pre><code>#include &lt;UNI.h&gt;
+
+// Создаем объект робота
+UniBase robot;
+
+void setup() {
+  // Инициализация робота
+  robot.begin();
+  
+  // Вывод приветствия
+  robot.displayPrint("Hello Robot!");
+  
+  // Мигаем светодиодом для индикации активности
+  robot.blinkLED(500);
+}
+
+void loop() {
+  // Основной цикл
+  delay(100);
+}</code></pre>
+
+                <h2 id="uploading">Загрузка на ESP32</h2>
+                <p>Убедитесь, что у вас установлен <strong>пакет плат ESP32</strong> в Arduino IDE.</p>
+                <ol>
+                    <li>Выберите вашу плату: <strong>Инструменты > Плата > ESP32 Dev Module</strong>.</li>
+                    <li>Выберите правильный Порт.</li>
+                    <li>Нажмите <strong>Загрузить</strong>.</li>
+                </ol>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
