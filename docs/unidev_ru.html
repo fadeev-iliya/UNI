@@ -18,56 +18,7 @@
 
     <div class="app-container">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <a href="index_ru.html" class="logo">UNI Docs</a>
-            </div>
-
-            <nav class="sidebar-nav">
-                <ul>
-                    <li><a href="index_ru.html">Главная</a></li>
-                    <li><a href="getting-started_ru.html">Начало работы</a></li>
-                </ul>
-
-                <div class="sidebar-section-title">Справочник</div>
-                <ul>
-                    <li>
-                        <a href="unibase_ru.html">UniBase</a>
-                        <ul class="sidebar-subnav">
-                            <li><a href="unibase_ru.html#constants">Константы</a></li>
-                            <li><a href="unibase_ru.html#initialization">Инициализация</a></li>
-                            <li><a href="unibase_ru.html#motor-control">Управление моторами</a></li>
-                            <li><a href="unibase_ru.html#movement">Движение</a></li>
-                            <li><a href="unibase_ru.html#odometry">Одометрия</a></li>
-                            <li><a href="unibase_ru.html#display">Дисплей</a></li>
-                        </ul>
-                    </li>
-                    <li>
-                        <a href="unidev_ru.html" class="active">UniDev</a>
-
-                        <ul class="sidebar-subnav">
-                            <li><a href="unidev_ru.html#constants">Определения портов</a></li>
-                            <li><a href="unidev_ru.html#dev-init">Инициализация</a></li>
-                            <li><a href="unidev_ru.html#sensors">Датчики</a></li>
-                            <li><a href="unidev_ru.html#inputs">Входы</a></li>
-                            <li><a href="unidev_ru.html#light-ring-basic">Световое кольцо (Баз.)</a></li>
-                            <li><a href="unidev_ru.html#light-ring-effects">Световое кольцо (Эфф.)</a></li>
-                        </ul>
-                    </li>
-                </ul>
-                <div class="sidebar-section-title">Руководства</div>
-                <ul>
-                    <li>
-                        <a href="examples_ru.html">Примеры</a>
-                        <ul class="sidebar-subnav">
-                            <li><a href="examples_ru.html#basic">Базовая иниц.</a></li>
-                            <li><a href="examples_ru.html#distance">Датчики расстояния</a></li>
-                            <li><a href="examples_ru.html#line">Датчик линии</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </nav>
-        </aside>
+        <aside class="sidebar"></aside>
 
         <!-- Main Content -->
         <main class="main-content">
@@ -100,58 +51,121 @@
                     периферией.</p>
 
                 <h2 id="constants">Определения портов</h2>
-                <p>Предопределенные константы для подключения модулей к правильным портам.</p>
-                <table class="constants-table">
-                    <thead>
-                        <tr>
-                            <th>Константа</th>
-                            <th>GPIO Пин</th>
-                            <th>Использование</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><code>P1</code></td>
-                            <td>12</td>
-                            <td>Красный сигнал светофора</td>
-                        </tr>
-                        <tr>
-                            <td><code>P2</code></td>
-                            <td>13</td>
-                            <td>Желтый сигнал светофора</td>
-                        </tr>
-                        <tr>
-                            <td><code>P3</code></td>
-                            <td>14</td>
-                            <td>Зеленый сигнал светофора / Боковой ультразвук Trig</td>
-                        </tr>
-                        <tr>
-                            <td><code>P4</code></td>
-                            <td>15</td>
-                            <td>Боковой ультразвук Echo</td>
-                        </tr>
-                        <tr>
-                            <td><code>P5</code></td>
-                            <td>17</td>
-                            <td>Кнопка</td>
-                        </tr>
-                        <tr>
-                            <td><code>P6</code></td>
-                            <td>16</td>
-                            <td>Передний ультразвук Trig</td>
-                        </tr>
-                        <tr>
-                            <td><code>P7</code></td>
-                            <td>32</td>
-                            <td>Передний ультразвук Echo</td>
-                        </tr>
-                        <tr>
-                            <td><code>P8</code></td>
-                            <td>23</td>
-                            <td>Светодиодное кольцо</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <p>Значки у каждого порта показывают доступные возможности: аналоговый вход
+                    (<strong>ADC</strong>), цифровой ввод/вывод (<strong>DIG</strong>) и сервопривод/ШИМ
+                    (<strong>PWM</strong>). Ниже — назначение по умолчанию.</p>
+                <div class="port-list">
+                    <div class="port-item">
+                        <div class="port-head">
+                            <span class="port-name">P1</span>
+                            <span class="port-gpio">GPIO 12</span>
+                            <span class="port-caps">
+                                <span class="cap-badge" title="ADC2">ADC</span>
+                                <span class="cap-badge">DIG</span>
+                                <span class="cap-badge">PWM</span>
+                            </span>
+                        </div>
+                        <div class="port-usage">Красный сигнал светофора</div>
+                    </div>
+                    <div class="port-item">
+                        <div class="port-head">
+                            <span class="port-name">P2</span>
+                            <span class="port-gpio">GPIO 13</span>
+                            <span class="port-caps">
+                                <span class="cap-badge" title="ADC2">ADC</span>
+                                <span class="cap-badge">DIG</span>
+                                <span class="cap-badge">PWM</span>
+                            </span>
+                        </div>
+                        <div class="port-usage">Желтый сигнал светофора</div>
+                    </div>
+                    <div class="port-item">
+                        <div class="port-head">
+                            <span class="port-name">P3</span>
+                            <span class="port-gpio">GPIO 14</span>
+                            <span class="port-caps">
+                                <span class="cap-badge" title="ADC2">ADC</span>
+                                <span class="cap-badge">DIG</span>
+                                <span class="cap-badge">PWM</span>
+                            </span>
+                        </div>
+                        <div class="port-usage">Зеленый сигнал светофора / Боковой ультразвук Trig</div>
+                    </div>
+                    <div class="port-item">
+                        <div class="port-head">
+                            <span class="port-name">P4</span>
+                            <span class="port-gpio">GPIO 15</span>
+                            <span class="port-caps">
+                                <span class="cap-badge" title="ADC2">ADC</span>
+                                <span class="cap-badge">DIG</span>
+                                <span class="cap-badge">PWM</span>
+                            </span>
+                        </div>
+                        <div class="port-usage">Боковой ультразвук Echo</div>
+                    </div>
+                    <div class="port-item">
+                        <div class="port-head">
+                            <span class="port-name">P5</span>
+                            <span class="port-gpio">GPIO 17</span>
+                            <span class="port-caps">
+                                <span class="cap-badge off" title="Нет АЦП">ADC</span>
+                                <span class="cap-badge">DIG</span>
+                                <span class="cap-badge">PWM</span>
+                            </span>
+                        </div>
+                        <div class="port-usage">Кнопка</div>
+                    </div>
+                    <div class="port-item">
+                        <div class="port-head">
+                            <span class="port-name">P6</span>
+                            <span class="port-gpio">GPIO 16</span>
+                            <span class="port-caps">
+                                <span class="cap-badge off" title="Нет АЦП">ADC</span>
+                                <span class="cap-badge">DIG</span>
+                                <span class="cap-badge">PWM</span>
+                            </span>
+                        </div>
+                        <div class="port-usage">Передний ультразвук Trig</div>
+                    </div>
+                    <div class="port-item">
+                        <div class="port-head">
+                            <span class="port-name">P7</span>
+                            <span class="port-gpio">GPIO 32</span>
+                            <span class="port-caps">
+                                <span class="cap-badge" title="ADC1">ADC</span>
+                                <span class="cap-badge">DIG</span>
+                                <span class="cap-badge">PWM</span>
+                            </span>
+                        </div>
+                        <div class="port-usage">Передний ультразвук Echo</div>
+                    </div>
+                    <div class="port-item">
+                        <div class="port-head">
+                            <span class="port-name">P8</span>
+                            <span class="port-gpio">GPIO 23</span>
+                            <span class="port-caps">
+                                <span class="cap-badge off" title="Нет АЦП">ADC</span>
+                                <span class="cap-badge">DIG</span>
+                                <span class="cap-badge off" title="Занят кольцом">PWM</span>
+                            </span>
+                        </div>
+                        <div class="port-usage">Светодиодное кольцо (занято)</div>
+                    </div>
+                </div>
+                <p style="margin-top: 1rem;"><strong>Кратко:</strong></p>
+                <ul>
+                    <li><strong>Аналоговые датчики</strong> (<code>analogSensor</code>,
+                        <code>lineSensor</code>): только <strong>P1–P4</strong> и <strong>P7</strong>.
+                        На P5, P6, P8 АЦП нет — чтение вернет мусор.</li>
+                    <li><strong>Цифровой ввод/вывод</strong> (<code>digitalSensor</code>, кнопка):
+                        <strong>любой</strong> порт P1–P8.</li>
+                    <li><strong>Серво / ШИМ</strong> (<code>servo</code>): <strong>P1–P7</strong>.
+                        P8 технически умеет ШИМ, но занят светодиодным кольцом — использовать не стоит.</li>
+                    <li><strong>P7</strong> — самый универсальный порт: единственный аналоговый на ADC1
+                        (не конфликтует с Wi-Fi), без особенностей при загрузке.</li>
+                </ul>
+                <p>Подробнее об аппаратных нюансах отдельных пинов (strapping-пины, конфликт ADC2 с Wi-Fi)
+                    см. страницу <a href="limitations_ru.html">Ограничения</a>.</p>
 
                 <h2 id="dev-init">Инициализация</h2>
 
@@ -330,6 +344,71 @@ module.waitButton(P5);</code></pre>
                         <pre><code>if (module.getButtonState(P5)) {
     Serial.println("Button Pressed!");
 }</code></pre>
+                    </div>
+                </div>
+
+                <h2 id="servo">Сервопривод</h2>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">servo</span>
+                            <span class="api-signature">void servo(int port, int angle)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Устанавливает угол сервопривода, подключённого к указанному порту.</p>
+                        <h4>Параметры</h4>
+                        <ul>
+                            <li><code>port</code>: Порт, к которому подключён сервопривод (например, <code>P1</code>).</li>
+                            <li><code>angle</code>: Угол поворота в градусах (0–180).</li>
+                        </ul>
+                        <h4>Пример</h4>
+                        <pre><code>module.servo(P3, 0);   // Начальное положение
+module.servo(P3, 90);  // Среднее положение
+module.servo(P3, 180); // Конечное положение</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">servoAttach</span>
+                            <span class="api-signature">void servoAttach(int port)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Подключает сервопривод к порту и резервирует PWM-канал без задания угла. Опциональный вызов — <code>servo()</code> подключает автоматически при первом обращении. Используется, когда нужно занять канал заранее.</p>
+                        <h4>Параметры</h4>
+                        <ul>
+                            <li><code>port</code>: Порт, к которому подключён сервопривод (например, <code>P3</code>).</li>
+                        </ul>
+                        <h4>Пример</h4>
+                        <pre><code>module.servoAttach(P3); // Резервируем PWM-канал заранее
+module.servo(P3, 90);   // Затем используем</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">servoDetach</span>
+                            <span class="api-signature">void servoDetach(int port)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Отключает сервопривод: PWM-импульсы прекращаются, привод расслабляется и не держит нагрузку. Используется для защиты от поломки, когда механизм упирается или удерживает груз. Следующий вызов <code>servo()</code> снова включит его автоматически.</p>
+                        <h4>Параметры</h4>
+                        <ul>
+                            <li><code>port</code>: Порт, к которому подключён сервопривод (например, <code>P3</code>).</li>
+                        </ul>
+                        <h4>Пример</h4>
+                        <pre><code>module.servo(P3, 90);    // Устанавливаем угол
+delay(1000);
+module.servoDetach(P3);  // Отключаем — привод обмякает</code></pre>
                     </div>
                 </div>
 
@@ -622,6 +701,7 @@ module.pixelsRotating(255, 0, 0, 2000, 5, 3);</code></pre>
         </main>
     </div>
 
+    <script src="nav.js"></script>
     <script src="script.js"></script>
 </body>
 

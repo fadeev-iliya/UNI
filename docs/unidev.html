@@ -18,57 +18,7 @@
 
     <div class="app-container">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <a href="index.html" class="logo">UNI Docs</a>
-            </div>
-
-            <nav class="sidebar-nav">
-                <ul>
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="getting-started.html">Getting Started</a></li>
-                </ul>
-
-                <div class="sidebar-section-title">Reference</div>
-                <ul>
-                    <li>
-                        <a href="unibase.html">UniBase</a>
-
-                        <ul class="sidebar-subnav">
-                            <li><a href="unibase.html#constants">Constants</a></li>
-                            <li><a href="unibase.html#initialization">Initialization</a></li>
-                            <li><a href="unibase.html#motor-control">Motor Control</a></li>
-                            <li><a href="unibase.html#movement">Movement</a></li>
-                            <li><a href="unibase.html#odometry">Odometry</a></li>
-                            <li><a href="unibase.html#display">Display</a></li>
-                        </ul>
-                    </li>
-                    <li>
-                        <a href="unidev.html" class="active">UniDev</a>
-
-                        <ul class="sidebar-subnav">
-                            <li><a href="unidev.html#constants">Port Definitions</a></li>
-                            <li><a href="unidev.html#dev-init">Initialization</a></li>
-                            <li><a href="unidev.html#sensors">Sensors</a></li>
-                            <li><a href="unidev.html#inputs">Inputs</a></li>
-                            <li><a href="unidev.html#light-ring-basic">Light Ring (Basic)</a></li>
-                            <li><a href="unidev.html#light-ring-effects">Light Ring (Effects)</a></li>
-                        </ul>
-                    </li>
-                </ul>
-                <div class="sidebar-section-title">Guides</div>
-                <ul>
-                    <li>
-                        <a href="examples.html">Examples</a>
-                        <ul class="sidebar-subnav">
-                            <li><a href="examples.html#basic">Basic Init</a></li>
-                            <li><a href="examples.html#distance">Distance Sensors</a></li>
-                            <li><a href="examples.html#line">Line Sensor</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </nav>
-        </aside>
+        <aside class="sidebar"></aside>
 
         <!-- Main Content -->
         <main class="main-content">
@@ -100,58 +50,121 @@
                 <p class="lead">Class for controlling sensors, addressable LEDs (Light Ring), and other peripherals.</p>
 
                 <h2 id="constants">Port Definitions</h2>
-                <p>Pre-defined constants for connecting modules to correct ports.</p>
-                <table class="constants-table">
-                    <thead>
-                        <tr>
-                            <th>Constant</th>
-                            <th>GPIO Pin</th>
-                            <th>Usage</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><code>P1</code></td>
-                            <td>12</td>
-                            <td>Traffic light red</td>
-                        </tr>
-                        <tr>
-                            <td><code>P2</code></td>
-                            <td>13</td>
-                            <td>Traffic light yellow</td>
-                        </tr>
-                        <tr>
-                            <td><code>P3</code></td>
-                            <td>14</td>
-                            <td>Traffic light green / Side Trig</td>
-                        </tr>
-                        <tr>
-                            <td><code>P4</code></td>
-                            <td>15</td>
-                            <td>Side ultrasonic Echo</td>
-                        </tr>
-                        <tr>
-                            <td><code>P5</code></td>
-                            <td>17</td>
-                            <td>Button</td>
-                        </tr>
-                        <tr>
-                            <td><code>P6</code></td>
-                            <td>16</td>
-                            <td>Front ultrasonic Trig</td>
-                        </tr>
-                        <tr>
-                            <td><code>P7</code></td>
-                            <td>32</td>
-                            <td>Front ultrasonic Echo</td>
-                        </tr>
-                        <tr>
-                            <td><code>P8</code></td>
-                            <td>23</td>
-                            <td>Light Ring</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <p>The badges on each port show its available capabilities: analog input
+                    (<strong>ADC</strong>), digital I/O (<strong>DIG</strong>), and servo/PWM
+                    (<strong>PWM</strong>). Below is the default usage.</p>
+                <div class="port-list">
+                    <div class="port-item">
+                        <div class="port-head">
+                            <span class="port-name">P1</span>
+                            <span class="port-gpio">GPIO 12</span>
+                            <span class="port-caps">
+                                <span class="cap-badge" title="ADC2">ADC</span>
+                                <span class="cap-badge">DIG</span>
+                                <span class="cap-badge">PWM</span>
+                            </span>
+                        </div>
+                        <div class="port-usage">Traffic light red</div>
+                    </div>
+                    <div class="port-item">
+                        <div class="port-head">
+                            <span class="port-name">P2</span>
+                            <span class="port-gpio">GPIO 13</span>
+                            <span class="port-caps">
+                                <span class="cap-badge" title="ADC2">ADC</span>
+                                <span class="cap-badge">DIG</span>
+                                <span class="cap-badge">PWM</span>
+                            </span>
+                        </div>
+                        <div class="port-usage">Traffic light yellow</div>
+                    </div>
+                    <div class="port-item">
+                        <div class="port-head">
+                            <span class="port-name">P3</span>
+                            <span class="port-gpio">GPIO 14</span>
+                            <span class="port-caps">
+                                <span class="cap-badge" title="ADC2">ADC</span>
+                                <span class="cap-badge">DIG</span>
+                                <span class="cap-badge">PWM</span>
+                            </span>
+                        </div>
+                        <div class="port-usage">Traffic light green / Side ultrasonic Trig</div>
+                    </div>
+                    <div class="port-item">
+                        <div class="port-head">
+                            <span class="port-name">P4</span>
+                            <span class="port-gpio">GPIO 15</span>
+                            <span class="port-caps">
+                                <span class="cap-badge" title="ADC2">ADC</span>
+                                <span class="cap-badge">DIG</span>
+                                <span class="cap-badge">PWM</span>
+                            </span>
+                        </div>
+                        <div class="port-usage">Side ultrasonic Echo</div>
+                    </div>
+                    <div class="port-item">
+                        <div class="port-head">
+                            <span class="port-name">P5</span>
+                            <span class="port-gpio">GPIO 17</span>
+                            <span class="port-caps">
+                                <span class="cap-badge off" title="No ADC">ADC</span>
+                                <span class="cap-badge">DIG</span>
+                                <span class="cap-badge">PWM</span>
+                            </span>
+                        </div>
+                        <div class="port-usage">Button</div>
+                    </div>
+                    <div class="port-item">
+                        <div class="port-head">
+                            <span class="port-name">P6</span>
+                            <span class="port-gpio">GPIO 16</span>
+                            <span class="port-caps">
+                                <span class="cap-badge off" title="No ADC">ADC</span>
+                                <span class="cap-badge">DIG</span>
+                                <span class="cap-badge">PWM</span>
+                            </span>
+                        </div>
+                        <div class="port-usage">Front ultrasonic Trig</div>
+                    </div>
+                    <div class="port-item">
+                        <div class="port-head">
+                            <span class="port-name">P7</span>
+                            <span class="port-gpio">GPIO 32</span>
+                            <span class="port-caps">
+                                <span class="cap-badge" title="ADC1">ADC</span>
+                                <span class="cap-badge">DIG</span>
+                                <span class="cap-badge">PWM</span>
+                            </span>
+                        </div>
+                        <div class="port-usage">Front ultrasonic Echo</div>
+                    </div>
+                    <div class="port-item">
+                        <div class="port-head">
+                            <span class="port-name">P8</span>
+                            <span class="port-gpio">GPIO 23</span>
+                            <span class="port-caps">
+                                <span class="cap-badge off" title="No ADC">ADC</span>
+                                <span class="cap-badge">DIG</span>
+                                <span class="cap-badge off" title="Used by ring">PWM</span>
+                            </span>
+                        </div>
+                        <div class="port-usage">Light Ring (in use)</div>
+                    </div>
+                </div>
+                <p style="margin-top: 1rem;"><strong>Summary:</strong></p>
+                <ul>
+                    <li><strong>Analog sensors</strong> (<code>analogSensor</code>, <code>lineSensor</code>):
+                        only <strong>P1–P4</strong> and <strong>P7</strong>. P5, P6, P8 have no ADC —
+                        reads return garbage.</li>
+                    <li><strong>Digital I/O</strong> (<code>digitalSensor</code>, button):
+                        <strong>any</strong> port P1–P8.</li>
+                    <li><strong>Servo / PWM</strong> (<code>servo</code>): <strong>P1–P7</strong>.
+                        P8 technically supports PWM but is occupied by the light ring — avoid it.</li>
+                    <li><strong>P7</strong> is the most versatile port: the only analog input on ADC1
+                        (no Wi-Fi conflict), with no boot-time quirks.</li>
+                </ul>
+                <p>For hardware nuances of individual pins (strapping pins, ADC2/Wi-Fi conflict) see the
+                    <a href="limitations.html">Limitations</a> page.</p>
 
                 <h2 id="dev-init">Initialization</h2>
 
@@ -330,6 +343,71 @@ module.waitButton(P5);</code></pre>
                         <pre><code>if (module.getButtonState(P5)) {
     Serial.println("Button Pressed!");
 }</code></pre>
+                    </div>
+                </div>
+
+                <h2 id="servo">Servo</h2>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">servo</span>
+                            <span class="api-signature">void servo(int port, int angle)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Sets the angle of a servo motor connected to the specified port.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>port</code>: The port the servo is connected to (e.g. <code>P1</code>).</li>
+                            <li><code>angle</code>: Target angle in degrees (0–180).</li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>module.servo(P3, 0);   // Home position
+module.servo(P3, 90);  // Centre position
+module.servo(P3, 180); // End position</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">servoAttach</span>
+                            <span class="api-signature">void servoAttach(int port)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Pre-attaches a servo to a port and reserves a PWM channel without setting an angle. Optional — <code>servo()</code> attaches automatically on first call. Useful when you want to claim the channel before the first movement.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>port</code>: The port the servo is connected to (e.g. <code>P3</code>).</li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>module.servoAttach(P3); // Reserve PWM channel early
+module.servo(P3, 90);   // Then use it</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">servoDetach</span>
+                            <span class="api-signature">void servoDetach(int port)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Detaches a servo from its port — PWM pulses stop and the motor goes limp. Use this to protect the servo when the mechanism is forced against a stop or carrying a load. The next <code>servo()</code> call re-attaches it automatically.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>port</code>: The port the servo is on (e.g. <code>P3</code>).</li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>module.servo(P3, 90);    // Move to position
+delay(1000);
+module.servoDetach(P3);  // Release — servo goes limp</code></pre>
                     </div>
                 </div>
 
@@ -617,6 +695,7 @@ module.pixelsRotating(255, 0, 0, 2000, 5, 3);</code></pre>
         </main>
     </div>
 
+    <script src="nav.js"></script>
     <script src="script.js"></script>
 </body>
 

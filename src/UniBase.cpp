@@ -1,115 +1,103 @@
 #include "UniBase.h"
-#include "UniDev.h"
 
-UniBase* UniBase::_instance = nullptr;
-
-UniBase::UniBase(String robotName)
-  : _display(nullptr), _displayInitialized(false), _customDisplayMode(false),
+UniBase::UniBase(const char* robotName, UniConfig config)
+  : _cfg(config), _display(nullptr), _displayInitialized(false), _customDisplayMode(false),
     _ledBlinking(false), _ledBlinkInterval(0),
     _batteryPercent(-1), _batteryValid(false),
-    _lEnc(0), _rEnc(0), _lEncOld(0), _rEncOld(0), _encPrevTime(0), _encPrevErr(0), _I(0),
     _xPos(0.0), _yPos(0.0), _theta(0.0), _totalDistance(0.0), _totalAngle(0.0),
-    _targetTheta(0.0), _useTargetTheta(true),
-    _currentCommand("Idle"), _robotName(robotName),
+    _secondCore(nullptr),
+    _moveState(STATE_IDLE), _targetTheta(0.0),
+    _rotateCruiseVel(0.0),
     _encMoveActive(false), _encMovePowerL(0), _encMovePowerR(0),
     _encMoveStartL(0), _encMoveStartR(0),
-    _lastLeftPower(0), _lastRightPower(0),
-    _distPerTickLeft((PI * WHEEL_DIAMETER_MM) / TICKS_PER_REV_LEFT),
-    _distPerTickRight((PI * WHEEL_DIAMETER_MM) / TICKS_PER_REV_RIGHT),
+    _encPrevTime(0), _targetPosL(0), _targetPosR(0), _currentTargetVelL(0), _currentTargetVelR(0), _encPrevErrL(0), _encPrevErrR(0), _IL(0), _IR(0), _lastLeftPower(0), _lastRightPower(0),
     _ctrlSerial(nullptr), _ctrlInitialized(false),
-    _ctrlBufferIndex(0),
-    _cmdQueue(nullptr), _cmdTaskHandle(nullptr),
-    _abortCommand(false)
+    _ctrlBuffer(nullptr), _decodeBuffer(nullptr), _ctrlBufferIndex(0),
+    _begun(false)
 {
-  _instance = this;
-  _display = new Adafruit_SSD1306(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+  _ctrlBuffer = new uint8_t[_cfg.uartBufferSize];
+  _decodeBuffer = new uint8_t[_cfg.uartBufferSize];
+  
+  strncpy(_robotName, robotName, sizeof(_robotName) - 1);
+  _robotName[sizeof(_robotName) - 1] = '\0';
+  
+  strncpy(_currentCommand, "Idle", sizeof(_currentCommand) - 1);
+  _currentCommand[sizeof(_currentCommand) - 1] = '\0';
+  
+  _customDisplayName[0] = '\0';
+  _customDisplayText[0] = '\0';
+
+  _distPerTickLeft = (PI * _cfg.wheelDiameterMM) / _cfg.ticksPerRevLeft;
+  _distPerTickRight = (PI * _cfg.wheelDiameterMM) / _cfg.ticksPerRevRight;
+  
+  _moveSemaphore = xSemaphoreCreateBinary();
+
+  _display = new Adafruit_SSD1306(_cfg.screenWidth, _cfg.screenHeight, &Wire, _cfg.oledReset);
 }
 
 UniBase::~UniBase() {
+  if (_secondCore) vTaskDelete(_secondCore);
   if (_display) delete _display;
+  if (_moveSemaphore) vSemaphoreDelete(_moveSemaphore);
+  if (_ctrlBuffer) delete[] _ctrlBuffer;
+  if (_decodeBuffer) delete[] _decodeBuffer;
+  if (_ctrlSerial) delete _ctrlSerial;
 }
 
 // ============ Initialization ============
 
-void UniBase::begin() {
+void UniBase::begin(const char* robotName) {
+  // Имя можно задать здесь, в конструкторе или нигде (останется стандартное)
+  if (robotName && robotName[0] != '\0') {
+    strncpy(_robotName, robotName, sizeof(_robotName) - 1);
+    _robotName[sizeof(_robotName) - 1] = '\0';
+  }
+
+  if (_begun) return;
+  _begun = true; // ставим до инициализации: методы внутри begin() сами зовут ensureBegun
+
   Serial.begin(115200);
-  
+
   #ifdef DEBUG_MODE
-  Serial.println("\n\nUNI Platform - UniBase & UniDev");
+  Serial.println("\n\nUNI Platform - Industrial Refactoring");
   Serial.print("Robot name: ");
   Serial.println(_robotName);
   #endif
 
-  initMotors();
-  initEncoders();
+  _motors.begin(_cfg.leftMotorA, _cfg.leftMotorB, _cfg.rightMotorA, _cfg.rightMotorB);
+  _encoders.begin(_cfg.leftEncInt, _cfg.leftEncDir, _cfg.rightEncInt, _cfg.rightEncDir);
+  
   initOLED();
   _uartLastRxTime = millis();
   
-  pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, LOW);
-  
-  pinMode(BATTERY_PIN, INPUT);
+  pinMode(_cfg.ledPin, OUTPUT);
+  digitalWrite(_cfg.ledPin, LOW);
+  pinMode(_cfg.batteryPin, INPUT);
   analogReadResolution(12);
   
   initSecondCore();
   getBatteryPower();
   
-  UniDev::staticInit();
-  
   #ifdef DEBUG_MODE
-  Serial.println("All initializations done properly");
   Serial.println("Robot ready");
   #endif
   
-  _currentCommand = "Ready";
-  updateDisplay();
+  setCommandName("Ready");
+  // Дисплей отрисует второе ядро в своем цикле: рисовать отсюда нельзя,
+  // одновременные кадры с двух ядер ломают шину I2C на самом старте
 }
 
-void UniBase::begin(String robotName) {
-  _robotName = robotName;
-  begin();
-}
-
-void UniBase::initMotors() {
-  #ifdef DEBUG_MODE
-  Serial.println("Motors initialization");
-  #endif
-  
-  pinMode(LEFT_MOTOR_PIN_A, OUTPUT);
-  pinMode(LEFT_MOTOR_PIN_B, OUTPUT);
-  pinMode(RIGHT_MOTOR_PIN_A, OUTPUT);
-  pinMode(RIGHT_MOTOR_PIN_B, OUTPUT);
-  
-  analogWrite(LEFT_MOTOR_PIN_A, 0);
-  analogWrite(LEFT_MOTOR_PIN_B, 0);
-  analogWrite(RIGHT_MOTOR_PIN_A, 0);
-  analogWrite(RIGHT_MOTOR_PIN_B, 0);
-  
-}
-
-void UniBase::initEncoders() {
-  #ifdef DEBUG_MODE
-  Serial.println("Encoders initialization");
-  #endif
-  
-  pinMode(LEFT_ENC_INTERRUPT, INPUT);
-  pinMode(LEFT_ENC_DIRECTION, INPUT);
-  pinMode(RIGHT_ENC_INTERRUPT, INPUT);
-  pinMode(RIGHT_ENC_DIRECTION, INPUT);
-  
-  attachInterrupt(LEFT_ENC_INTERRUPT, leftEncISR, RISING);
-  attachInterrupt(RIGHT_ENC_INTERRUPT, rightEncISR, RISING);
+void UniBase::ensureBegun() {
+  if (!_begun) begin();
 }
 
 void UniBase::initOLED() {
-  Wire.begin(OLED_SDA, OLED_SCL);
-  
-  if(!_display->begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+  Wire.begin(_cfg.oledSda, _cfg.oledScl);
+  if(!_display->begin(SSD1306_SWITCHCAPVCC, _cfg.screenAddress)) {
     Serial.println(F("SSD1306 allocation failed - continuing without display"));
     _displayInitialized = false;
     return;
   }
-  
   _displayInitialized = true;
   _display->clearDisplay();
   _display->setTextSize(1);
@@ -122,15 +110,12 @@ void UniBase::initOLED() {
 }
 
 void UniBase::initSecondCore() {
-  #ifdef DEBUG_MODE
-  Serial.println("Second core initialization");
-  #endif
-  
+  // Передаем this как pvParameters
   xTaskCreatePinnedToCore(
     secondCoreLoop,
     "Odometry",
     10000,
-    NULL,
+    this,
     1,
     &_secondCore,
     0);
@@ -139,162 +124,263 @@ void UniBase::initSecondCore() {
 
 // ============ Internal methods ============
 
-void UniBase::leftMotor(int power) {
-  power = constrain(power, -100, 100);
-  
-  if (power > 0) {
-    analogWrite(LEFT_MOTOR_PIN_A, map(abs(power), 0, 100, 0, 255));
-    analogWrite(LEFT_MOTOR_PIN_B, 0);
-  }
-  else if (power < 0) {
-    analogWrite(LEFT_MOTOR_PIN_A, 0);
-    analogWrite(LEFT_MOTOR_PIN_B, map(abs(power), 0, 100, 0, 255));
-  }
-  else {
-    digitalWrite(LEFT_MOTOR_PIN_A, 0);
-    digitalWrite(LEFT_MOTOR_PIN_B, 0);
-  }
-}
-
-void UniBase::rightMotor(int power) {
-  power = constrain(power, -100, 100);
-  
-  if (power < 0) {
-    analogWrite(RIGHT_MOTOR_PIN_A, map(abs(power), 0, 100, 0, 255));
-    analogWrite(RIGHT_MOTOR_PIN_B, 0);
-  }
-  else if (power > 0) {
-    analogWrite(RIGHT_MOTOR_PIN_A, 0);
-    analogWrite(RIGHT_MOTOR_PIN_B, map(abs(power), 0, 100, 0, 255));
-  }
-  else {
-    digitalWrite(RIGHT_MOTOR_PIN_A, 0);
-    digitalWrite(RIGHT_MOTOR_PIN_B, 0);
-  }
-}
-
 void UniBase::updateOdometry() {
-  noInterrupts();
-  long lEncI = _lEnc;
-  long rEncI = _rEnc;
-  interrupts();
+  _encoders.update(); 
   
-  float SL = (lEncI - _lEncOld) * _distPerTickLeft;
-  float SR = (rEncI - _rEncOld) * _distPerTickRight;
+  long lEncI = _encoders.getLeftTicks();
+  long rEncI = _encoders.getRightTicks();
   
-  _lEncOld = lEncI;
-  _rEncOld = rEncI;
+  float SL = (lEncI - _lEncOdomOld) * _distPerTickLeft;
+  float SR = (rEncI - _rEncOdomOld) * _distPerTickRight;
   
-  float deltaDistance = (abs(SL) + abs(SR)) / 2;
+  _lEncOdomOld = lEncI;
+  _rEncOdomOld = rEncI;
+  
+  float deltaDistance = (abs(SL) + abs(SR)) / 2.0;
+  float deltaAngle = (SL - SR) / _cfg.trackLengthMM;
+  
+  // Вход в критическую секцию: защищаем от Data Tearing
+  portENTER_CRITICAL(&_odomMux);
+  
   _totalDistance += deltaDistance;
-  
-  float deltaAngle = (SL - SR) / TRACK_LENGTH_MM;
   _totalAngle += deltaAngle;
   
-  _xPos += ((SR + SL) / 2) * cos(_theta + ((SL - SR) / (2 * TRACK_LENGTH_MM)));
-  _yPos += ((SR + SL) / 2) * sin(_theta + ((SL - SR) / (2 * TRACK_LENGTH_MM)));
+  _xPos += ((SR + SL) / 2.0) * cos(_theta + ((SL - SR) / (2.0 * _cfg.trackLengthMM)));
+  _yPos += ((SR + SL) / 2.0) * sin(_theta + ((SL - SR) / (2.0 * _cfg.trackLengthMM)));
   _theta += deltaAngle;
   
-  if (_theta > PI)
-    _theta -= 2 * PI;
-  else if (_theta < -PI)
-    _theta += 2 * PI;
+  if (_theta > PI) _theta -= 2 * PI;
+  else if (_theta < -PI) _theta += 2 * PI;
+  
+  portEXIT_CRITICAL(&_odomMux);
+}
+
+void UniBase::encMove(float pL, float pR, long startLEnc, long startREnc) {
+  long funcLEnc = _encoders.getLeftTicks() - startLEnc;
+  long funcREnc = _encoders.getRightTicks() - startREnc;
+  
+  unsigned long nowTime = micros();
+  double dt = (nowTime - _encPrevTime) / 1000000.0;
+  if (dt <= 0.0) dt = 0.0001;
+  _encPrevTime = nowTime;
+  
+  float rawTargetVelL = (pL / 100.0f) * _cfg.maxTicksPerSec;
+  float rawTargetVelR = (pR / 100.0f) * _cfg.maxTicksPerSec;
+  
+  bool isRotation = (pL * pR < 0);
+
+  // Лимит разгона чуть выше замедления внешнего профиля, чтобы сервопривод
+  // успевал отслеживать тормозную кривую без накопления отставания
+  float accL_limit = isRotation ? _tuning.rotateAccel * 1.15f : _tuning.moveAccel * 1.15f;
+  float accR_limit = accL_limit;
+
+  // Adaptive physics: smooth the primary axis, rigidify the secondary axis
+  float accL = (abs(rawTargetVelL) > abs(_currentTargetVelL) && rawTargetVelL * _currentTargetVelL >= 0) ? accL_limit : 6000.0f;
+  float accR = (abs(rawTargetVelR) > abs(_currentTargetVelR) && rawTargetVelR * _currentTargetVelR >= 0) ? accR_limit : 6000.0f;
+  
+  accL *= dt;
+  accR *= dt;
+  
+  if (_currentTargetVelL < rawTargetVelL) _currentTargetVelL = min(_currentTargetVelL + accL, rawTargetVelL);
+  else if (_currentTargetVelL > rawTargetVelL) _currentTargetVelL = max(_currentTargetVelL - accL, rawTargetVelL);
+  
+  if (_currentTargetVelR < rawTargetVelR) _currentTargetVelR = min(_currentTargetVelR + accR, rawTargetVelR);
+  else if (_currentTargetVelR > rawTargetVelR) _currentTargetVelR = max(_currentTargetVelR - accR, rawTargetVelR);
+  
+  _targetPosL += _currentTargetVelL * dt;
+  _targetPosR += _currentTargetVelR * dt;
+  
+  float errL = _targetPosL - funcLEnc;
+  float errR = _targetPosR - funcREnc;
+  
+  // Kinematic Decomposition
+  float eBase = (errL + errR) / 2.0f;
+  float eTurn = (errL - errR) / 2.0f;
+  
+  // Короткие поводки: позицию ведет внешний контур по одометрии, внутреннему
+  // длинная память не нужна. Большой поводок копил "долг" на длинных дистанциях
+  // (когда реальная скорость ниже заданной) и развязывал его в конце рывком
+  float baseLeash = isRotation ? 30.0f : 40.0f;
+  float turnLeash = isRotation ? 40.0f : 30.0f;
+  
+  // Anti-windup / Catch-up prevention for Translation (Base)
+  float excessBase = 0;
+  if (eBase > baseLeash) excessBase = eBase - baseLeash;
+  else if (eBase < -baseLeash) excessBase = eBase + baseLeash;
+  
+  if (excessBase != 0) {
+      _targetPosL -= excessBase;
+      _targetPosR -= excessBase;
+      errL -= excessBase;
+      errR -= excessBase;
+      eBase -= excessBase;
+  }
+  
+  // Anti-windup for Rotation (Turn)
+  float excessTurn = 0;
+  if (eTurn > turnLeash) excessTurn = eTurn - turnLeash;
+  else if (eTurn < -turnLeash) excessTurn = eTurn + turnLeash;
+  
+  if (excessTurn != 0) {
+      _targetPosL -= excessTurn;
+      _targetPosR += excessTurn;
+      errL -= excessTurn;
+      errR += excessTurn;
+      eTurn -= excessTurn;
+  }
+  
+  // Soften base braking
+  float activeBaseErr = eBase;
+  float expectedBaseVel = (_currentTargetVelL + _currentTargetVelR) / 2.0f;
+  if (eBase * expectedBaseVel < 0) activeBaseErr *= 0.2f;
+  
+  // Base Translation PID
+  float P_Base = _tuning.pGain * (isRotation ? 2.0f : 0.8f);
+  float I_Base = _tuning.iGain * (isRotation ? 2.0f : 5.0f);
+  
+  float PL_Base = P_Base * activeBaseErr;
+  _IL = _IL + I_Base * eBase * dt;
+  _IL = constrain(_IL, -30.0f, 30.0f);
+  
+  float errBaseDiff = (eBase - _encPrevErrL) / dt;
+  float DL_Base = (_tuning.dGain + 0.05f) * errBaseDiff;
+  float U_Base = PL_Base + _IL + DL_Base;
+  
+  // Turn Rotation PID (Cross-Coupling)
+  float P_Turn = _tuning.pGain * (isRotation ? 0.8f : 2.0f);
+  float I_Turn = _tuning.iGain * (isRotation ? 5.0f : 2.0f);
+  
+  float PL_Turn = P_Turn * eTurn;
+  _IR = _IR + I_Turn * eTurn * dt;
+  _IR = constrain(_IR, -30.0f, 30.0f);
+  
+  float errTurnDiff = (eTurn - _encPrevErrR) / dt;
+  float DL_Turn = (_tuning.dGain + 0.05f) * errTurnDiff;
+  float U_Turn = PL_Turn + _IR + DL_Turn;
+  
+  _encPrevErrL = eBase;
+  _encPrevErrR = eTurn;
+  
+  float currentPowerL = 0;
+  if (abs(_currentTargetVelL) > 0.1f) {
+      float signL = (_currentTargetVelL > 0) ? 1.0f : -1.0f;
+      float velRatioL = abs(_currentTargetVelL) / _cfg.maxTicksPerSec;
+      currentPowerL = signL * (_tuning.minPower + velRatioL * (100.0f - _tuning.minPower));
+  }
+  
+  float currentPowerR = 0;
+    if (abs(_currentTargetVelR) > 0.1f) {
+        float signR = (_currentTargetVelR > 0) ? 1.0f : -1.0f;
+        float velRatioR = abs(_currentTargetVelR) / _cfg.maxTicksPerSec;
+        currentPowerR = signR * (_tuning.minPower + velRatioR * (100.0f - _tuning.minPower));
+    }
+    
+    float targetLeftPower = currentPowerL + U_Base + U_Turn;
+    float targetRightPower = currentPowerR + U_Base - U_Turn;
+    
+    const float maxPowerChange = 10.0;
+    float leftPowerChange = constrain(targetLeftPower - _lastLeftPower, -maxPowerChange, maxPowerChange);
+    float rightPowerChange = constrain(targetRightPower - _lastRightPower, -maxPowerChange, maxPowerChange);
+    
+    _lastLeftPower = constrain(_lastLeftPower + leftPowerChange, -100.0, 100.0);
+    _lastRightPower = constrain(_lastRightPower + rightPowerChange, -100.0, 100.0);
+    
+    _motors.setPower(_lastLeftPower, _lastRightPower);
+}
+
+void UniBase::startEncMoveOnSecondCore(float powerL, float powerR) {
+  _cmdSeq++; // новая команда: устаревший stop() не должен гасить ее своим хвостом
+  _encMovePowerL = powerL;
+  _encMovePowerR = powerR;
+  _encMoveStartL = _encoders.getLeftTicks();
+  _encMoveStartR = _encoders.getRightTicks();
+  _encPrevTime = micros();
+  _targetPosL = 0;
+  _targetPosR = 0;
+  _currentTargetVelL = 0;
+  _currentTargetVelR = 0;
+  _IL = 0;
+  _IR = 0;
+  _encPrevErrL = 0;
+  _encPrevErrR = 0;
+  _lastLeftPower = 0;
+  _lastRightPower = 0;
+  _encMoveActive = true;
+}
+
+// ============ Display ============
+void UniBase::setCommandName(const char* name) {
+  portENTER_CRITICAL(&_dispMux);
+  strncpy(_currentCommand, name, sizeof(_currentCommand)-1);
+  _currentCommand[sizeof(_currentCommand)-1] = '\0';
+  portEXIT_CRITICAL(&_dispMux);
 }
 
 void UniBase::updateDisplay() {
-  if (!_displayInitialized) {
-    return;
-  }
-  
+  if (!_displayInitialized) return;
+
+  // Снимаем копии строк под блокировкой: их пишут с другого ядра
+  char cmdBuf[sizeof(_currentCommand)];
+  char nameBuf[sizeof(_customDisplayName)];
+  char textBuf[sizeof(_customDisplayText)];
+  portENTER_CRITICAL(&_dispMux);
+  bool customMode = _customDisplayMode;
+  memcpy(cmdBuf, _currentCommand, sizeof(cmdBuf));
+  memcpy(nameBuf, _customDisplayName, sizeof(nameBuf));
+  memcpy(textBuf, _customDisplayText, sizeof(textBuf));
+  portEXIT_CRITICAL(&_dispMux);
+  cmdBuf[sizeof(cmdBuf)-1] = '\0';
+  nameBuf[sizeof(nameBuf)-1] = '\0';
+  textBuf[sizeof(textBuf)-1] = '\0';
+
   _display->clearDisplay();
-  
-  if (_customDisplayMode) {
-    // Show name at top if set, otherwise no title
-    if (_customDisplayName.length() > 0) {
-      _display->setTextSize(2);
-      String displayName = _customDisplayName;
-      if (displayName.length() > 10) displayName = displayName.substring(0, 10);
-      int16_t x1, y1;
-      uint16_t w, h;
-      _display->getTextBounds(displayName.c_str(), 0, 0, &x1, &y1, &w, &h);
-      _display->setCursor((SCREEN_WIDTH - w) / 2, 0);
-      _display->print(displayName);
-      
-      // Value centered below
-      _display->setTextSize(2);
-      String displayText = _customDisplayText;
-      if (displayText.length() > 10) displayText = displayText.substring(0, 10);
-      _display->getTextBounds(displayText.c_str(), 0, 0, &x1, &y1, &w, &h);
-      _display->setCursor((SCREEN_WIDTH - w) / 2, (SCREEN_HEIGHT + 10 - h) / 2);
-      _display->print(displayText);
+
+  if (customMode) {
+    _display->setTextSize(2);
+    int16_t x1, y1; uint16_t w, h;
+
+    if (strlen(nameBuf) > 0) {
+      _display->getTextBounds(nameBuf, 0, 0, &x1, &y1, &w, &h);
+      _display->setCursor((_cfg.screenWidth - w) / 2, 0);
+      _display->print(nameBuf);
+
+      _display->getTextBounds(textBuf, 0, 0, &x1, &y1, &w, &h);
+      _display->setCursor((_cfg.screenWidth - w) / 2, (_cfg.screenHeight + 10 - h) / 2);
+      _display->print(textBuf);
     } else {
-      // No name — center value on screen
-      _display->setTextSize(2);
-      String displayText = _customDisplayText;
-      if (displayText.length() > 10) displayText = displayText.substring(0, 10);
-      int16_t x1, y1;
-      uint16_t w, h;
-      _display->getTextBounds(displayText.c_str(), 0, 0, &x1, &y1, &w, &h);
-      _display->setCursor((SCREEN_WIDTH - w) / 2, (SCREEN_HEIGHT - h) / 2);
-      _display->print(displayText);
+      _display->getTextBounds(textBuf, 0, 0, &x1, &y1, &w, &h);
+      _display->setCursor((_cfg.screenWidth - w) / 2, (_cfg.screenHeight - h) / 2);
+      _display->print(textBuf);
     }
   } else {
     _display->setTextSize(2);
-    
-    String displayName = _robotName;
-    if (displayName.length() > 10) {
-      displayName = displayName.substring(0, 10);
-    }
-    
-    int16_t x1, y1;
-    uint16_t w, h;
-    _display->getTextBounds(displayName.c_str(), 0, 0, &x1, &y1, &w, &h);
-    _display->setCursor((SCREEN_WIDTH - w) / 2, 0);
-    _display->print(displayName);
+    int16_t x1, y1; uint16_t w, h;
+    _display->getTextBounds(_robotName, 0, 0, &x1, &y1, &w, &h);
+    _display->setCursor((_cfg.screenWidth - w) / 2, 0);
+    _display->print(_robotName);
+
+    portENTER_CRITICAL(&_odomMux);
+    float dispX = _xPos, dispY = _yPos, dispT = _theta;
+    portEXIT_CRITICAL(&_odomMux);
 
     _display->setTextSize(1);
-    
-    _display->setCursor(0, 18);
-    _display->print("X: ");
-    _display->print(_xPos, 0);
-    _display->print(" mm");
-    
-    _display->setCursor(70, 18);
-    _display->print("Y: ");
-    _display->print(_yPos, 0);
-    _display->print(" mm");
-    
-    _display->setCursor(0, 30);
-    _display->print("Angle: ");
-    _display->print(_theta * 180 / PI, 0);
-    _display->print((char)247);
-    
-    
-    _display->setCursor(0, 42);
-    _display->print("L: ");
-    _display->print(_lEnc);
-    
-    _display->setCursor(70, 42);
-    _display->print("R: ");
-    _display->print(_rEnc);
-    
-    _display->setCursor(0, 56);
-    _display->print(_currentCommand);
+    _display->setCursor(0, 18); _display->print("X: "); _display->print(dispX, 0); _display->print(" mm");
+    _display->setCursor(70, 18); _display->print("Y: "); _display->print(dispY, 0); _display->print(" mm");
+    _display->setCursor(0, 30); _display->print("Angle: "); _display->print(dispT * 180 / PI, 0); _display->print((char)247);
+    _display->setCursor(0, 42); _display->print("L: "); _display->print(_encoders.getLeftTicks());
+    _display->setCursor(70, 42); _display->print("R: "); _display->print(_encoders.getRightTicks());
+    _display->setCursor(0, 55); _display->print(cmdBuf);
     
     if (_batteryValid && _batteryPercent >= 0) {
-      drawBatteryIcon(104, 54, _batteryPercent);
-      
-      // Show percentage number next to icon
+      drawBatteryIcon(104, 53, _batteryPercent);
       _display->setTextSize(1);
-      String batText = String(_batteryPercent) + "%";
-      int16_t bx1, by1;
-      uint16_t bw, bh;
-      _display->getTextBounds(batText.c_str(), 0, 0, &bx1, &by1, &bw, &bh);
-      _display->setCursor(102 - bw, 56);
-      _display->print(batText);
+      char batBuf[8];
+      snprintf(batBuf, sizeof(batBuf), "%d%%", _batteryPercent);
+      _display->getTextBounds(batBuf, 0, 0, &x1, &y1, &w, &h);
+      _display->setCursor(102 - w, 55);
+      _display->print(batBuf);
     }
   }
-  
   _display->display();
 }
 
@@ -303,1215 +389,856 @@ void UniBase::drawBatteryIcon(int x, int y, int percent) {
   const int batteryHeight = 10;
   const int tipWidth = 2;
   const int tipHeight = 6;
-  
   _display->drawRect(x, y, batteryWidth, batteryHeight, SSD1306_WHITE);
   _display->fillRect(x + batteryWidth, y + (batteryHeight - tipHeight) / 2, tipWidth, tipHeight, SSD1306_WHITE);
-  
   int fillWidth = ((batteryWidth - 4) * percent) / 100;
   if (fillWidth > 0) {
     _display->fillRect(x + 2, y + 2, fillWidth, batteryHeight - 4, SSD1306_WHITE);
   }
 }
 
-void UniBase::encMove(int pL, int pR) {
-  if (pL != 0 && pR != 0) {
-    float ratio = (float)pR / (float)pL;
-    float err = (_lEnc * ratio - _rEnc);
-    
-    leftMotor(pL + err * (pL / abs(pL)) * (pR / abs(pR)));
-    rightMotor(pR - err * (pL / abs(pL)) * (pR / abs(pR)));
-  }
-  else {
-    leftMotor(pL);
-    rightMotor(pR);
-  }
-}
+// ============ ASYNC STATE MACHINE ============
 
-void UniBase::encMove(int pL, int pR, long startLEnc, long startREnc) {
-  long funcLEnc = _lEnc - startLEnc;
-  long funcREnc = _rEnc - startREnc;
-  
-  if (pL != 0 && pR != 0) {
-    float ratio = (float)pR / (float)pL;
-    float err = (funcLEnc * ratio - funcREnc);
-    
-    unsigned long nowTime = micros();
-    double dt = (nowTime - _encPrevTime) / 1000000.0;
-    if (dt == 0) {
-      dt = 0.0001;
+void UniBase::processAsyncMovement() {
+  if (_moveState == STATE_IDLE) return;
+
+  switch (_moveState) {
+    case STATE_MOVE_DIST:
+    case STATE_MOVE_ARC_DIST:
+    {
+      // Внешний контур: остаток дистанции по энкодерам -> заданная скорость.
+      // Тот же замкнутый профиль, что и у поворота: ошибка пересчитывается
+      // каждый цикл, открытых компенсаций торможения нет.
+      float curL = _encoders.getLeftTicks() - _targetStartLEnc;
+      float curR = _encoders.getRightTicks() - _targetStartREnc;
+      float cur = (curL + curR) / 2.0f; // знаковая дистанция центра (тики)
+      float remTicks = (float)_targetDistTicks * _asyncDirection - cur;
+      float absRem = abs(remTicks);
+      float tolTicks = (_tuning.moveTolMM / (_cfg.wheelDiameterMM * PI)) * _cfg.ticksPerRevLeft;
+
+      // Завершаем при входе в допуск ИЛИ при пересечении цели: назад не сдаем,
+      // перелет фиксируется тормозом вместо реверсного "доезда"
+      bool crossed = (remTicks * (float)_asyncDirection) < 0;
+      if (absRem <= tolTicks || crossed || millis() > _targetEndTime) {
+          setCommandName("Ready");
+          stop(HARD); // семафор отдается внутри stop() последним действием
+          return;
+      }
+
+      // Профиль целится в ближний край допуска: скорость обнуляется
+      // ровно на входе в зону цели, тормоз гасит остаток инерции
+      float aimErr = absRem - tolTicks * 0.5f;
+      float v = sqrtf(2.0f * _tuning.moveAccel * aimErr);
+      v = min(v, (_asyncAbsPower / 100.0f) * _cfg.maxTicksPerSec);
+      v = max(v, _tuning.moveMinSpeed);
+
+      float p = (v / _cfg.maxTicksPerSec) * 100.0f * ((remTicks > 0) ? 1.0f : -1.0f);
+      if (_moveState == STATE_MOVE_ARC_DIST) {
+          _encMovePowerL = p * (1.0f + _targetAngleDeg / 90.0f);
+          _encMovePowerR = p * (1.0f - _targetAngleDeg / 90.0f);
+      } else {
+          _encMovePowerL = p;
+          _encMovePowerR = p;
+      }
+      break;
     }
-    
-    float P = 0.5 * err;
-    _I = _I + 0.005 * err * dt;
-    float D = (0.05 * (err - _encPrevErr)) / dt;
-    
-    float U = P + _I + D;
-    
-    _encPrevErr = err;
-    _encPrevTime = nowTime;
-    
-    int targetLeftPower = pL - U * (pL / abs(pL)) * (pR / abs(pR));
-    int targetRightPower = pR + U;
-    
-    const int maxPowerChange = 10;
-    
-    int leftPowerChange = targetLeftPower - _lastLeftPower;
-    int rightPowerChange = targetRightPower - _lastRightPower;
-    
-    leftPowerChange = constrain(leftPowerChange, -maxPowerChange, maxPowerChange);
-    rightPowerChange = constrain(rightPowerChange, -maxPowerChange, maxPowerChange);
-    
-    _lastLeftPower += leftPowerChange;
-    _lastRightPower += rightPowerChange;
-    
-    leftMotor(_lastLeftPower);
-    rightMotor(_lastRightPower);
-  }
-  else {
-    _lastLeftPower = pL;
-    _lastRightPower = pR;
-    leftMotor(pL);
-    rightMotor(pR);
+
+    case STATE_MOVE_TIME:
+    case STATE_MOVE_ARC_TIME:
+      if (millis() >= _targetEndTime) {
+          setCommandName("Ready");
+          stop(HARD);
+      }
+      break;
+
+    case STATE_ROTATE_PROFILE:
+    case STATE_MOVETO_TURN:
+    {
+      // Внешний контур: ошибка по углу одометрии -> заданная скорость колес.
+      // Ошибка пересчитывается каждый цикл, поэтому инерция и проскальзывание
+      // закрываются автоматически, без компенсаций разомкнутого контура.
+      portENTER_CRITICAL(&_odomMux);
+      float errRad = _targetTheta - _totalAngle;
+      portEXIT_CRITICAL(&_odomMux);
+
+      float halfTrack = _cfg.trackLengthMM / 2.0f;
+      float errTicks = errRad * halfTrack / _distPerTickLeft; // остаток дуги левого колеса (тики)
+      float tolTicks = (_tuning.rotateTolDeg * PI / 180.0f) * halfTrack / _distPerTickLeft;
+      float absErr = abs(errTicks);
+
+      // Завершение с первого захода: вошли в допуск — чёткий тормоз, без доводки
+      if (absErr <= tolTicks || millis() > _targetEndTime) {
+          if (_moveState == STATE_MOVETO_TURN && millis() <= _targetEndTime) {
+              beginMoveToDrive(); // довернулись на курс к цели — едем прямой участок
+          } else {
+              setCommandName("Ready");
+              stop(HARD);
+          }
+          break;
+      }
+
+      // Профиль целится в ближний край допуска, а не в его центр: скорость
+      // обнуляется ровно на входе в зону цели — без перелёта и обратной доводки
+      float aimErr = absErr - tolTicks * 0.5f;
+      float v = sqrtf(2.0f * _tuning.rotateAccel * aimErr);
+      v = min(v, (float)_rotateCruiseVel);
+      v = max(v, _tuning.rotateMinSpeed);
+
+      float p = (v / _cfg.maxTicksPerSec) * 100.0f;
+      float dir = (errTicks > 0) ? 1.0f : -1.0f;
+      _encMovePowerL = p * dir;
+      _encMovePowerR = -p * dir;
+      break;
+    }
+
+    default:
+      break;
   }
 }
 
-void UniBase::startEncMoveOnSecondCore(int powerL, int powerR) {
-  _encMovePowerL = powerL;
-  _encMovePowerR = powerR;
-  _encMoveStartL = _lEnc;
-  _encMoveStartR = _rEnc;
-  _encPrevTime = micros();
-  _I = 0;
-  _encPrevErr = 0;
-  _lastLeftPower = 0;
-  _lastRightPower = 0;
-  _encMoveActive = true;
-}
-
-// ============ Interrupt handlers ============
-void IRAM_ATTR UniBase::leftEncISR() {
-  if (_instance) {
-    if (!digitalRead(LEFT_ENC_DIRECTION))
-      _instance->_lEnc++;
-    else
-      _instance->_lEnc--;
-  }
-}
-
-void IRAM_ATTR UniBase::rightEncISR() {
-  if (_instance) {
-    if (!digitalRead(RIGHT_ENC_DIRECTION))
-      _instance->_rEnc--;
-    else
-      _instance->_rEnc++;
-  }
-}
+// ============ FreeRTOS Task ============
 
 void UniBase::secondCoreLoop(void* pvParameters) {
-  #ifdef DEBUG_MODE
-  Serial.print("Odometry running on core ");
-  Serial.println(xPortGetCoreID());
-  #endif
+  UniBase* self = static_cast<UniBase*>(pvParameters);
+  if (!self) vTaskDelete(NULL);
+
   delay(10);
-  
   unsigned long lastDisplayUpdate = 0;
   const unsigned long displayUpdateInterval = 100;
-  
   unsigned long lastLedToggle = 0;
   unsigned long lastBatteryUpdate = 0;
   const unsigned long batteryUpdateInterval = 2000;
   bool ledState = false;
   
   for (;;) {
-    if (_instance) {
-      _instance->updateOdometry();
-      
-      if (_instance->_encMoveActive) {
-        _instance->encMove(_instance->_encMovePowerL, _instance->_encMovePowerR, 
-                          _instance->_encMoveStartL, _instance->_encMoveStartR);
-      }
-      
-      unsigned long currentMillis = millis();
-      
-      if (_instance->_ledBlinking && _instance->_ledBlinkInterval > 0) {
-        if (currentMillis - lastLedToggle >= _instance->_ledBlinkInterval) {
-          lastLedToggle = currentMillis;
-          ledState = !ledState;
-          digitalWrite(LED_PIN, ledState ? HIGH : LOW);
-        }
-      }
-      
-      if (currentMillis - lastBatteryUpdate >= batteryUpdateInterval) {
-        lastBatteryUpdate = currentMillis;
-        _instance->getBatteryPower();
-      }
-      
-      // UART control: read and dispatch commands on Core 1
-      if (_instance->_ctrlInitialized && _instance->_ctrlSerial->available() > 0) {
-        _instance->ctrlReceiveUART();
-      }
-      
-      if (currentMillis - lastDisplayUpdate >= displayUpdateInterval) {
-        lastDisplayUpdate = currentMillis;
-        _instance->updateDisplay();
+    self->updateOdometry();
+    self->processAsyncMovement();
+    
+    if (self->_encMoveActive) {
+      self->encMove(self->_encMovePowerL, self->_encMovePowerR, 
+                    self->_encMoveStartL, self->_encMoveStartR);
+    }
+    
+    unsigned long currentMillis = millis();
+    if (self->_ledBlinking && self->_ledBlinkInterval > 0) {
+      if (currentMillis - lastLedToggle >= self->_ledBlinkInterval) {
+        lastLedToggle = currentMillis;
+        ledState = !ledState;
+        digitalWrite(self->_cfg.ledPin, ledState ? HIGH : LOW);
       }
     }
+    
+    if (currentMillis - lastBatteryUpdate >= batteryUpdateInterval) {
+      lastBatteryUpdate = currentMillis;
+      self->getBatteryPower();
+    }
+    
+    if (self->_ctrlInitialized && self->_ctrlSerial->available() > 0) {
+      self->ctrlReceiveUART();
+    }
+    
+    if (currentMillis - lastDisplayUpdate >= displayUpdateInterval) {
+      lastDisplayUpdate = currentMillis;
+      self->updateDisplay();
+    }
+    
     delay(10);
   }
 }
 
-// ============ Public API ============
+// ============ Async API ============
 
-void UniBase::motors(int powerLeft, int powerRight) {
-  _encMoveActive = false;
-  _useTargetTheta = false;
-  _currentCommand = "motors";
-  leftMotor(powerLeft);
-  rightMotor(powerRight);
+bool UniBase::isMoving() {
+  return (_moveState != STATE_IDLE);
 }
 
-void UniBase::motorLeft(int power) {
-  _encMoveActive = false;
-  _useTargetTheta = false;
-  _currentCommand = "motorL";
-  leftMotor(power);
-}
+void UniBase::moveDistAsync(int power, int millimeters) {
+  ensureBegun();
+  xSemaphoreTake(_moveSemaphore, 0);
 
-void UniBase::motorRight(int power) {
-  _encMoveActive = false;
-  _useTargetTheta = false;
-  _currentCommand = "motorR";
-  rightMotor(power);
-}
-
-void UniBase::motorsArc(int power, float angle) {
-  _encMoveActive = false;
-  _currentCommand = "motorsArc";
-  if (angle != 0) {
-    _useTargetTheta = false;
+  if (power == 0 || millimeters == 0) {
+    xSemaphoreGive(_moveSemaphore);
+    return;
   }
-  int leftPower = power * (1.0 + angle / 90.0);
-  int rightPower = power * (1.0 - angle / 90.0);
+
+  // Глушим предыдущий автомат до перенастройки сервопривода,
+  // иначе он может сработать посреди установки новых целей
+  _moveState = STATE_IDLE;
+
+  // Сервопривод стартует с нулевой скоростью: разгон, круиз и торможение
+  // целиком задает внешний профиль в processAsyncMovement
+  startEncMoveOnSecondCore(0, 0);
+
+  portENTER_CRITICAL(&_odomMux);
+  setCommandName("moveDist");
+  _asyncAbsPower = constrain(abs(power), _tuning.minPower, 100);
+  _asyncDirection = (power > 0) ? 1 : -1;
+  _targetDistTicks = (abs(millimeters) / (_cfg.wheelDiameterMM * PI)) * _cfg.ticksPerRevRight;
+
+  _targetStartLEnc = _encoders.getLeftTicks();
+  _targetStartREnc = _encoders.getRightTicks();
+
+  // Таймаут безопасности: 3x от расчетного времени движения + запас
+  float cruise = (_asyncAbsPower / 100.0f) * _cfg.maxTicksPerSec;
+  _targetEndTime = millis() + 1500 + (unsigned long)(((float)_targetDistTicks / cruise) * 3000.0f);
+
+  _moveState = STATE_MOVE_DIST;
+  portEXIT_CRITICAL(&_odomMux);
+}
+
+void UniBase::moveTimeAsync(int power, int milliseconds) {
+  ensureBegun();
+  xSemaphoreTake(_moveSemaphore, 0);
+  _moveState = STATE_IDLE;
+
+  portENTER_CRITICAL(&_odomMux);
+  setCommandName("moveTime");
+  _targetEndTime = millis() + milliseconds;
+  _moveState = STATE_MOVE_TIME;
+  portEXIT_CRITICAL(&_odomMux);
+  
+  startEncMoveOnSecondCore(power, power);
+}
+
+// Настройка фазы дуги по дистанции: angleParam - соотношение колес в модели (1 +/- a/90)
+void UniBase::startArcDistPhase(int power, float angleParam, float millimeters) {
+  _moveState = STATE_IDLE;
+  startEncMoveOnSecondCore(0, 0);
+
+  portENTER_CRITICAL(&_odomMux);
+  _targetDistTicks = (fabs(millimeters) / (_cfg.wheelDiameterMM * PI)) * _cfg.ticksPerRevRight;
+  _targetStartLEnc = _encoders.getLeftTicks();
+  _targetStartREnc = _encoders.getRightTicks();
+  _targetAngleDeg = angleParam;
+  _asyncAbsPower = constrain(abs(power), _tuning.minPower, 100);
+  _asyncDirection = (power > 0) ? 1 : -1;
+
+  float cruise = (_asyncAbsPower / 100.0f) * _cfg.maxTicksPerSec;
+  _targetEndTime = millis() + 1500 + (unsigned long)(((float)_targetDistTicks / cruise) * 3000.0f);
+
+  _moveState = STATE_MOVE_ARC_DIST;
+  portEXIT_CRITICAL(&_odomMux);
+}
+
+void UniBase::moveArcDistAsync(int power, int angle, int millimeters) {
+  ensureBegun();
+  xSemaphoreTake(_moveSemaphore, 0);
+
+  if (power == 0 || millimeters == 0) {
+    xSemaphoreGive(_moveSemaphore);
+    return;
+  }
+
+  setCommandName("moveArcD");
+  startArcDistPhase(power, (float)angle, (float)millimeters);
+}
+
+void UniBase::moveArcRadiusAsync(int power, float radiusMM, float angleDeg) {
+  ensureBegun();
+  xSemaphoreTake(_moveSemaphore, 0);
+
+  float halfTrack = _cfg.trackLengthMM / 2.0f;
+  if (power == 0 || angleDeg == 0 || radiusMM < halfTrack) {
+    // Радиус меньше половины колеи дугой не реализуется - используйте rotate()
+    xSemaphoreGive(_moveSemaphore);
+    return;
+  }
+
+  // Соотношение скоростей колес из геометрии дуги: vL/vR = (R + d/2)/(R - d/2)
+  float angleParam = 90.0f * halfTrack / radiusMM;
+  if (angleDeg < 0) angleParam = -angleParam;
+  float arcMM = fabs(angleDeg) * (PI / 180.0f) * radiusMM; // длина дуги по центру
+
+  setCommandName("moveArcR");
+  startArcDistPhase(power, angleParam, arcMM);
+}
+
+void UniBase::moveArcTimeAsync(int power, int angle, int milliseconds) {
+  ensureBegun();
+  xSemaphoreTake(_moveSemaphore, 0);
+  _moveState = STATE_IDLE;
+
+  portENTER_CRITICAL(&_odomMux);
+  setCommandName("moveArcT");
+  float leftPower = power * (1.0 + angle / 90.0);
+  float rightPower = power * (1.0 - angle / 90.0);
+  _targetEndTime = millis() + milliseconds;
+  _moveState = STATE_MOVE_ARC_TIME;
+  portEXIT_CRITICAL(&_odomMux);
   
   startEncMoveOnSecondCore(leftPower, rightPower);
 }
+
+// Настройка поворотной фазы: цель - абсолютный угол одометрии (текущий + deltaDeg),
+// ошибка измеряется и закрывается замкнутым контуром до конца
+void UniBase::startRotatePhase(int power, float deltaDeg, MoveState state) {
+  _moveState = STATE_IDLE;
+
+  // Запускаем внутренний тиковый сервопривод с нулевой скоростью:
+  // внешний контур по углу будет задавать скорость в processAsyncMovement
+  startEncMoveOnSecondCore(0, 0);
+
+  portENTER_CRITICAL(&_odomMux);
+  _targetTheta = _totalAngle + deltaDeg * PI / 180.0f;
+
+  _asyncAbsPower = constrain(abs(power), _tuning.minPower, 100);
+  _rotateCruiseVel = (_asyncAbsPower / 100.0f) * _cfg.maxTicksPerSec;
+
+  _targetStartLEnc = _encoders.getLeftTicks();
+  _targetStartREnc = _encoders.getRightTicks();
+
+  // Таймаут безопасности: 3x от расчетного времени поворота + запас
+  float arcMM = (fabs(deltaDeg) / 360.0f) * (PI * _cfg.trackLengthMM);
+  float arcTicks = (arcMM / (PI * _cfg.wheelDiameterMM)) * _cfg.ticksPerRevLeft;
+  _targetEndTime = millis() + 1500 + (unsigned long)((arcTicks / _rotateCruiseVel) * 3000.0f);
+
+  _moveState = state;
+  portEXIT_CRITICAL(&_odomMux);
+}
+
+void UniBase::rotateAsync(int power, int angle) {
+  ensureBegun();
+  xSemaphoreTake(_moveSemaphore, 0);
+
+  if (angle == 0 || power == 0) {
+    xSemaphoreGive(_moveSemaphore);
+    return;
+  }
+
+  setCommandName("rotate");
+  startRotatePhase(power, (float)angle, STATE_ROTATE_PROFILE);
+}
+
+void UniBase::rotateToAsync(int power, float angleDeg) {
+  ensureBegun();
+  xSemaphoreTake(_moveSemaphore, 0);
+
+  portENTER_CRITICAL(&_odomMux);
+  float curDeg = _totalAngle * 180.0f / PI;
+  portEXIT_CRITICAL(&_odomMux);
+
+  // Кратчайший доворот к абсолютному курсу
+  float delta = angleDeg - curDeg;
+  while (delta > 180.0f) delta -= 360.0f;
+  while (delta < -180.0f) delta += 360.0f;
+
+  if (power == 0 || fabs(delta) <= _tuning.rotateTolDeg) {
+    xSemaphoreGive(_moveSemaphore);
+    return;
+  }
+
+  setCommandName("rotateTo");
+  startRotatePhase(power, delta, STATE_ROTATE_PROFILE);
+}
+
+void UniBase::moveToAsync(int power, float x, float y) {
+  ensureBegun();
+  xSemaphoreTake(_moveSemaphore, 0);
+
+  portENTER_CRITICAL(&_odomMux);
+  float dx = x - _xPos;
+  float dy = y - _yPos;
+  float curThetaDeg = _theta * 180.0f / PI;
+  portEXIT_CRITICAL(&_odomMux);
+
+  float dist = sqrtf(dx * dx + dy * dy);
+  if (power == 0 || dist <= _tuning.moveTolMM) {
+    xSemaphoreGive(_moveSemaphore);
+    return;
+  }
+
+  _moveToX = x;
+  _moveToY = y;
+
+  // Фаза 1: кратчайший доворот на курс к цели. Фаза 2 (прямая до точки)
+  // настраивается автоматом состояний после завершения поворота
+  float delta = atan2f(dy, dx) * 180.0f / PI - curThetaDeg;
+  while (delta > 180.0f) delta -= 360.0f;
+  while (delta < -180.0f) delta += 360.0f;
+
+  setCommandName("moveTo");
+  startRotatePhase(power, delta, STATE_MOVETO_TURN);
+}
+
+// Переход от поворотной фазы moveTo к прямой (вызывается автоматом на втором ядре)
+void UniBase::beginMoveToDrive() {
+  // Гасим остаток вращения перед прямой
+  _encMoveActive = false;
+  _motors.brakeBoth();
+  delay(30);
+  _motors.setPower(0, 0);
+
+  portENTER_CRITICAL(&_odomMux);
+  float dx = _moveToX - _xPos;
+  float dy = _moveToY - _yPos;
+  portEXIT_CRITICAL(&_odomMux);
+  float dist = sqrtf(dx * dx + dy * dy);
+
+  if (dist <= _tuning.moveTolMM) {
+    setCommandName("Ready");
+    stop(SOFT);
+    return;
+  }
+
+  startEncMoveOnSecondCore(0, 0);
+
+  portENTER_CRITICAL(&_odomMux);
+  _targetDistTicks = (dist / (_cfg.wheelDiameterMM * PI)) * _cfg.ticksPerRevRight;
+  _asyncDirection = 1;
+  _targetStartLEnc = _encoders.getLeftTicks();
+  _targetStartREnc = _encoders.getRightTicks();
+  float cruise = (_asyncAbsPower / 100.0f) * _cfg.maxTicksPerSec;
+  _targetEndTime = millis() + 1500 + (unsigned long)(((float)_targetDistTicks / cruise) * 3000.0f);
+  _moveState = STATE_MOVE_DIST;
+  portEXIT_CRITICAL(&_odomMux);
+}
+
+// ============ Blocking API wrappers ============
 
 void UniBase::moveDist(int power, int millimeters) {
-  _currentCommand = "moveDist";
-  power = constrain(power, -100, 100);
-
-  long distTicks = (abs(millimeters) / (WHEEL_DIAMETER_MM * PI)) * TICKS_PER_REV_RIGHT;
-
-  #ifdef DEBUG_MODE
-  Serial.print("Ticks: ");
-  Serial.println(distTicks);
-  #endif
-  
-  long startLEnc = _lEnc;
-  long startREnc = _rEnc;
-  
-  // Deceleration parameters
-  const float decelDistMM = 35.0;  // Start slowing down 50mm before destination
-  long decelTicks = (decelDistMM / (WHEEL_DIAMETER_MM * PI)) * TICKS_PER_REV_RIGHT;
-  const int minPower = 15;         // Minimum driving power (overcomes friction)
-  int absPower = abs(power);
-  int direction = (power > 0) ? 1 : -1;
-  
-  // Compensate for distance traveled during final stop(HARD) braking
-  // Overshoot peaks at mid-power (max inertia + weaker EM braking), zero at full power
-  float stopCompMM = 2.0 * ((float)absPower * (100.0 - (float)absPower)) / 2500.0;
-  long stopCompTicks = (stopCompMM / (WHEEL_DIAMETER_MM * PI)) * TICKS_PER_REV_RIGHT;
-  distTicks = max(0L, distTicks - stopCompTicks);
-  
-  // If total distance is shorter than 2× decel zone, shrink decel zone
-  if (distTicks < decelTicks * 2) {
-    decelTicks = distTicks / 2;
-  }
-  
-  // If requested power is already at or below minimum, no deceleration needed
-  if (absPower <= minPower) {
-    decelTicks = 0;
-  }
-  
-  // Speed measurement variables
-  long prevAvgTicks = 0;
-  unsigned long prevSpeedTime = micros();
-  float measuredTickSpeed = 0.0;   // Current measured speed (ticks/sec)
-  float peakTickSpeed = 0.0;       // Peak speed at full power (ticks/sec)
-  
-  startEncMoveOnSecondCore(power, power);
-  
-  while (true) {
-    if (_abortCommand) { _abortCommand = false; stop(HARD); return; }
-    long currentDistance = (abs(_lEnc - startLEnc) + abs(_rEnc - startREnc)) / 2;
-    if (currentDistance >= distTicks) break;
-    
-    long remainingTicks = distTicks - currentDistance;
-    
-    // === Measure tick speed (both in cruise and decel phases) ===
-    unsigned long nowMicros = micros();
-    unsigned long dtMicros = nowMicros - prevSpeedTime;
-    
-    if (dtMicros >= 2000) {  // Sample every 2ms
-      long dTicks = currentDistance - prevAvgTicks;
-      measuredTickSpeed = (float)abs(dTicks) / ((float)dtMicros / 1000000.0);  // ticks/sec
-      
-      if (measuredTickSpeed > peakTickSpeed) {
-        peakTickSpeed = measuredTickSpeed;
-      }
-      
-      prevAvgTicks = currentDistance;
-      prevSpeedTime = nowMicros;
-    }
-    
-    if (remainingTicks <= decelTicks && decelTicks > 0 && peakTickSpeed > 0) {
-      // === Gradual deceleration zone with active braking ===
-      
-      // Target speed ramps linearly from peakTickSpeed down to a creep speed
-      float ratio = (float)remainingTicks / (float)decelTicks;  // 1.0 → 0.0
-      float creepSpeed = peakTickSpeed * ((float)minPower / (float)absPower);
-      float targetSpeed = creepSpeed + (peakTickSpeed - creepSpeed) * ratio;
-      
-      // Braking tolerance: lenient at start of decel, tight near destination
-      float brakeTolerance = 1.0 + 0.10 * ratio;  // 1.10 at entry → 1.0 at destination
-      
-      if (measuredTickSpeed > targetSpeed * brakeTolerance) {
-        // TOO FAST — actively brake by shorting motor pins (electromagnetic braking)
-        _encMoveActive = false;
-        analogWrite(LEFT_MOTOR_PIN_A, 255);
-        analogWrite(LEFT_MOTOR_PIN_B, 255);
-        analogWrite(RIGHT_MOTOR_PIN_A, 255);
-        analogWrite(RIGHT_MOTOR_PIN_B, 255);
-      } else {
-        // Speed is at or below target — apply proportional driving power
-        int targetPower = minPower + (int)((absPower - minPower) * ratio);
-        targetPower = constrain(targetPower, minPower, absPower);
-        int newPower = targetPower * direction;
-        
-        if (!_encMoveActive) {
-          // Re-engage PID motor control after braking
-          startEncMoveOnSecondCore(newPower, newPower);
-        } else {
-          _encMovePowerL = newPower;
-          _encMovePowerR = newPower;
-        }
-      }
-
-      #ifdef DEBUG_MODE
-      static unsigned long lastDebugPrint = 0;
-      if (millis() - lastDebugPrint > 50) {
-        Serial.print("Decel: remain=");
-        Serial.print(remainingTicks);
-        Serial.print(" speed=");
-        Serial.print(measuredTickSpeed, 0);
-        Serial.print(" target=");
-        Serial.print(targetSpeed, 0);
-        Serial.print(" braking=");
-        Serial.println(measuredTickSpeed > targetSpeed * 1.05 ? "YES" : "no");
-        lastDebugPrint = millis();
-      }
-      #endif
-    }
-    
-    delay(1);
-  }
-  
-  stop(HARD);
-  _currentCommand = "Ready";
+  moveDistAsync(power, millimeters);
+  xSemaphoreTake(_moveSemaphore, portMAX_DELAY);
 }
-
 void UniBase::moveTime(int power, int milliseconds) {
-  _currentCommand = "moveTime";
-  startEncMoveOnSecondCore(power, power);
-  unsigned long endTime = millis() + milliseconds;
-  while (millis() < endTime) {
-    if (_abortCommand) { _abortCommand = false; stop(HARD); return; }
-    delay(1);
-  }
-  stop(HARD);
-  _currentCommand = "Ready";
+  moveTimeAsync(power, milliseconds);
+  xSemaphoreTake(_moveSemaphore, portMAX_DELAY);
 }
-
 void UniBase::moveArcDist(int power, int angle, int millimeters) {
-  _currentCommand = "moveArcD";
-  if (angle != 0) {
-    _useTargetTheta = false;
-  }
-  int leftPower = power * (1.0 + angle / 90.0);
-  int rightPower = power * (1.0 - angle / 90.0);
-  
-  long distTicks = (abs(millimeters) / (WHEEL_DIAMETER_MM * PI)) * TICKS_PER_REV_RIGHT;
-  long startLEnc = _lEnc;
-  long startREnc = _rEnc;
-  
-  startEncMoveOnSecondCore(leftPower, rightPower);
-  
-  while ((abs(_lEnc - startLEnc) + abs(_rEnc - startREnc)) / 2 < distTicks) {
-    if (_abortCommand) { _abortCommand = false; stop(HARD); return; }
-    delay(1);
-  }
-  
-  stop(HARD);
-  _currentCommand = "Ready";
+  moveArcDistAsync(power, angle, millimeters);
+  xSemaphoreTake(_moveSemaphore, portMAX_DELAY);
 }
-
 void UniBase::moveArcTime(int power, int angle, int milliseconds) {
-  _currentCommand = "moveArcT";
-  if (angle != 0) {
-    _useTargetTheta = false;
-  }
-  int leftPower = power * (1.0 + angle / 90.0);
-  int rightPower = power * (1.0 - angle / 90.0);
-  
-  startEncMoveOnSecondCore(leftPower, rightPower);
-  
-  unsigned long endTime = millis() + milliseconds;
-  while (millis() < endTime) {
-    if (_abortCommand) { _abortCommand = false; stop(HARD); return; }
-    delay(1);
-  }
-  
-  stop(HARD);
-  _currentCommand = "Ready";
+  moveArcTimeAsync(power, angle, milliseconds);
+  xSemaphoreTake(_moveSemaphore, portMAX_DELAY);
+}
+void UniBase::rotate(int power, int angle) {
+  rotateAsync(power, angle);
+  xSemaphoreTake(_moveSemaphore, portMAX_DELAY);
+}
+void UniBase::rotateTo(int power, float angleDeg) {
+  rotateToAsync(power, angleDeg);
+  xSemaphoreTake(_moveSemaphore, portMAX_DELAY);
+}
+void UniBase::moveTo(int power, float x, float y) {
+  moveToAsync(power, x, y);
+  xSemaphoreTake(_moveSemaphore, portMAX_DELAY);
+}
+void UniBase::moveArcRadius(int power, float radiusMM, float angleDeg) {
+  moveArcRadiusAsync(power, radiusMM, angleDeg);
+  xSemaphoreTake(_moveSemaphore, portMAX_DELAY);
 }
 
-void UniBase::rotate(int power, int angle) {
-  _currentCommand = "rotate";
-  
-  if (!_useTargetTheta) {
-    _targetTheta = _theta;
-    _useTargetTheta = true;
+bool UniBase::waitMove(unsigned long timeoutMs) {
+  unsigned long start = millis();
+  while (isMoving()) {
+    if (timeoutMs > 0 && millis() - start >= timeoutMs) return false;
+    delay(5);
   }
-  
-  _targetTheta += angle * PI / 180.0;
-  
-  while (_targetTheta > PI) _targetTheta -= 2 * PI;
-  while (_targetTheta < -PI) _targetTheta += 2 * PI;
-  
-  float targetAngleDeg = _targetTheta * 180 / PI;
-  
-  int absPower = abs(power);
-  int leftPow, rightPow;
-  if (angle < 0) {
-    leftPow = -absPower;
-    rightPow = absPower;
-  } else {
-    leftPow = absPower;
-    rightPow = -absPower;
-  }
-  
-  // ============================================================
-  // PHASE 1: Fast rotation with tick-based deceleration
-  // Intentionally stops a few degrees early to guarantee no overshoot
-  // ============================================================
-  
-  const float decelAngleDeg = 30.0;
-  const int minPower = 15;
-  const float earlyStopDeg = 3.0;  // Stop 3° early, Phase 2 will correct
-  
-  long startLEnc = _lEnc;
-  long startREnc = _rEnc;
-  long prevAvgTicks = 0;
-  unsigned long prevSpeedTime = micros();
-  float measuredTickSpeed = 0.0;
-  float peakTickSpeed = 0.0;
-  
-  startEncMoveOnSecondCore(leftPow, rightPow);
-  
-  while (true) {
-    if (_abortCommand) { _abortCommand = false; stop(HARD); return; }
-    float currentAngle = _theta * 180 / PI;
-    float angleDiff = targetAngleDeg - currentAngle;
-    
-    while (angleDiff > 180) angleDiff -= 360;
-    while (angleDiff < -180) angleDiff += 360;
-    
-    float remainingAngle = abs(angleDiff);
-    
-    // Check if we've passed the target or are close enough for Phase 2
-    if ((angle > 0 && angleDiff < 0) || (angle < 0 && angleDiff > 0)) {
-      break;
-    }
-    if (remainingAngle < earlyStopDeg) {
-      break;
-    }
-    
-    // Measure tick speed (real-time via encoder interrupts)
-    long currentTicks = (abs(_lEnc - startLEnc) + abs(_rEnc - startREnc)) / 2;
-    unsigned long nowMicros = micros();
-    unsigned long dtMicros = nowMicros - prevSpeedTime;
-    
-    if (dtMicros >= 2000) {
-      long dTicks = currentTicks - prevAvgTicks;
-      measuredTickSpeed = (float)abs(dTicks) / ((float)dtMicros / 1000000.0);
-      
-      if (measuredTickSpeed > peakTickSpeed) {
-        peakTickSpeed = measuredTickSpeed;
-      }
-      
-      prevAvgTicks = currentTicks;
-      prevSpeedTime = nowMicros;
-    }
-    
-    if (remainingAngle <= decelAngleDeg && peakTickSpeed > 0) {
-      float ratio = remainingAngle / decelAngleDeg;
-      float creepSpeed = peakTickSpeed * ((float)minPower / (float)absPower);
-      float targetTickSpeed = creepSpeed + (peakTickSpeed - creepSpeed) * ratio;
-      float brakeTolerance = 1.0 + 0.10 * ratio;
-      
-      if (measuredTickSpeed > targetTickSpeed * brakeTolerance) {
-        _encMoveActive = false;
-        analogWrite(LEFT_MOTOR_PIN_A, 255);
-        analogWrite(LEFT_MOTOR_PIN_B, 255);
-        analogWrite(RIGHT_MOTOR_PIN_A, 255);
-        analogWrite(RIGHT_MOTOR_PIN_B, 255);
-      } else {
-        int targetPower = minPower + (int)((absPower - minPower) * ratio);
-        targetPower = constrain(targetPower, minPower, absPower);
-        
-        int fL, fR;
-        if (angle < 0) { fL = -targetPower; fR = targetPower; }
-        else { fL = targetPower; fR = -targetPower; }
-        
-        if (!_encMoveActive) {
-          startEncMoveOnSecondCore(fL, fR);
-        } else {
-          _encMovePowerL = fL;
-          _encMovePowerR = fR;
-        }
-      }
-    }
-    
-    delay(1);
-  }
-  
-  stop(HARD);
-  delay(30);  // Let robot settle and _theta update
-  
-  // ============================================================
-  // PHASE 2: Precision correction loop
-  // Use _theta feedback to nudge the robot to the exact target angle
-  // ============================================================
-  
-  const int corrPower = 12;          // Very low power for fine corrections
-  const float angleTolerance = 0.5;  // Acceptable error in degrees
-  const int maxAttempts = 5;         // Max correction attempts
-  
-  for (int attempt = 0; attempt < maxAttempts; attempt++) {
-    // Measure current error
-    float currentAngle = _theta * 180 / PI;
-    float angleDiff = targetAngleDeg - currentAngle;
-    
-    while (angleDiff > 180) angleDiff -= 360;
-    while (angleDiff < -180) angleDiff += 360;
-    
-    #ifdef DEBUG_MODE
-    Serial.print("Correction #");
-    Serial.print(attempt);
-    Serial.print(": error=");
-    Serial.print(angleDiff, 2);
-    Serial.println(" deg");
-    #endif
-    
-    // If within tolerance, we're done
-    if (abs(angleDiff) < angleTolerance) {
-      break;
-    }
-    
-    // Determine correction direction
-    int cL, cR;
-    int activeCorrPower = corrPower;  // Start at base correction power
-    if (angleDiff > 0) {
-      cL = activeCorrPower;
-      cR = -activeCorrPower;
-    } else {
-      cL = -activeCorrPower;
-      cR = activeCorrPower;
-    }
-    
-    // Drive at correction power until we reach target or pass it
-    startEncMoveOnSecondCore(cL, cR);
-    
-    float corrStartDiff = angleDiff;
-    long stallCheckTicks = (abs(_lEnc) + abs(_rEnc));
-    unsigned long stallCheckTime = millis();
-    
-    while (true) {
-      if (_abortCommand) { _abortCommand = false; stop(HARD); return; }
-      float curAng = _theta * 180 / PI;
-      float diff = targetAngleDeg - curAng;
-      
-      while (diff > 180) diff -= 360;
-      while (diff < -180) diff += 360;
-      
-      // Stop if within tight tolerance or if we've passed the target
-      if (abs(diff) < angleTolerance * 0.5) {
-        break;
-      }
-      if ((corrStartDiff > 0 && diff <= 0) || (corrStartDiff < 0 && diff >= 0)) {
-        break;  // Crossed target
-      }
-      
-      // Stall detection: if ticks haven't changed for 50ms, increase power
-      long currentStallTicks = (abs(_lEnc) + abs(_rEnc));
-      if (currentStallTicks != stallCheckTicks) {
-        // Movement detected, reset stall check
-        stallCheckTicks = currentStallTicks;
-        stallCheckTime = millis();
-      } else if (millis() - stallCheckTime > 50) {
-        // Stalled — increase power
-        activeCorrPower = min(activeCorrPower + 5, 40);
-        if (diff > 0) {
-          cL = activeCorrPower;
-          cR = -activeCorrPower;
-        } else {
-          cL = -activeCorrPower;
-          cR = activeCorrPower;
-        }
-        startEncMoveOnSecondCore(cL, cR);
-        stallCheckTime = millis();
-        
-        #ifdef DEBUG_MODE
-        Serial.print("Stall detected, power up to ");
-        Serial.println(activeCorrPower);
-        #endif
-      }
-      
-      delay(1);
-    }
-    
-    stop(HARD);
-    delay(30);  // Settle
-  }
-  _currentCommand = "Ready";
+  return true;
+}
+
+// ============ Motor basics & Stop ============
+
+void UniBase::motors(int powerLeft, int powerRight) {
+  ensureBegun();
+  _cmdSeq++;
+  _moveState = STATE_IDLE; _encMoveActive = false;
+  setCommandName("motors");
+  _motors.setPower(powerLeft, powerRight);
+}
+void UniBase::motorLeft(int power) {
+  ensureBegun();
+  _cmdSeq++;
+  _moveState = STATE_IDLE; _encMoveActive = false;
+  setCommandName("motorL");
+  _motors.setLeftPower(power);
+}
+void UniBase::motorRight(int power) {
+  ensureBegun();
+  _cmdSeq++;
+  _moveState = STATE_IDLE; _encMoveActive = false;
+  setCommandName("motorR");
+  _motors.setRightPower(power);
+}
+void UniBase::motorsArc(int power, float angle) {
+  ensureBegun();
+  _moveState = STATE_IDLE; _encMoveActive = false;
+  setCommandName("motorsArc");
+  startEncMoveOnSecondCore(power * (1.0 + angle / 90.0), power * (1.0 - angle / 90.0));
+}
+
+void UniBase::motorsSync(int powerLeft, int powerRight) {
+  ensureBegun();
+  _moveState = STATE_IDLE; _encMoveActive = false;
+  setCommandName("motorsSync");
+  startEncMoveOnSecondCore(constrain(powerLeft, -100, 100), constrain(powerRight, -100, 100));
+}
+
+void UniBase::holdPosition() {
+  ensureBegun();
+  _moveState = STATE_IDLE;
+  setCommandName("hold");
+  // Сервопривод с нулевой скоростью активно удерживает текущую позицию
+  startEncMoveOnSecondCore(0, 0);
 }
 
 void UniBase::stop(int stopType) {
-  _currentCommand = "stop";
-  _encMoveActive = false;
-  _useTargetTheta = false;
-  
+  ensureBegun();
+  uint32_t seq = ++_cmdSeq;
+  setCommandName("stop");
+  _moveState = STATE_IDLE; _encMoveActive = false;
   if (stopType == HARD) {
-    // Фаза 1: Резкое торможение
-    const byte stopPower = 255;
-    for (int i = 0; i < 50; i++) {
-      analogWrite(LEFT_MOTOR_PIN_A, stopPower);
-      analogWrite(LEFT_MOTOR_PIN_B, stopPower);
-      analogWrite(RIGHT_MOTOR_PIN_A, stopPower);
-      analogWrite(RIGHT_MOTOR_PIN_B, stopPower);
-      delay(1);
-    }
+    _motors.brakeBoth();
+    delay(50);
   }
-  
-  leftMotor(0);
-  rightMotor(0);
-  
-  _lastLeftPower = 0;
-  _lastRightPower = 0;
+  // Если во время торможения пришла новая команда движения, не гасим ее:
+  // хвост этого stop() больше не имеет права трогать моторы и семафор
+  if (seq != _cmdSeq) return;
+  _motors.setPower(0, 0);
+  _lastLeftPower = 0; _lastRightPower = 0;
+  // Семафор отдаем последним: блокирующие команды должны проснуться только
+  // когда остановка полностью завершена, иначе следующая команда гонится со stop()
+  xSemaphoreGive(_moveSemaphore);
 }
-
 void UniBase::stopLeft(int stopType) {
-  _currentCommand = "stopL";
-  _encMoveActive = false;
-  _useTargetTheta = false;
-  
-  if (stopType == HARD) {
-    const byte stopPower = 255;
-    
-    // Фаза 1: Резкое торможение
-    for (int i = 0; i < 30; i++) {
-      analogWrite(LEFT_MOTOR_PIN_A, stopPower);
-      analogWrite(LEFT_MOTOR_PIN_B, stopPower);
-      delay(1);
-    }
-  }
-  
-  leftMotor(0);
-  
-  _lastLeftPower = 0;
+  ensureBegun();
+  uint32_t seq = ++_cmdSeq;
+  setCommandName("stopL");
+  _moveState = STATE_IDLE; _encMoveActive = false;
+  if (stopType == HARD) { _motors.brakeLeft(); delay(30); }
+  if (seq != _cmdSeq) return; // новая команда пришла во время торможения
+  _motors.setLeftPower(0); _lastLeftPower = 0;
 }
-
 void UniBase::stopRight(int stopType) {
-  _currentCommand = "stopR";
-  _encMoveActive = false;
-  _useTargetTheta = false;
-  
-  if (stopType == HARD) {
-    const byte stopPower = 255;
-    
-    // Фаза 1: Резкое торможение
-    for (int i = 0; i < 30; i++) {
-      analogWrite(RIGHT_MOTOR_PIN_A, stopPower);
-      analogWrite(RIGHT_MOTOR_PIN_B, stopPower);
-      delay(1);
-    }
-  }
-  
-  rightMotor(0);
-  
-  _lastRightPower = 0;
+  ensureBegun();
+  uint32_t seq = ++_cmdSeq;
+  setCommandName("stopR");
+  _moveState = STATE_IDLE; _encMoveActive = false;
+  if (stopType == HARD) { _motors.brakeRight(); delay(30); }
+  if (seq != _cmdSeq) return; // новая команда пришла во время торможения
+  _motors.setRightPower(0); _lastRightPower = 0;
 }
 
 // ============ Odometry ============
 
-void UniBase::resetDistance() {
-  noInterrupts();
-  _totalDistance = 0.0;
-  interrupts();
+void UniBase::resetDistance() { 
+    ensureBegun();
+    portENTER_CRITICAL(&_odomMux);
+    _totalDistance = 0.0; 
+    portEXIT_CRITICAL(&_odomMux);
 }
-
-float UniBase::getDistance() {
-  float dist;
-  noInterrupts();
-  dist = _totalDistance;
-  interrupts();
-  return dist;
+float UniBase::getDistance() { 
+    ensureBegun();
+    portENTER_CRITICAL(&_odomMux);
+    float v = _totalDistance; 
+    portEXIT_CRITICAL(&_odomMux);
+    return v;
 }
-
-void UniBase::resetAngle() {
-  noInterrupts();
-  _totalAngle = 0.0;
-  interrupts();
+void UniBase::resetAngle() { 
+    ensureBegun();
+    portENTER_CRITICAL(&_odomMux);
+    _totalAngle = 0.0; 
+    portEXIT_CRITICAL(&_odomMux);
 }
-
-float UniBase::getAngle() {
-  float angle;
-  noInterrupts();
-  angle = _totalAngle * 180 / PI;
-  interrupts();
-  return angle;
+float UniBase::getAngle() { 
+    ensureBegun();
+    portENTER_CRITICAL(&_odomMux);
+    float v = _totalAngle * 180 / PI; 
+    portEXIT_CRITICAL(&_odomMux);
+    return v;
+}
+void UniBase::setPosition(float x, float y, float angleDeg) {
+    ensureBegun();
+    float a = angleDeg * PI / 180.0f;
+    portENTER_CRITICAL(&_odomMux);
+    _xPos = x;
+    _yPos = y;
+    _totalAngle = a;
+    _theta = a;
+    while (_theta > PI) _theta -= 2 * PI;
+    while (_theta < -PI) _theta += 2 * PI;
+    portEXIT_CRITICAL(&_odomMux);
 }
 
 OdometryData UniBase::getOdometry() {
-  OdometryData data;
-  noInterrupts();
-  data.x = _xPos;
-  data.y = _yPos;
-  data.angle = _theta * 180 / PI;
-  interrupts();
-  return data;
+    ensureBegun();
+    OdometryData data;
+    portENTER_CRITICAL(&_odomMux);
+    data.x = _xPos;
+    data.y = _yPos;
+    data.angle = _theta * 180 / PI;
+    portEXIT_CRITICAL(&_odomMux);
+    return data; 
 }
-
-float UniBase::getAbsX() {
-  return _xPos;
+float UniBase::getAbsX() { 
+    ensureBegun();
+    portENTER_CRITICAL(&_odomMux);
+    float v = _xPos; 
+    portEXIT_CRITICAL(&_odomMux);
+    return v;
 }
-
-float UniBase::getAbsY() {
-  return _yPos;
+float UniBase::getAbsY() { 
+    ensureBegun();
+    portENTER_CRITICAL(&_odomMux);
+    float v = _yPos; 
+    portEXIT_CRITICAL(&_odomMux);
+    return v;
 }
-
-float UniBase::getAbsAngle() {
-  return _theta * 180 / PI;
+float UniBase::getAbsAngle() { 
+    ensureBegun();
+    portENTER_CRITICAL(&_odomMux);
+    float v = _theta * 180 / PI; 
+    portEXIT_CRITICAL(&_odomMux);
+    return v;
 }
-
-long UniBase::getLeftTicks() {
-  return _lEnc;
-}
-
-long UniBase::getRightTicks() {
-  return _rEnc;
-}
+long UniBase::getLeftTicks() { ensureBegun(); return _encoders.getLeftTicks(); }
+long UniBase::getRightTicks() { ensureBegun(); return _encoders.getRightTicks(); }
 
 // ============ Display ============
 
-void UniBase::displayPrint(String text) {
-  _customDisplayMode = true;
-  _customDisplayText = text;
-  _customDisplayName = "";
-}
-
 void UniBase::displayPrint(const char* text) {
-  displayPrint(String(text));
+    ensureBegun();
+    portENTER_CRITICAL(&_dispMux);
+    strncpy(_customDisplayText, text, sizeof(_customDisplayText) - 1);
+    _customDisplayText[sizeof(_customDisplayText) - 1] = '\0';
+    _customDisplayName[0] = '\0';
+    _customDisplayMode = true;
+    portEXIT_CRITICAL(&_dispMux);
 }
-
-void UniBase::displayPrint(int value) {
-  displayPrint(String(value));
-}
-
-void UniBase::displayPrint(long value) {
-  displayPrint(String(value));
-}
-
-void UniBase::displayPrint(float value) {
-  displayPrint(String(value, 2));
-}
-
-void UniBase::displayPrint(double value) {
-  displayPrint(String(value, 4));
-}
-
-void UniBase::displayPrint(bool value) {
-  displayPrint(value ? "true" : "false");
-}
-
-// Named displayPrint overloads
-void UniBase::displayPrint(const char* name, String value) {
-  _customDisplayMode = true;
-  _customDisplayName = String(name);
-  _customDisplayText = value;
-}
+void UniBase::displayPrint(int value) { char buf[16]; snprintf(buf, sizeof(buf), "%d", value); displayPrint(buf); }
+void UniBase::displayPrint(long value) { char buf[16]; snprintf(buf, sizeof(buf), "%ld", value); displayPrint(buf); }
+void UniBase::displayPrint(float value) { char buf[16]; snprintf(buf, sizeof(buf), "%.2f", value); displayPrint(buf); }
+void UniBase::displayPrint(double value) { char buf[16]; snprintf(buf, sizeof(buf), "%.4f", value); displayPrint(buf); }
+void UniBase::displayPrint(bool value) { displayPrint(value ? "true" : "false"); }
 
 void UniBase::displayPrint(const char* name, const char* value) {
-  displayPrint(name, String(value));
+    ensureBegun();
+    portENTER_CRITICAL(&_dispMux);
+    strncpy(_customDisplayName, name, sizeof(_customDisplayName) - 1);
+    _customDisplayName[sizeof(_customDisplayName) - 1] = '\0';
+    strncpy(_customDisplayText, value, sizeof(_customDisplayText) - 1);
+    _customDisplayText[sizeof(_customDisplayText) - 1] = '\0';
+    _customDisplayMode = true;
+    portEXIT_CRITICAL(&_dispMux);
 }
-
-void UniBase::displayPrint(const char* name, int value) {
-  displayPrint(name, String(value));
-}
-
-void UniBase::displayPrint(const char* name, long value) {
-  displayPrint(name, String(value));
-}
-
-void UniBase::displayPrint(const char* name, float value) {
-  displayPrint(name, String(value, 2));
-}
-
-void UniBase::displayPrint(const char* name, double value) {
-  displayPrint(name, String(value, 4));
-}
-
-void UniBase::displayPrint(const char* name, bool value) {
-  displayPrint(name, value ? "true" : "false");
-}
+void UniBase::displayPrint(const char* name, int value) { char buf[16]; snprintf(buf, sizeof(buf), "%d", value); displayPrint(name, buf); }
+void UniBase::displayPrint(const char* name, long value) { char buf[16]; snprintf(buf, sizeof(buf), "%ld", value); displayPrint(name, buf); }
+void UniBase::displayPrint(const char* name, float value) { char buf[16]; snprintf(buf, sizeof(buf), "%.2f", value); displayPrint(name, buf); }
+void UniBase::displayPrint(const char* name, double value) { char buf[16]; snprintf(buf, sizeof(buf), "%.4f", value); displayPrint(name, buf); }
+void UniBase::displayPrint(const char* name, bool value) { displayPrint(name, value ? "true" : "false"); }
 
 void UniBase::displayClear() {
-  _customDisplayMode = false;
-  _customDisplayText = "";
-  _customDisplayName = "";
-  updateDisplay();
+    ensureBegun();
+    portENTER_CRITICAL(&_dispMux);
+    _customDisplayMode = false;
+    _customDisplayText[0] = '\0';
+    _customDisplayName[0] = '\0';
+    portEXIT_CRITICAL(&_dispMux);
+    updateDisplay();
 }
 
 // ============ Utility ============
 
 void UniBase::printOdometry() {
-  Serial.print("encL: ");
-  Serial.print(_lEnc);
-  Serial.print(" \tencR: ");
-  Serial.print(_rEnc);
-  Serial.print(" \tX: ");
-  Serial.print(_xPos);
-  Serial.print(" \tY: ");
-  Serial.print(_yPos);
-  Serial.print(" \tTheta: ");
-  Serial.println(_theta * 180 / PI);
+  ensureBegun();
+  OdometryData odom = getOdometry();
+  Serial.printf("encL: %ld \tencR: %ld \tX: %.2f \tY: %.2f \tTheta: %.2f\n", 
+    _encoders.getLeftTicks(), _encoders.getRightTicks(), odom.x, odom.y, odom.angle);
 }
 
 void UniBase::blinkLED(int interval) {
-  if (interval > 0) {
-    _ledBlinkInterval = interval;
-    _ledBlinking = true;
-  } else {
-    _ledBlinking = false;
-    _ledBlinkInterval = 0;
-    digitalWrite(LED_PIN, LOW);
-  }
+  ensureBegun();
+  if (interval > 0) { _ledBlinkInterval = interval; _ledBlinking = true; }
+  else { _ledBlinking = false; _ledBlinkInterval = 0; digitalWrite(_cfg.ledPin, LOW); }
 }
 
 int UniBase::getBatteryPower() {
-  // Use analogReadMilliVolts for accurate voltage (uses ESP32 internal calibration)
-  float measuredVoltage = analogReadMilliVolts(BATTERY_PIN) / 1000.0;
-  float batteryVoltage = measuredVoltage * 2.0;
+  ensureBegun();
+  float batteryVoltage = (analogReadMilliVolts(_cfg.batteryPin) / 1000.0) * 2.0;
+  if (batteryVoltage < 2.5 || batteryVoltage > 4.5) { _batteryValid = false; _batteryPercent = -1; return -1; }
   
-  #ifdef DEBUG_MODE
-    Serial.print("Battery voltage: ");
-    Serial.println(batteryVoltage);
-  #endif
-  
-  if (batteryVoltage < 2.5 || batteryVoltage > 4.5) {
-    _batteryValid = false;
-    _batteryPercent = -1;
-    return -1;
-  }
-  
-  // LiPo discharge lookup table (voltage → percentage)
-  // Based on typical 1S LiPo discharge curve, 3.20V = 0%, 4.20V = 100%
   static const float lipoTable[][2] = {
-    {3.20,   0}, {3.30,   2}, {3.40,   5}, {3.50,   8},
-    {3.55,  10}, {3.60,  13}, {3.65,  17}, {3.70,  22},
-    {3.73,  27}, {3.75,  30}, {3.77,  34}, {3.79,  38},
-    {3.80,  40}, {3.82,  45}, {3.84,  50}, {3.86,  55},
-    {3.88,  60}, {3.92,  65}, {3.96,  72}, {4.00,  78},
-    {4.05,  84}, {4.10,  90}, {4.15,  95}, {4.20, 100}
+    {3.20,0}, {3.50,8}, {3.70,22}, {3.80,40}, {3.96,72}, {4.20,100}
   };
-  static const int tableSize = sizeof(lipoTable) / sizeof(lipoTable[0]);
   
   float percent = 0;
-  float v = batteryVoltage;
-  
-  if (v >= 4.20) {
-    percent = 100.0;
-  } else if (v <= 3.20) {
-    percent = 0.0;
-  } else {
-    // Linear interpolation between table points
-    for (int i = 1; i < tableSize; i++) {
-      if (v <= lipoTable[i][0]) {
+  if (batteryVoltage >= 4.20) percent = 100.0;
+  else if (batteryVoltage <= 3.20) percent = 0.0;
+  else {
+    for (int i = 1; i < 6; i++) {
+      if (batteryVoltage <= lipoTable[i][0]) {
         float v0 = lipoTable[i-1][0], p0 = lipoTable[i-1][1];
-        float v1 = lipoTable[i][0],   p1 = lipoTable[i][1];
-        percent = p0 + (p1 - p0) * (v - v0) / (v1 - v0);
+        float v1 = lipoTable[i][0], p1 = lipoTable[i][1];
+        percent = p0 + (p1 - p0) * (batteryVoltage - v0) / (v1 - v0);
         break;
       }
     }
   }
-  
-  int percentInt = (int)(percent + 0.5);
-  percentInt = constrain(percentInt, 0, 100);
-  
-  _batteryPercent = percentInt;
+  _batteryPercent = constrain((int)(percent + 0.5), 0, 100);
   _batteryValid = true;
-  
-  return percentInt;
+  return _batteryPercent;
 }
 
-// ============ UART Control Mode ============
+// ============ UART Control Protocol (COBS + CRC8) ============
 
 void UniBase::UniBaseControl() {
-  if (_ctrlInitialized) return;  // Already initialized
-  
+  ensureBegun();
+  if (_ctrlInitialized) return;
   _ctrlSerial = new HardwareSerial(2);
-  _ctrlSerial->begin(CTRL_UART_BAUD_RATE, SERIAL_8N1, CTRL_UART_RX_PIN, CTRL_UART_TX_PIN);
+  _ctrlSerial->begin(_cfg.uartBaudRate, SERIAL_8N1, _cfg.uartRxPin, _cfg.uartTxPin);
   _ctrlBufferIndex = 0;
-  _abortCommand = false;
-  
-  // Create command queue (depth 1 — latest command wins)
-  _cmdQueue = xQueueCreate(1, sizeof(UartCmd));
-  
-  // Create command executor task on Core 0
-  xTaskCreatePinnedToCore(
-    uartCommandTaskFunc,  // task function
-    "uartCmd",            // name
-    4096,                 // stack size
-    this,                 // parameter
-    1,                    // priority
-    &_cmdTaskHandle,      // handle
-    0                     // Core 0
-  );
-  
   _ctrlInitialized = true;
 }
 
-// --- UART Receiver (non-blocking, byte-by-byte) ---
+void UniBase::sendPacket(const uint8_t* payload, uint8_t len) {
+    uint8_t crc = UniProtocol::crc8(payload, len);
+    uint8_t fullPayload[32];
+    memcpy(fullPayload, payload, len);
+    fullPayload[len] = crc;
+
+    uint8_t encoded[35];
+    size_t encLen = UniProtocol::cobsEncode(fullPayload, len + 1, encoded);
+
+    _ctrlSerial->write(UBC_SYNC_BYTE);
+    _ctrlSerial->write(encoded, encLen);
+    _ctrlSerial->write(UBC_SYNC_BYTE);
+}
+
+void UniBase::ctrlSendFloat(float val) { sendPacket((uint8_t*)&val, 4); }
+void UniBase::ctrlSendLong(long val) { sendPacket((uint8_t*)&val, 4); }
+
 void UniBase::ctrlReceiveUART() {
   while (_ctrlSerial->available() > 0) {
     uint8_t b = _ctrlSerial->read();
     
-    // Timeout: if partial packet stalled > 100ms, reset buffer
-    if (_ctrlBufferIndex > 0 && (millis() - _uartLastRxTime > 100)) {
-      _ctrlBufferIndex = 0;
-    }
-    _uartLastRxTime = millis();
-    
-    if (_ctrlBufferIndex == 0) {
-      // Expect a valid command byte (0x01 to 0x1C+)
-      if (b >= 0x01 && b <= 0x20) {
-        _ctrlBuffer[_ctrlBufferIndex++] = b;
-      }
-      continue;
-    }
-    
-    if (_ctrlBufferIndex < CTRL_UART_BUFFER_SIZE - 1) {
-      _ctrlBuffer[_ctrlBufferIndex++] = b;
+    if (b == UBC_SYNC_BYTE) {
+        if (_ctrlBufferIndex > 0) {
+            size_t decLen = UniProtocol::cobsDecode(_ctrlBuffer, _ctrlBufferIndex, _decodeBuffer);
+            _ctrlBufferIndex = 0;
+            
+            if (decLen >= 2) {
+                uint8_t rxCrc = _decodeBuffer[decLen - 1];
+                uint8_t calcCrc = UniProtocol::crc8(_decodeBuffer, decLen - 1);
+                if (rxCrc == calcCrc) {
+                    uartDispatchCommand(_decodeBuffer, decLen - 1);
+                }
+            }
+        }
     } else {
-      _ctrlBufferIndex = 0;
-      continue;
-    }
-    
-    // Determine expected length
-    uint8_t cmd = _ctrlBuffer[0];
-    uint8_t expectedLength = 0;
-    
-    switch (cmd) {
-      case 0x01: expectedLength = 3; break;  // motors
-      case 0x02: expectedLength = 2; break;  // stop
-      case 0x03: expectedLength = 4; break;  // moveDist
-      case 0x04: expectedLength = 4; break;  // rotate
-      case 0x05: expectedLength = 1; break;  // getDistance
-      case 0x06: expectedLength = 1; break;  // getAngle
-      case 0x07: expectedLength = 1; break;  // getOdometry
-      case 0x08: expectedLength = 4; break;  // motorsArc
-      case 0x09: expectedLength = 4; break;  // moveTime
-      case 0x0A: expectedLength = 6; break;  // moveArcTime
-      case 0x0B: expectedLength = 2; break;  // motorLeft
-      case 0x0C: expectedLength = 2; break;  // motorRight
-      case 0x0D: expectedLength = 2; break;  // stopLeft
-      case 0x0E: expectedLength = 2; break;  // stopRight
-      case 0x0F: expectedLength = 1; break;  // resetDistance
-      case 0x10: expectedLength = 1; break;  // resetAngle
-      case 0x11: expectedLength = 1; break;  // getAbsX
-      case 0x12: expectedLength = 1; break;  // getAbsY
-      case 0x13: expectedLength = 1; break;  // getAbsAngle
-      case 0x14: expectedLength = 1; break;  // getLeftTicks
-      case 0x15: expectedLength = 1; break;  // getRightTicks
-      case 0x16: {  // displayPrint (variable length: cmd + len + chars)
-        if (_ctrlBufferIndex >= 2) {
-          expectedLength = 2 + _ctrlBuffer[1];  // cmd + len byte + N chars
+        if (_ctrlBufferIndex < _cfg.uartBufferSize) {
+            _ctrlBuffer[_ctrlBufferIndex++] = b;
         } else {
-          continue;  // wait for length byte
+            _ctrlBufferIndex = 0;
         }
-        break;
-      }
-      case 0x17: expectedLength = 1; break;  // displayClear
-      case 0x18: expectedLength = 1; break;  // printOdometry
-      case 0x19: expectedLength = 3; break;  // blinkLED
-      case 0x1A: expectedLength = 1; break;  // getBatteryPower
-      case 0x1B: expectedLength = 6; break;  // moveArcDist
-      case 0x1C: { // displayPrintNamed (cmd + nLen + name + vLen + val)
-        // Need CMD + NameLen
-        if (_ctrlBufferIndex < 2) {
-          continue; 
-        }
-        uint8_t nameLen = _ctrlBuffer[1];
-        
-        // Need CMD + NameLen + Name + ValLen
-        if (_ctrlBufferIndex < 2 + nameLen + 1) {
-          continue;
-        }
-        uint8_t valLen = _ctrlBuffer[2 + nameLen];
-        expectedLength = 1 + 1 + nameLen + 1 + valLen;
-        break;
-      }
-      default:
-        _ctrlBufferIndex = 0;
-        continue;
-    }
-    
-    if (_ctrlBufferIndex >= expectedLength) {
-      uartDispatchCommand(_ctrlBuffer, expectedLength);
-      _ctrlBufferIndex = 0;
     }
   }
 }
 
-// --- Command Dispatcher ---
-// Called from Core 1. Immediate commands execute here.
-// Blocking commands are queued to the executor task on Core 0.
+// Минимальная длина пакета (включая байт команды); переменная часть
+// команд дисплея проверяется дополнительно в их обработчиках
+static uint8_t uartRequiredLen(uint8_t cmd) {
+  switch (cmd) {
+    case CMD_MOTORS:              return 3;
+    case CMD_STOP:                return 2;
+    case CMD_MOVE_DIST:           return 4;
+    case CMD_ROTATE:              return 4;
+    case CMD_MOTORS_ARC:          return 4;
+    case CMD_MOTORS_SYNC:         return 3;
+    case CMD_ROTATE_TO:           return 4;
+    case CMD_MOVE_TO:             return 6;
+    case CMD_MOVE_ARC_RADIUS:     return 6;
+    case CMD_SET_POSITION:        return 7;
+    case CMD_MOVE_TIME:           return 4;
+    case CMD_MOVE_ARC_TIME:       return 6;
+    case CMD_MOTOR_LEFT:          return 2;
+    case CMD_MOTOR_RIGHT:         return 2;
+    case CMD_STOP_LEFT:           return 2;
+    case CMD_STOP_RIGHT:          return 2;
+    case CMD_DISPLAY_PRINT:       return 2;
+    case CMD_BLINK_LED:           return 3;
+    case CMD_MOVE_ARC_DIST:       return 6;
+    case CMD_DISPLAY_PRINT_NAMED: return 3;
+    default:                      return 1;
+  }
+}
+
 void UniBase::uartDispatchCommand(uint8_t* data, uint8_t len) {
   uint8_t cmd = data[0];
-  
-  // ---- DATA commands (getters) — run anytime, no interruption ----
+  if (len < uartRequiredLen(cmd)) return; // битый/обрезанный пакет
   switch (cmd) {
-    case 0x05: { // getDistance
-      ctrlSendFloat(getDistance());
-      return;
-    }
-    case 0x06: { // getAngle
-      ctrlSendFloat(getAngle());
-      return;
-    }
-    case 0x07: { // getOdometry (3 floats: x, y, angle)
+    case CMD_MOTORS: motors((int8_t)data[1], (int8_t)data[2]); break;
+    case CMD_STOP: stop(data[1]); break;
+    case CMD_MOVE_DIST: moveDistAsync((int8_t)data[1], (int)((uint16_t)data[2] << 8 | data[3])); break;
+    case CMD_ROTATE: rotateAsync((int8_t)data[1], (int16_t)((data[2] << 8) | data[3])); break;
+    case CMD_GET_DISTANCE: ctrlSendFloat(getDistance()); break;
+    case CMD_GET_ANGLE: ctrlSendFloat(getAngle()); break;
+    case CMD_GET_ODOMETRY: {
       OdometryData od = getOdometry();
-      ctrlSendFloat(od.x);
-      ctrlSendFloat(od.y);
-      ctrlSendFloat(od.angle);
-      return;
+      uint8_t buf[12];
+      memcpy(buf, &od.x, 4); memcpy(buf+4, &od.y, 4); memcpy(buf+8, &od.angle, 4);
+      sendPacket(buf, 12);
+      break;
     }
-    case 0x0F: { // resetDistance
-      resetDistance();
-      return;
+    case CMD_MOTORS_ARC: motorsArc((int8_t)data[1], (float)((int16_t)((data[2] << 8) | data[3]))); break;
+    case CMD_MOTORS_SYNC: motorsSync((int8_t)data[1], (int8_t)data[2]); break;
+    case CMD_ROTATE_TO: rotateToAsync((int8_t)data[1], (float)(int16_t)((data[2] << 8) | data[3])); break;
+    case CMD_MOVE_TO: moveToAsync((int8_t)data[1], (float)(int16_t)((data[2] << 8) | data[3]), (float)(int16_t)((data[4] << 8) | data[5])); break;
+    case CMD_MOVE_ARC_RADIUS: moveArcRadiusAsync((int8_t)data[1], (float)(uint16_t)((data[2] << 8) | data[3]), (float)(int16_t)((data[4] << 8) | data[5])); break;
+    case CMD_SET_POSITION: setPosition((float)(int16_t)((data[1] << 8) | data[2]), (float)(int16_t)((data[3] << 8) | data[4]), (float)(int16_t)((data[5] << 8) | data[6])); break;
+    case CMD_HOLD_POSITION: holdPosition(); break;
+    case CMD_MOVE_TIME: moveTimeAsync((int8_t)data[1], (int)((uint16_t)data[2] << 8 | data[3])); break;
+    case CMD_MOVE_ARC_TIME: moveArcTimeAsync((int8_t)data[1], (int16_t)((data[2] << 8) | data[3]), (int)((uint16_t)data[4] << 8 | data[5])); break;
+    case CMD_MOTOR_LEFT: motorLeft((int8_t)data[1]); break;
+    case CMD_MOTOR_RIGHT: motorRight((int8_t)data[1]); break;
+    case CMD_STOP_LEFT: stopLeft(data[1]); break;
+    case CMD_STOP_RIGHT: stopRight(data[1]); break;
+    case CMD_RESET_DIST: resetDistance(); break;
+    case CMD_RESET_ANGLE: resetAngle(); break;
+    case CMD_GET_ABS_X: ctrlSendFloat(getAbsX()); break;
+    case CMD_GET_ABS_Y: ctrlSendFloat(getAbsY()); break;
+    case CMD_GET_ABS_ANGLE: ctrlSendFloat(getAbsAngle()); break;
+    case CMD_GET_L_TICKS: ctrlSendLong(getLeftTicks()); break;
+    case CMD_GET_R_TICKS: ctrlSendLong(getRightTicks()); break;
+    case CMD_DISPLAY_PRINT: {
+      char buf[21];
+      uint8_t cLen = min(data[1], (uint8_t)20);
+      if (cLen > len - 2) cLen = len - 2; // не читаем за концом пакета
+      for (uint8_t i = 0; i < cLen; i++) buf[i] = (char)data[2 + i];
+      buf[cLen] = '\0';
+      displayPrint(buf);
+      break;
     }
-    case 0x10: { // resetAngle
-      resetAngle();
-      return;
-    }
-    case 0x11: { // getAbsX
-      ctrlSendFloat(getAbsX());
-      return;
-    }
-    case 0x12: { // getAbsY
-      ctrlSendFloat(getAbsY());
-      return;
-    }
-    case 0x13: { // getAbsAngle
-      ctrlSendFloat(getAbsAngle());
-      return;
-    }
-    case 0x14: { // getLeftTicks
-      ctrlSendLong(getLeftTicks());
-      return;
-    }
-    case 0x15: { // getRightTicks
-      ctrlSendLong(getRightTicks());
-      return;
-    }
-    case 0x18: { // printOdometry
-      printOdometry();
-      return;
-    }
-    case 0x1A: { // getBatteryPower
+    case CMD_DISPLAY_CLEAR: displayClear(); break;
+    case CMD_PRINT_ODOM: printOdometry(); break;
+    case CMD_BLINK_LED: blinkLED(((uint16_t)data[1] << 8) | data[2]); break;
+    case CMD_GET_BATTERY: {
       int batt = getBatteryPower();
       uint8_t val = (batt < 0) ? 0xFF : (uint8_t)batt;
-      _ctrlSerial->write(val);
-      return;
+      sendPacket(&val, 1);
+      break;
+    }
+    case CMD_MOVE_ARC_DIST: moveArcDistAsync((int8_t)data[1], (int16_t)((data[2] << 8) | data[3]), (int)((uint16_t)data[4] << 8 | data[5])); break;
+    case CMD_DISPLAY_PRINT_NAMED: {
+      char nameBuf[12];
+      char valBuf[12];
+      uint8_t nLen = min(data[1], (uint8_t)10);
+      if (2 + nLen + 1 > len) break; // имя + байт длины значения не помещаются
+      uint8_t idx = 2;
+      for (uint8_t i = 0; i < nLen; i++) nameBuf[i] = (char)data[idx++];
+      nameBuf[nLen] = '\0';
+
+      uint8_t vLen = min(data[idx++], (uint8_t)10);
+      if (idx + vLen > len) break; // значение не помещается
+      for (uint8_t i = 0; i < vLen; i++) valBuf[i] = (char)data[idx++];
+      valBuf[vLen] = '\0';
+
+      displayPrint(nameBuf, valBuf);
+      break;
+    }
+    case CMD_IS_MOVING: {
+      uint8_t ans = isMoving() ? 1 : 0;
+      sendPacket(&ans, 1);
+      break;
     }
   }
-  
-  // ---- DIRECT commands — execute immediately, abort any blocking command ----
-  switch (cmd) {
-    case 0x01: { // motors(powerLeft, powerRight)
-      _abortCommand = true;
-      int8_t pL = (int8_t)(data[1] - 128);
-      int8_t pR = (int8_t)(data[2] - 128);
-      motors(pL, pR);
-      return;
-    }
-    case 0x02: { // stop(stopType)
-      _abortCommand = true;
-      uint8_t stopType = data[1];
-      stop(stopType);
-      return;
-    }
-    case 0x08: { // motorsArc(power, angle)
-      _abortCommand = true;
-      int8_t power = (int8_t)(data[1] - 128);
-      int16_t angle = (int16_t)(((int8_t)data[2] << 8) | data[3]);
-      motorsArc(power, (float)angle);
-      return;
-    }
-    case 0x0B: { // motorLeft(power)
-      _abortCommand = true;
-      int8_t power = (int8_t)(data[1] - 128);
-      motorLeft(power);
-      return;
-    }
-    case 0x0C: { // motorRight(power)
-      _abortCommand = true;
-      int8_t power = (int8_t)(data[1] - 128);
-      motorRight(power);
-      return;
-    }
-    case 0x0D: _abortCommand = true; stopLeft(data[1]); return;
-    case 0x0E: _abortCommand = true; stopRight(data[1]); return;
-    case 0x16: { // displayPrint(string)
-      uint8_t strLen = data[1];
-      String text = "";
-      for (uint8_t i = 0; i < strLen; i++) text += (char)data[2 + i];
-      displayPrint(text);
-      return;
-    }
-    case 0x17: displayClear(); return;
-    case 0x1C: { // displayPrint(name, value)
-      uint8_t nLen = data[1];
-      String name = "";
-      for (uint8_t i = 0; i < nLen; i++) name += (char)data[2 + i];
-      
-      uint8_t vLen = data[2 + nLen];
-      String value = "";
-      for (uint8_t i = 0; i < vLen; i++) value += (char)data[3 + nLen + i];
-      
-      displayPrint(name.c_str(), value);
-      return;
-    }
-    case 0x19: {
-      uint16_t interval = ((uint16_t)data[1] << 8) | data[2];
-      blinkLED((int)interval);
-      return;
-    }
-  }
-  
-  // ---- BLOCKING commands — abort current, queue to executor task ----
-  UartCmd cmd_struct;
-  cmd_struct.type = cmd;
-  cmd_struct.p1 = 0; cmd_struct.p2 = 0; cmd_struct.p3 = 0;
-  
-  // Abort any running blocking command
-  _abortCommand = true;
-  
-  switch (cmd) {
-    case 0x03: { // moveDist(power, millimeters)
-      cmd_struct.p1 = (int8_t)(data[1] - 128);
-      cmd_struct.p2 = (int)((uint16_t)data[2] << 8 | data[3]);
-      break;
-    }
-    case 0x04: { // rotate(power, angle)
-      cmd_struct.p1 = (int8_t)(data[1] - 128);
-      cmd_struct.p2 = (int16_t)(((int8_t)data[2] << 8) | data[3]);
-      break;
-    }
-    case 0x09: { // moveTime(power, milliseconds)
-      cmd_struct.p1 = (int8_t)(data[1] - 128);
-      cmd_struct.p2 = (int)((uint16_t)data[2] << 8 | data[3]);
-      break;
-    }
-    case 0x0A: { // moveArcTime(power, arcAngle, milliseconds)
-      cmd_struct.p1 = (int8_t)(data[1] - 128);
-      cmd_struct.p2 = (int16_t)(((int8_t)data[2] << 8) | data[3]);
-      cmd_struct.p3 = (int)((uint16_t)data[4] << 8 | data[5]);
-      break;
-    }
-    case 0x1B: { // moveArcDist(power, arcAngle, millimeters)
-      cmd_struct.p1 = (int8_t)(data[1] - 128);
-      cmd_struct.p2 = (int16_t)(((int8_t)data[2] << 8) | data[3]);
-      cmd_struct.p3 = (int)((uint16_t)data[4] << 8 | data[5]);
-      break;
-    }
-    default: return;  // Unknown command
-  }
-  
-  // Overwrite queue (if a command is waiting, replace it)
-  xQueueOverwrite(_cmdQueue, &cmd_struct);
-}
-
-// --- Command Executor Task (runs on Core 0) ---
-// Waits for blocking commands and calls native functions directly.
-void UniBase::uartCommandTaskFunc(void* param) {
-  UniBase* self = (UniBase*)param;
-  UartCmd cmd;
-  
-  for (;;) {
-    // Block until a command arrives
-    if (xQueueReceive(self->_cmdQueue, &cmd, portMAX_DELAY) == pdTRUE) {
-      self->_abortCommand = false;
-      
-      switch (cmd.type) {
-        case 0x03: self->moveDist(cmd.p1, cmd.p2); break;
-        case 0x04: self->rotate(cmd.p1, cmd.p2); break;
-        case 0x09: self->moveTime(cmd.p1, cmd.p2); break;
-        case 0x0A: self->moveArcTime(cmd.p1, cmd.p2, cmd.p3); break;
-        case 0x1B: self->moveArcDist(cmd.p1, cmd.p2, cmd.p3); break;
-      }
-      
-      self->_currentCommand = "Ready";
-    }
-  }
-}
-
-
-
-    
-
-
-
-
-
-
-      
-
-
-      
-
-
-    
-
-
-
-
-
-
-
-
-  
-
-
-
-// --- Send float response over UART ---
-void UniBase::ctrlSendFloat(float val) {
-  uint8_t* bytes = (uint8_t*)&val;
-  _ctrlSerial->write(bytes, 4);
-}
-
-// --- Send long response over UART ---
-void UniBase::ctrlSendLong(long val) {
-  uint8_t* bytes = (uint8_t*)&val;
-  _ctrlSerial->write(bytes, 4);
 }

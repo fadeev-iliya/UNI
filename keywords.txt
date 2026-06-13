@@ -9,6 +9,8 @@
 OdometryData	KEYWORD1
 UniBase	KEYWORD1
 UniDev	KEYWORD1
+UniConfig	KEYWORD1
+TuningConfig	KEYWORD1
 TrafficLightColor	KEYWORD1
 
 #######################################
@@ -20,11 +22,30 @@ motors	KEYWORD2
 motorLeft	KEYWORD2
 motorRight	KEYWORD2
 motorsArc	KEYWORD2
+motorsSync	KEYWORD2
 moveDist	KEYWORD2
 moveTime	KEYWORD2
 moveArcDist	KEYWORD2
 moveArcTime	KEYWORD2
+moveArcRadius	KEYWORD2
 rotate	KEYWORD2
+rotateTo	KEYWORD2
+moveTo	KEYWORD2
+moveDistAsync	KEYWORD2
+moveTimeAsync	KEYWORD2
+moveArcDistAsync	KEYWORD2
+moveArcTimeAsync	KEYWORD2
+moveArcRadiusAsync	KEYWORD2
+rotateAsync	KEYWORD2
+rotateToAsync	KEYWORD2
+moveToAsync	KEYWORD2
+isMoving	KEYWORD2
+waitMove	KEYWORD2
+holdPosition	KEYWORD2
+setPosition	KEYWORD2
+setTuning	KEYWORD2
+getTuning	KEYWORD2
+UniBaseControl	KEYWORD2
 stop	KEYWORD2
 stopLeft	KEYWORD2
 stopRight	KEYWORD2
@@ -51,6 +72,8 @@ getPinMode	KEYWORD2
 waitButton	KEYWORD2
 getButtonState	KEYWORD2
 servo	KEYWORD2
+servoAttach	KEYWORD2
+servoDetach	KEYWORD2
 pixel	KEYWORD2
 pixelsAll	KEYWORD2
 pixelsClear	KEYWORD2
@@ -70,7 +93,7 @@ trafficLightSequence	KEYWORD2
 # Constants (LITERAL1)
 #######################################
 
-SMOOTH	LITERAL1
+SOFT	LITERAL1
 HARD	LITERAL1
 TRAFFIC_GREEN	LITERAL1
 TRAFFIC_OFF	LITERAL1

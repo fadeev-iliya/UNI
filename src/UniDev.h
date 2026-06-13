@@ -32,6 +32,8 @@ private:
   static bool _initialized;
   static Adafruit_NeoPixel* _staticNeoPixels;
   static uint8_t _pinModes[40];
+  static int8_t _servoChannels[40];
+  static uint8_t _nextFreeChannel;
   
   void ensureInitialized();
   void ensurePinMode(uint8_t pin, uint8_t mode);
@@ -106,10 +108,26 @@ public:
   // Servo
   /**
    * @brief Установить угол сервопривода.
+   * При первом вызове подключает порт автоматически.
    * @param port Порт сервопривода
    * @param angle Угол (0-180)
    */
   void servo(int port, int angle);
+
+  /**
+   * @brief Подключить сервопривод заранее (опционально):
+   * закрепляет за портом PWM-канал без задания угла.
+   * @param port Порт сервопривода
+   */
+  void servoAttach(int port);
+
+  /**
+   * @brief Отключить сервопривод: импульсы прекращаются, привод
+   * расслабляется и не держит нагрузку (защита от поломки).
+   * Следующий вызов servo() снова включит его.
+   * @param port Порт сервопривода
+   */
+  void servoDetach(int port);
   
   // NeoPixel базовые функции
   /**

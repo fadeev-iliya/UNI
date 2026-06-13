@@ -6,45 +6,79 @@
 #include <Adafruit_SSD1306.h>
 #include <Wire.h>
 
+#include "UniMotors.h"
+#include "UniEncoders.h"
+#include "UniProtocol.h"
+
 // Debug mode - раскомментируйте для вывода отладочных сообщений
-#define DEBUG_MODE
+// #define DEBUG_MODE
 
-// Stop types
-#define SMOOTH 0
-#define HARD 1
+// ============ Конфигурация платформы ============
 
-// Motor pins
-#define LEFT_MOTOR_PIN_A GPIO_NUM_2
-#define LEFT_MOTOR_PIN_B GPIO_NUM_4
-#define RIGHT_MOTOR_PIN_A GPIO_NUM_27
-#define RIGHT_MOTOR_PIN_B GPIO_NUM_26
+struct UniConfig {
+    // Пины моторов
+    uint8_t leftMotorA = 2;
+    uint8_t leftMotorB = 4;
+    uint8_t rightMotorA = 27;
+    uint8_t rightMotorB = 26;
 
-// Encoder pins
-#define LEFT_ENC_INTERRUPT GPIO_NUM_18
-#define LEFT_ENC_DIRECTION GPIO_NUM_19
-#define RIGHT_ENC_INTERRUPT GPIO_NUM_35
-#define RIGHT_ENC_DIRECTION GPIO_NUM_34
+    // Пины энкодеров
+    uint8_t leftEncInt = 18;
+    uint8_t leftEncDir = 19;
+    uint8_t rightEncInt = 35;
+    uint8_t rightEncDir = 34;
 
-// OLED pins
-#define OLED_SDA GPIO_NUM_21
-#define OLED_SCL GPIO_NUM_22
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
-#define OLED_RESET -1
-#define SCREEN_ADDRESS 0x3C
+    // Системные пины
+    uint8_t ledPin = 25;
+    uint8_t batteryPin = 33;
+    uint8_t sdaPin = 21;
+    uint8_t sclPin = 22;
+    uint8_t oledSda = 21;
+    uint8_t oledScl = 22;
+    int8_t oledReset = -1;
+    uint8_t screenWidth = 128;
+    uint8_t screenHeight = 64;
+    uint8_t screenAddress = 0x3C;
 
-// LED and Battery pins
-#define LED_PIN GPIO_NUM_25
-#define BATTERY_PIN GPIO_NUM_33
+    // Кинематика
+    float wheelDiameterMM = 45.0f;
+    float trackLengthMM = 106.0f;
+    float ticksPerRevLeft = 690.0f;
+    float ticksPerRevRight = 690.0f;
+    float maxTicksPerSec = 1500.0f;
 
-// Robot parameters
-#define TRACK_LENGTH_MM 104
-#define WHEEL_DIAMETER_MM 45
-#define TICKS_PER_REV_LEFT 690
-#define TICKS_PER_REV_RIGHT 690
-#ifndef PI
-#define PI 3.141592653589793
-#endif
+    // UART Управление (Связь с Nano)
+    long uartBaudRate = 38400;
+    uint8_t uartRxPin = 16;
+    uint8_t uartTxPin = 17;
+    uint16_t uartBufferSize = 128;
+};
+
+// ============ Конфигурация физики и ПИД ============
+
+struct TuningConfig {
+    int minPower = 15;            // Минимальная мощность страгивания
+    float pGain = 0.5;            // Коэффициент P для прямолинейного движения
+    float iGain = 0.005;          // Коэффициент I
+    float dGain = 0.0;            // Коэффициент D
+
+    // Точный поворот (замкнутый контур по одометрии)
+    float rotateTolDeg = 1.0f;      // Допуск завершения поворота (град)
+    float rotateAccel = 1300.0f;    // Замедление профиля поворота (тики/с^2)
+    float rotateMinSpeed = 40.0f;   // Минимальная скорость подхода к цели (тики/с)
+
+    // Прямолинейное движение (замкнутый профиль по энкодерам)
+    float moveTolMM = 1.0f;         // Допуск завершения движения (мм)
+    float moveAccel = 1800.0f;      // Замедление профиля движения (тики/с^2)
+    float moveMinSpeed = 60.0f;     // Минимальная скорость подхода к цели (тики/с)
+};
+
+// ============ Внутренние константы ============
+
+enum StopType {
+  SOFT = 0,
+  HARD = 1
+};
 
 struct OdometryData {
   float x;
@@ -52,374 +86,280 @@ struct OdometryData {
   float angle;
 };
 
-
-// UART pins for control mode
-#define CTRL_UART_RX_PIN 17
-#define CTRL_UART_TX_PIN 16
-#define CTRL_UART_BUFFER_SIZE 40
-#define CTRL_UART_BAUD_RATE 9600
-
-/// @brief Класс управления UniBase
 class UniBase {
 private:
-  // Display
+  UniConfig _cfg;
+  TuningConfig _tuning;
+
+  // OLED Display
   Adafruit_SSD1306* _display;
   bool _displayInitialized;
   bool _customDisplayMode;
-  String _customDisplayText;
-  String _customDisplayName;
+  char _customDisplayName[16];
+  char _customDisplayText[16];
   
-  // LED
-  volatile bool _ledBlinking;
-  volatile int _ledBlinkInterval;
-  
-  // Battery
+  // Peripherals state
+  bool _ledBlinking;
+  int _ledBlinkInterval;
   int _batteryPercent;
   bool _batteryValid;
   
-  // Task handle for second core
+  // RTOS Handles and Synchronization
   TaskHandle_t _secondCore;
+  portMUX_TYPE _odomMux = portMUX_INITIALIZER_UNLOCKED;
+  portMUX_TYPE _dispMux = portMUX_INITIALIZER_UNLOCKED; // защита строк дисплея (пишутся с обоих ядер)
+  SemaphoreHandle_t _moveSemaphore;
   
-  // Encoder variables
-  volatile long _lEnc;
-  volatile long _rEnc;
-  volatile long _lEncOld;
-  volatile long _rEncOld;
-  volatile long _encPrevTime;
-  volatile float _encPrevErr;
-  volatile float _I;
+  // Submodules
+  UniMotors _motors;
+  UniEncoders _encoders;
   
-  // Odometry variables  
-  volatile float _xPos;
-  volatile float _yPos;
-  volatile float _theta;
+  // Odometry variables (Protected by _odomMux)
+  float _xPos;
+  float _yPos;
+  float _theta;
+  float _totalDistance;
+  float _totalAngle;
+  float _distPerTickLeft;
+  float _distPerTickRight;
+  long _lEncOdomOld = 0;
+  long _rEncOdomOld = 0;
   
-  // Tracking variables
-  volatile float _totalDistance;
-  volatile float _totalAngle;
+  // State Machine for Async movements
+  enum MoveState {
+    STATE_IDLE,
+    STATE_MOVE_DIST,
+    STATE_MOVE_TIME,
+    STATE_MOVE_ARC_DIST,
+    STATE_MOVE_ARC_TIME,
+    STATE_ROTATE_PROFILE,
+    STATE_MOVETO_TURN
+  };
+  volatile MoveState _moveState;
   
-  // Target angle for accumulated rotation control
+  // Async movement targets and parameters
+  volatile long _targetDistTicks;
+  volatile long _targetStartLEnc;
+  volatile long _targetStartREnc;
+  volatile unsigned long _targetEndTime;
+  volatile float _targetAngleDeg;
   volatile float _targetTheta;
-  volatile bool _useTargetTheta;
-  
+  volatile float _rotateCruiseVel;
+  volatile float _asyncAbsPower;
+  volatile int _asyncDirection;
+  volatile float _moveToX;
+  volatile float _moveToY;
+  volatile uint32_t _cmdSeq = 0; // счетчик команд: защита от хвоста устаревшего stop()
+
   // Control variables
-  String _currentCommand;
-  String _robotName;
+  char _currentCommand[16];
+  char _robotName[16];
   
-  // EncMove on second core variables
+  // PID variables for straight line (EncMove)
   volatile bool _encMoveActive;
-  volatile int _encMovePowerL;
-  volatile int _encMovePowerR;
-  volatile long _encMoveStartL;  
+  volatile float _encMovePowerL;
+  volatile float _encMovePowerR;
+  volatile long _encMoveStartL;
   volatile long _encMoveStartR;
+  volatile long _encPrevTime;
+  volatile float _targetPosL;
+  volatile float _targetPosR;
+  volatile float _currentTargetVelL;
+  volatile float _currentTargetVelR;
+  volatile float _encPrevErrL;
+  volatile float _encPrevErrR;
+  volatile float _IL;
+  volatile float _IR;
+  volatile float _lastLeftPower;
+  volatile float _lastRightPower;
   
-  // Rate limiting variables для плавного изменения мощности
-  volatile int _lastLeftPower;
-  volatile int _lastRightPower;
+  // UART control variables
+  HardwareSerial* _ctrlSerial;
+  bool _ctrlInitialized;
+  uint8_t* _ctrlBuffer;
+  uint8_t* _decodeBuffer;
+  uint16_t _ctrlBufferIndex;
+  unsigned long _uartLastRxTime;
   
-  // Constants
-  const float _distPerTickLeft;
-  const float _distPerTickRight;
-  
-  // Private methods
-  void initMotors();
-  void initEncoders();
+  // Lazy init
+  bool _begun;
+  void ensureBegun();
+
+  // Internal methods
   void initOLED();
   void initSecondCore();
   
-  void leftMotor(int power);
-  void rightMotor(int power);
   void updateOdometry();
   void updateDisplay();
   void drawBatteryIcon(int x, int y, int percent);
+  void setCommandName(const char* name);
 
-  void encMove(int pL, int pR);
-  void encMove(int pL, int pR, long startLEnc, long startREnc);
+  void encMove(float pL, float pR, long startLEnc, long startREnc);
   
-  void startEncMoveOnSecondCore(int powerL, int powerR);
-  
-  static void leftEncISR();
-  static void rightEncISR();
+  void startEncMoveOnSecondCore(float powerL, float powerR);
+
+  // Общие настройщики фаз движения
+  void startRotatePhase(int power, float deltaDeg, MoveState state);
+  void startArcDistPhase(int power, float angleParam, float millimeters);
+  void beginMoveToDrive();
+
+  // State machine logic
+  void processAsyncMovement();
+
+  // RTOS Task
   static void secondCoreLoop(void* pvParameters);
 
-  static UniBase* _instance;
-
-  // ============ UART Control Mode ============
-  HardwareSerial* _ctrlSerial;
-  bool _ctrlInitialized;
-  
-  // UART receive buffer
-  uint8_t _ctrlBuffer[CTRL_UART_BUFFER_SIZE];
-  uint8_t _ctrlBufferIndex;
-  uint32_t _uartLastRxTime;
-  
-  // FreeRTOS command dispatcher
-  struct UartCmd { uint8_t type; int p1; int p2; int p3; };
-  QueueHandle_t _cmdQueue;
-  TaskHandle_t _cmdTaskHandle;
-  volatile bool _abortCommand;
-  
   // UART control private methods
   void ctrlReceiveUART();
   void uartDispatchCommand(uint8_t* data, uint8_t len);
   void ctrlSendFloat(float val);
   void ctrlSendLong(long val);
-  static void uartCommandTaskFunc(void* param);
+  void sendPacket(const uint8_t* payload, uint8_t len);
 
 public:
   /**
-   * @brief Конструктор класса управления роботом UniBase
-   * @param robotName Имя робота (по умолчанию "UNI").
+   * @brief Конструктор платформы
+   * @param robotName Имя робота (будет выведено на экран), макс 15 символов
+   * @param config Структура с конфигурацией железа (опционально)
    */
-  UniBase(String robotName = "UNI");
-  
-  /**
-   * @brief Деструктор класса.
-   */
+  UniBase(const char* robotName = "UNI Robot", UniConfig config = UniConfig());
   ~UniBase();
-  
+
   /**
-   * @brief Инициализация всех компонентов робота.
+   * @brief Инициализация периферии (опционально). Если не вызвать,
+   * выполнится автоматически при первой команде.
+   * @param robotName Имя робота (опционально, переопределяет имя из конструктора)
    */
-  void begin();
+  void begin(const char* robotName = nullptr);
   
+  // Конфигурация ПИД и физики на лету
+  void setTuning(const TuningConfig& tuning) { _tuning = tuning; }
+  TuningConfig getTuning() const { return _tuning; }
+
+  // ---- Control logic ----
   /**
-   * @brief Инициализация всех компонентов робота с заданием имени.
-   * @param robotName Имя робота
+   * @brief Инициализировать прослушивание UART с Arduino Nano
    */
-  void begin(String robotName);
+  void UniBaseControl();
   
-  // Motor control
-  /**
-   * @brief Управление моторами напрямую.
-   * @param powerLeft Мощность левого мотора (-100...100)
-   * @param powerRight Мощность правого мотора (-100...100)
-   */
+  // ---- Motor Basics ----
   void motors(int powerLeft, int powerRight);
-  
-  /**
-   * @brief Управление левым мотором.
-   * @param power Мощность (-100...100)
-   */
   void motorLeft(int power);
-  
-  /**
-   * @brief Управление правым мотором.
-   * @param power Мощность (-100...100)
-   */
   void motorRight(int power);
-  
-  /**
-   * @brief Движение по дуге с выравниванием.
-   * @param power Мощность моторов (-100...100)
-   * @param angle Угол дуги (-90...90)
-   */
   void motorsArc(int power, float angle);
-  
-  // Movement
+
   /**
-   * @brief Проехать заданное расстояние.
-   * @param power Мощность моторов (-100...100)
-   * @param millimeters Расстояние в миллиметрах
+   * @brief Езда с раздельными скоростями колес и выравниванием по энкодерам.
+   * Работает асинхронно до вызова stop(): соотношение скоростей колес
+   * удерживается сервоприводом, в отличие от motors() без стабилизации.
+   * @param powerLeft Скорость левого колеса (-100..100)
+   * @param powerRight Скорость правого колеса (-100..100)
    */
+  void motorsSync(int powerLeft, int powerRight);
+
+  // ---- Blocking Movement ----
   void moveDist(int power, int millimeters);
-  
-  /**
-   * @brief Движение в течение заданного времени.
-   * @param power Мощность моторов (-100...100)
-   * @param milliseconds Время в миллисекундах
-   */
   void moveTime(int power, int milliseconds);
-  
-  /**
-   * @brief Движение по дуге на заданное расстояние.
-   * @param power Мощность моторов (-100...100)
-   * @param angle Угол дуги (-90...90)
-   * @param millimeters Расстояние в миллиметрах
-   */
   void moveArcDist(int power, int angle, int millimeters);
-  
-  /**
-   * @brief Движение по дуге в течение заданного времени.
-   * @param power Мощность моторов (-100...100)
-   * @param angle Угол дуги (-90...90)
-   * @param milliseconds Время в миллисекундах
-   */
   void moveArcTime(int power, int angle, int milliseconds);
-  
-  /**
-   * @brief Поворот на заданный угол.
-   * @param power Мощность моторов (0...100)
-   * @param angle Угол в градусах (+ по часовой, - против)
-   */
   void rotate(int power, int angle);
-  
-  // Stop
+
   /**
-   * @brief Остановка робота.
-   * @param stopType SMOOTH = плавная, HARD = жёсткая
+   * @brief Поворот к абсолютному курсу одометрии кратчайшим путем.
+   * В отличие от rotate() съедает накопленную ошибку предыдущих маневров.
+   * @param angleDeg Целевой курс в градусах (в системе getAngle()/setPosition())
    */
-  void stop(int stopType);
-  
+  void rotateTo(int power, float angleDeg);
+
   /**
-   * @brief Остановка левого мотора.
-   * @param stopType SMOOTH = плавная, HARD = жёсткая
+   * @brief Поехать в точку одометрии: доворот на курс к цели, затем прямая.
+   * @param x, y Целевая точка (мм, в системе getOdometry()/setPosition())
    */
-  void stopLeft(int stopType);
-  
+  void moveTo(int power, float x, float y);
+
   /**
-   * @brief Остановка правого мотора.
-   * @param stopType SMOOTH = плавная, HARD = жёсткая
+   * @brief Дуга с заданной геометрией: радиус и угол.
+   * @param radiusMM Радиус дуги по центру робота (не меньше половины колеи)
+   * @param angleDeg Угол дуги; знак задает сторону поворота (как у rotate)
    */
-  void stopRight(int stopType);
-  
-  // Odometry
+  void moveArcRadius(int power, float radiusMM, float angleDeg);
+
+  // ---- Async Movement ----
+  void moveDistAsync(int power, int millimeters);
+  void moveTimeAsync(int power, int milliseconds);
+  void moveArcDistAsync(int power, int angle, int millimeters);
+  void moveArcTimeAsync(int power, int angle, int milliseconds);
+  void rotateAsync(int power, int angle);
+  void rotateToAsync(int power, float angleDeg);
+  void moveToAsync(int power, float x, float y);
+  void moveArcRadiusAsync(int power, float radiusMM, float angleDeg);
+
   /**
-   * @brief Сбросить пройденное расстояние.
+   * @brief Возвращает true, если робот сейчас выполняет команду движения
    */
+  bool isMoving();
+
+  /**
+   * @brief Ожидание завершения асинхронной команды движения
+   * @param timeoutMs Максимальное время ожидания в мс (0 = ждать бесконечно)
+   * @return true - движение завершено, false - вышли по таймауту
+   */
+  bool waitMove(unsigned long timeoutMs = 0);
+
+  /**
+   * @brief Активное удержание текущей позиции сервоприводом
+   * (робот сопротивляется сдвигу). Отменяется stop() или любым движением.
+   */
+  void holdPosition();
+  
+  // ---- Stop ----
+  void stop(int stopType = HARD);
+  void stopLeft(int stopType = HARD);
+  void stopRight(int stopType = HARD);
+
+  // ---- Odometry ----
   void resetDistance();
-  
-  /**
-   * @brief Получить пройденное расстояние.
-   * @return Расстояние в миллиметрах
-   */
   float getDistance();
   
-  /**
-   * @brief Сбросить угол поворота.
-   */
   void resetAngle();
-  
-  /**
-   * @brief Получить пройденный угол.
-   * @return Угол в градусах
-   */
   float getAngle();
   
-  /**
-   * @brief Получить полную одометрию (x, y, angle).
-   * @return OdometryData структура с данными
-   */
   OdometryData getOdometry();
-  
+
   /**
-   * @brief Получить абсолютную координату X.
-   * @return Координата X в миллиметрах
+   * @brief Установить позу одометрии (например, стартовую клетку поля)
    */
+  void setPosition(float x, float y, float angleDeg);
+
   float getAbsX();
-  
-  /**
-   * @brief Получить абсолютную координату Y.
-   * @return Координата Y в миллиметрах
-   */
   float getAbsY();
-  
-  /**
-   * @brief Получить абсолютный угол поворота.
-   * @return Угол в градусах
-   */
   float getAbsAngle();
   
-  /**
-   * @brief Получить значение тиков левого энкодера.
-   * @return Количество тиков
-   */
   long getLeftTicks();
-  
-  /**
-   * @brief Получить значение тиков правого энкодера.
-   * @return Количество тиков
-   */
   long getRightTicks();
-  
-  // Display
-  /**
-   * @brief Вывести текст на дисплей.
-   * @param text Текст для отображения
-   */
-  void displayPrint(String text);
-  
-  /**
-   * @brief Вывести C-строку на дисплей.
-   * @param text C-строка для отображения
-   */
+
+  void printOdometry();
+
+  // ---- Peripherals ----
+  void blinkLED(int interval);
+  int getBatteryPower();
+
+  // ---- Display ----
   void displayPrint(const char* text);
-  
-  /**
-   * @brief Вывести целое число на дисплей.
-   * @param value Число для отображения
-   */
   void displayPrint(int value);
-  
-  /**
-   * @brief Вывести длинное целое число на дисплей.
-   * @param value Число для отображения
-   */
   void displayPrint(long value);
-  
-  /**
-   * @brief Вывести число с плавающей точкой на дисплей (2 знака после запятой).
-   * @param value Число для отображения
-   */
   void displayPrint(float value);
-  
-  /**
-   * @brief Вывести число с плавающей точкой двойной точности на дисплей (4 знака после запятой).
-   * @param value Число для отображения
-   */
   void displayPrint(double value);
-  
-  /**
-   * @brief Вывести булевое значение на дисплей.
-   * @param value true или false
-   */
   void displayPrint(bool value);
-  
-  /**
-   * @brief Вывести именованное значение на дисплей.
-   * @param name Название (вверху дисплея)
-   * @param value Значение для отображения
-   */
+
   void displayPrint(const char* name, const char* value);
   void displayPrint(const char* name, int value);
   void displayPrint(const char* name, long value);
   void displayPrint(const char* name, float value);
   void displayPrint(const char* name, double value);
   void displayPrint(const char* name, bool value);
-  void displayPrint(const char* name, String value);
-  
-  /**
-   * @brief Очистить дисплей и вернуть стандартный режим.
-   */
+
   void displayClear();
-  
-  // Utility
-  /**
-   * @brief Вывести одометрию в Serial.
-   */
-  void printOdometry();
-  
-  // LED
-  /**
-   * @brief Запустить мигание светодиода.
-   * @param interval Интервал мигания в миллисекундах (0 = выключить мигание)
-   */
-  void blinkLED(int interval);
-  
-  // Battery
-  /**
-   * @brief Получить уровень заряда батареи.
-   * @return Процент заряда (0-100), -1 если данные недоступны
-   */
-  int getBatteryPower();
-
-  /**
-   * @brief Активировать режим управления по UART.
-   * Вызывайте в loop(). Читает команды UART2 и выполняет их.
-   */
-  void UniBaseControl();
-
 };
 
 #endif
-

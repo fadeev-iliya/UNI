@@ -3,6 +3,8 @@
 bool UniDev::_initialized = false;
 Adafruit_NeoPixel* UniDev::_staticNeoPixels = nullptr;
 uint8_t UniDev::_pinModes[40] = {0};
+int8_t UniDev::_servoChannels[40] = {-1}; // Initializes first element, others 0
+uint8_t UniDev::_nextFreeChannel = 4; // 0-3 reserved for UniMotors
 
 UniDev::UniDev() {}
 
@@ -13,30 +15,15 @@ void UniDev::staticInit() {
   Serial.println("UniDev static initialization");
   #endif
   
+  for (int i = 0; i < 40; i++) {
+    _servoChannels[i] = -1;
+  }
+  
   _staticNeoPixels = new Adafruit_NeoPixel(NEOPIXEL_COUNT, P8, NEO_GRB + NEO_KHZ800);
   _staticNeoPixels->begin();
   _staticNeoPixels->clear();
   _staticNeoPixels->show();
   _staticNeoPixels->setBrightness(100);
-  
-  pinMode(P3, OUTPUT);
-  _pinModes[P3] = OUTPUT;
-  pinMode(P4, INPUT);
-  _pinModes[P4] = INPUT;
-  pinMode(P6, OUTPUT);
-  _pinModes[P6] = OUTPUT;
-  pinMode(P7, INPUT);
-  _pinModes[P7] = INPUT;
-  digitalWrite(P3, LOW);
-  digitalWrite(P6, LOW);
-  
-  pinMode(P1, OUTPUT);
-  _pinModes[P1] = OUTPUT;
-  pinMode(P2, OUTPUT);
-  _pinModes[P2] = OUTPUT;
-  digitalWrite(P1, LOW);
-  digitalWrite(P2, LOW);
-  digitalWrite(P3, LOW);
   
   _initialized = true;
   
@@ -98,10 +85,31 @@ int UniDev::ultraSonic(int trig, int echo) {
   return 0;
 }
 
+// На ESP32 АЦП имеют только пины ADC1 (32-39) и ADC2 (0,2,4,12-15,25-27).
+// GPIO 16/17 (порты P5/P6) к АЦП не подключены - analogRead вернет мусор.
+static bool isAdcCapable(int pin) {
+  if (pin >= 32 && pin <= 39) return true; // ADC1
+  switch (pin) {                            // ADC2
+    case 0: case 2: case 4:
+    case 12: case 13: case 14: case 15:
+    case 25: case 26: case 27:
+      return true;
+    default:
+      return false;
+  }
+}
+
+static void warnNoAdc(int port) {
+  Serial.print(F("[UniDev] WARNING: GPIO "));
+  Serial.print(port);
+  Serial.println(F(" has no ADC - analog read will be invalid. Use P1-P4 or P7."));
+}
+
 int UniDev::lineSensor(int port) {
   ensureInitialized();
   ensurePinMode(port, INPUT);
-  
+
+  if (!isAdcCapable(port)) warnNoAdc(port);
   return analogRead(port);
 }
 
@@ -115,7 +123,8 @@ int UniDev::digitalSensor(int port) {
 int UniDev::analogSensor(int port) {
   ensureInitialized();
   ensurePinMode(port, INPUT);
-  
+
+  if (!isAdcCapable(port)) warnNoAdc(port);
   return analogRead(port);
 }
 
@@ -156,12 +165,57 @@ bool UniDev::getButtonState(int port) {
 
 // ============ Servo ============
 
-void UniDev::servo(int port, int angle) {
+void UniDev::servoAttach(int port) {
   ensureInitialized();
+  if (port < 0 || port >= 40) return;
   ensurePinMode(port, OUTPUT);
-  
+
+  // Закрепляем за портом LEDC-канал один раз. servoDetach канал не
+  // освобождает, поэтому циклы attach/detach каналы не расходуют
+  if (_servoChannels[port] == -1) {
+    if (_nextFreeChannel > 15) return; // ESP32 has max 16 channels (0-15)
+    _servoChannels[port] = _nextFreeChannel++;
+#if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
+    ledcAttach(port, 50, 14); // 50 Hz, 14-bit resolution
+#else
+    ledcSetup(_servoChannels[port], 50, 14); // 50 Hz, 14-bit resolution
+    ledcAttachPin(port, _servoChannels[port]);
+#endif
+  }
+}
+
+void UniDev::servo(int port, int angle) {
+  servoAttach(port);
+  if (port < 0 || port >= 40 || _servoChannels[port] == -1) return;
+
   angle = constrain(angle, 0, 180);
-  // Не сделано 
+
+  // 14-bit resolution means values 0-16383.
+  // 50 Hz = 20 ms period.
+  // Servo pulses are 0.5 ms to 2.5 ms.
+  // 0.5 ms = 0.5 / 20 * 16384 = 410
+  // 2.5 ms = 2.5 / 20 * 16384 = 2048
+  uint32_t duty = map(angle, 0, 180, 410, 2048);
+
+#if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
+  ledcWrite(port, duty);
+#else
+  ledcWrite(_servoChannels[port], duty);
+#endif
+}
+
+void UniDev::servoDetach(int port) {
+  ensureInitialized();
+  if (port < 0 || port >= 40) return;
+  if (_servoChannels[port] == -1) return; // не был подключен
+
+  // Нулевая скважность = нет импульсов: привод расслабляется и не держит
+  // нагрузку. Канал остается закрепленным - servo() мгновенно оживит его
+#if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
+  ledcWrite(port, 0);
+#else
+  ledcWrite(_servoChannels[port], 0);
+#endif
 }
 
 // ============ NeoPixel ============

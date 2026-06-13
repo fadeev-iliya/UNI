@@ -18,57 +18,7 @@
 
     <div class="app-container">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <a href="index.html" class="logo">UNI Docs</a>
-            </div>
-
-            <nav class="sidebar-nav">
-                <ul>
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="getting-started.html">Getting Started</a></li>
-                </ul>
-
-                <div class="sidebar-section-title">Reference</div>
-                <ul>
-                    <li>
-                        <a href="unibase.html" class="active">UniBase</a>
-
-                        <ul class="sidebar-subnav">
-                            <li><a href="unibase.html#constants">Constants</a></li>
-                            <li><a href="unibase.html#initialization">Initialization</a></li>
-                            <li><a href="unibase.html#motor-control">Motor Control</a></li>
-                            <li><a href="unibase.html#movement">Movement</a></li>
-                            <li><a href="unibase.html#odometry">Odometry</a></li>
-                            <li><a href="unibase.html#display">Display</a></li>
-                        </ul>
-                    </li>
-                    <li>
-                        <a href="unidev.html">UniDev</a>
-
-                        <ul class="sidebar-subnav">
-                            <li><a href="unidev.html#constants">Port Definitions</a></li>
-                            <li><a href="unidev.html#dev-init">Initialization</a></li>
-                            <li><a href="unidev.html#sensors">Sensors</a></li>
-                            <li><a href="unidev.html#inputs">Inputs</a></li>
-                            <li><a href="unidev.html#light-ring-basic">Light Ring (Basic)</a></li>
-                            <li><a href="unidev.html#light-ring-effects">Light Ring (Effects)</a></li>
-                        </ul>
-                    </li>
-                </ul>
-                <div class="sidebar-section-title">Guides</div>
-                <ul>
-                    <li>
-                        <a href="examples.html">Examples</a>
-                        <ul class="sidebar-subnav">
-                            <li><a href="examples.html#basic">Basic Init</a></li>
-                            <li><a href="examples.html#distance">Distance Sensors</a></li>
-                            <li><a href="examples.html#line">Line Sensor</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </nav>
-        </aside>
+        <aside class="sidebar"></aside>
 
         <!-- Main Content -->
         <main class="main-content">
@@ -111,7 +61,7 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td><code>SMOOTH</code></td>
+                            <td><code>SOFT</code></td>
                             <td>0</td>
                             <td>Used in <code>stop()</code> for gradual deceleration (coasting).</td>
                         </tr>
@@ -129,7 +79,7 @@
                     <div class="api-header">
                         <div class="api-title-container">
                             <span class="api-name">begin</span>
-                            <span class="api-signature">void begin(String robotName = "UNI")</span>
+                            <span class="api-signature">void begin(const char* robotName = nullptr)</span>
                         </div>
                         <span class="expand-icon">▼</span>
                     </div>
@@ -140,8 +90,7 @@
                         </p>
                         <h4>Parameters</h4>
                         <ul>
-                            <li><code>robotName</code> (optional): Name to display on the OLED splash screen. Defaults
-                                to "UNI".</li>
+                            <li><code>robotName</code> (optional): Name to display on the OLED splash screen. Type <code>const char*</code>. Pass <code>nullptr</code> to use the library default.</li>
                         </ul>
                         <h4>Example</h4>
                         <pre><code>#include &lt;UNI.h&gt;
@@ -251,8 +200,44 @@ robot.motorsArc(80, 45);</code></pre>
                 <div class="api-card">
                     <div class="api-header">
                         <div class="api-title-container">
+                            <span class="api-name">motorsSync</span>
+                            <span class="api-signature">void motorsSync(int powerLeft, int powerRight)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Like <code>motors()</code> but with encoder-based synchronisation — maintains the set speed ratio between left and right wheels. Non-blocking; runs until <code>stop()</code> is called.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>powerLeft</code>: Left wheel power (-100..100).</li>
+                            <li><code>powerRight</code>: Right wheel power (-100..100).</li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>// Smooth arc with maintained speed ratio
+robot.motorsSync(70, 40);</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">holdPosition</span>
+                            <span class="api-signature">void holdPosition()</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Actively holds the current wheel position using PID. The robot resists being pushed. Cancelled by <code>stop()</code> or any movement command.</p>
+                        <h4>Example</h4>
+                        <pre><code>robot.holdPosition();</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
                             <span class="api-name">stop</span>
-                            <span class="api-signature">void stop(int stopType)</span>
+                            <span class="api-signature">void stop(int stopType = HARD)</span>
                         </div>
                         <span class="expand-icon">▼</span>
                     </div>
@@ -260,7 +245,7 @@ robot.motorsArc(80, 45);</code></pre>
                         <p>Stops both motors. Can perform a smooth coast to stop or a hard brake.</p>
                         <h4>Parameters</h4>
                         <ul>
-                            <li><code>stopType</code>: <code>SMOOTH</code> (0) or <code>HARD</code> (1).</li>
+                            <li><code>stopType</code>: <code>SOFT</code> (0) or <code>HARD</code> (1).</li>
                         </ul>
                         <h4>Example</h4>
                         <pre><code>robot.stop(HARD); // Instant stop</code></pre>
@@ -271,7 +256,7 @@ robot.motorsArc(80, 45);</code></pre>
                     <div class="api-header">
                         <div class="api-title-container">
                             <span class="api-name">stopLeft</span>
-                            <span class="api-signature">void stopLeft(int stopType)</span>
+                            <span class="api-signature">void stopLeft(int stopType = HARD)</span>
                         </div>
                         <span class="expand-icon">▼</span>
                     </div>
@@ -279,10 +264,10 @@ robot.motorsArc(80, 45);</code></pre>
                         <p>Stops the left motor only.</p>
                         <h4>Parameters</h4>
                         <ul>
-                            <li><code>stopType</code>: <code>SMOOTH</code> (0) or <code>HARD</code> (1).</li>
+                            <li><code>stopType</code>: <code>SOFT</code> (0) or <code>HARD</code> (1).</li>
                         </ul>
                         <h4>Example</h4>
-                        <pre><code>robot.stopLeft(SMOOTH); // Coast left motor to stop</code></pre>
+                        <pre><code>robot.stopLeft(SOFT); // Coast left motor to stop</code></pre>
                     </div>
                 </div>
 
@@ -290,7 +275,7 @@ robot.motorsArc(80, 45);</code></pre>
                     <div class="api-header">
                         <div class="api-title-container">
                             <span class="api-name">stopRight</span>
-                            <span class="api-signature">void stopRight(int stopType)</span>
+                            <span class="api-signature">void stopRight(int stopType = HARD)</span>
                         </div>
                         <span class="expand-icon">▼</span>
                     </div>
@@ -298,7 +283,7 @@ robot.motorsArc(80, 45);</code></pre>
                         <p>Stops the right motor only.</p>
                         <h4>Parameters</h4>
                         <ul>
-                            <li><code>stopType</code>: <code>SMOOTH</code> (0) or <code>HARD</code> (1).</li>
+                            <li><code>stopType</code>: <code>SOFT</code> (0) or <code>HARD</code> (1).</li>
                         </ul>
                         <h4>Example</h4>
                         <pre><code>robot.stopRight(HARD); // Brake right motor immediately</code></pre>
@@ -414,6 +399,280 @@ robot.moveArcTime(80, -60, 1500);</code></pre>
                         <h4>Example</h4>
                         <pre><code>// Turn 90 degrees left
 robot.rotate(60, 90);</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">rotateTo</span>
+                            <span class="api-signature">void rotateTo(int power, float angleDeg)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Rotates to an absolute odometry heading via the shortest path. Unlike <code>rotate()</code>, this corrects accumulated drift from previous manoeuvres.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>power</code>: Speed (0-100).</li>
+                            <li><code>angleDeg</code>: Target heading in degrees (odometry frame).</li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>robot.rotateTo(50, 90);  // Face heading 90°
+robot.rotateTo(50, 0);   // Return to original heading</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">moveTo</span>
+                            <span class="api-signature">void moveTo(int power, float x, float y)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Drives to a target odometry coordinate: turns to face the target then moves in a straight line.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>power</code>: Speed (0-100).</li>
+                            <li><code>x, y</code>: Target position in mm (odometry frame).</li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>robot.setPosition(0, 0, 0);
+robot.moveTo(50, 400, 0);    // Forward 400 mm
+robot.moveTo(50, 400, 400);  // Then left 400 mm</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">moveArcRadius</span>
+                            <span class="api-signature">void moveArcRadius(int power, float radiusMM, float angleDeg)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Arc with precise geometry: specify the turning radius and arc angle.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>power</code>: Speed (0-100).</li>
+                            <li><code>radiusMM</code>: Arc radius at robot centre (mm).</li>
+                            <li><code>angleDeg</code>: Arc angle; sign determines turn direction.</li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>// 300 mm radius arc, 90° to the right
+robot.moveArcRadius(60, 300, -90);</code></pre>
+                    </div>
+                </div>
+
+                <h2 id="async-movement">Async Movement</h2>
+                <p>Commands with the <code>Async</code> suffix start movement and return immediately — the next line of code runs while the robot moves. Use <code>isMoving()</code> or <code>waitMove()</code> to synchronise.</p>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">moveDistAsync</span>
+                            <span class="api-signature">void moveDistAsync(int power, int millimeters)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Async version of <code>moveDist()</code>.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>power</code>: Speed (0-100).</li>
+                            <li><code>millimeters</code>: Distance in mm.</li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>robot.moveDistAsync(80, 500);
+module.setColor(0, 255, 0); // Light green while moving
+robot.waitMove();</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">moveTimeAsync</span>
+                            <span class="api-signature">void moveTimeAsync(int power, int milliseconds)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Async version of <code>moveTime()</code>.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>power</code>: Speed (0-100).</li>
+                            <li><code>milliseconds</code>: Duration in ms.</li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>robot.moveTimeAsync(100, 2000);
+robot.waitMove();</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">moveArcDistAsync</span>
+                            <span class="api-signature">void moveArcDistAsync(int power, int angle, int millimeters)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Async version of <code>moveArcDist()</code>.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>power</code>: Speed (0-100).</li>
+                            <li><code>angle</code>: Steering angle (-90..90).</li>
+                            <li><code>millimeters</code>: Arc distance in mm.</li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>robot.moveArcDistAsync(60, 30, 800);</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">moveArcTimeAsync</span>
+                            <span class="api-signature">void moveArcTimeAsync(int power, int angle, int milliseconds)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Async version of <code>moveArcTime()</code>.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>power</code>: Speed (0-100).</li>
+                            <li><code>angle</code>: Steering angle (-90..90).</li>
+                            <li><code>milliseconds</code>: Duration in ms.</li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>robot.moveArcTimeAsync(80, 60, 1500);</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">moveArcRadiusAsync</span>
+                            <span class="api-signature">void moveArcRadiusAsync(int power, float radiusMM, float angleDeg)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Async version of <code>moveArcRadius()</code>.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>power</code>: Speed (0-100).</li>
+                            <li><code>radiusMM</code>: Arc radius in mm.</li>
+                            <li><code>angleDeg</code>: Arc angle.</li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>robot.moveArcRadiusAsync(60, 300, -90);</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">rotateAsync</span>
+                            <span class="api-signature">void rotateAsync(int power, int angle)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Async version of <code>rotate()</code>.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>power</code>: Speed (0-100).</li>
+                            <li><code>angle</code>: Degrees. Positive = Left (CCW), Negative = Right (CW).</li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>robot.rotateAsync(60, 90);</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">rotateToAsync</span>
+                            <span class="api-signature">void rotateToAsync(int power, float angleDeg)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Async version of <code>rotateTo()</code>.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>power</code>: Speed (0-100).</li>
+                            <li><code>angleDeg</code>: Target absolute heading in degrees.</li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>robot.rotateToAsync(50, 90);</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">moveToAsync</span>
+                            <span class="api-signature">void moveToAsync(int power, float x, float y)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Async version of <code>moveTo()</code>.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>power</code>: Speed (0-100).</li>
+                            <li><code>x, y</code>: Target position in mm.</li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>robot.moveToAsync(50, 400, 400);</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">isMoving</span>
+                            <span class="api-signature">bool isMoving()</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Returns <code>true</code> while an async movement task is active.</p>
+                        <h4>Example</h4>
+                        <pre><code>robot.moveDistAsync(80, 500);
+while (robot.isMoving()) {
+    module.setColor(255, 100, 0); // Orange while moving
+}
+module.setColor(0, 255, 0);       // Green when done</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">waitMove</span>
+                            <span class="api-signature">bool waitMove(unsigned long timeoutMs = 0)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Blocks until the current async movement command finishes. Returns <code>true</code> on clean completion, <code>false</code> if the timeout expired.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>timeoutMs</code> (optional): Maximum wait time in ms. <code>0</code> = wait forever.</li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>robot.moveDistAsync(80, 500);
+bool ok = robot.waitMove(3000); // Wait up to 3 s
+if (!ok) robot.stop(HARD);      // Force stop on timeout</code></pre>
                     </div>
                 </div>
 
@@ -554,6 +813,27 @@ robot.stop(HARD);</code></pre>
                         <h4>Example</h4>
                         <pre><code>float currentAngle = robot.getAngle();
 Serial.println(currentAngle);</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-title-container">
+                            <span class="api-name">setPosition</span>
+                            <span class="api-signature">void setPosition(float x, float y, float angleDeg)</span>
+                        </div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="api-details">
+                        <p>Sets the odometry pose. Use this to anchor the robot to field coordinates or reset position at a checkpoint.</p>
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li><code>x, y</code>: Starting coordinates in mm.</li>
+                            <li><code>angleDeg</code>: Starting heading in degrees.</li>
+                        </ul>
+                        <h4>Example</h4>
+                        <pre><code>// Robot is at the origin, facing along the X axis
+robot.setPosition(0, 0, 0);</code></pre>
                     </div>
                 </div>
 
@@ -712,6 +992,7 @@ robot.blinkLED(0);</code></pre>
         </main>
     </div>
 
+    <script src="nav.js"></script>
     <script src="script.js"></script>
 </body>
 

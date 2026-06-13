@@ -2,6 +2,89 @@
 // -------------------
 const currentPath = window.location.pathname;
 const isRuPage = currentPath.includes('_ru.html');
+
+// Sidebar Rendering
+// -----------------
+const _NAV_ICONS = {
+    home:     `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+    start:    `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
+    unibase:  `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>`,
+    unidev:   `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>`,
+    overview: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`,
+    examples: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`,
+    limits:   `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+    faq:      `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+};
+
+function _getNavIcon(href) {
+    const f = (href || '').split('#')[0];
+    if (/^index/.test(f))            return _NAV_ICONS.home;
+    if (/getting-started/.test(f))   return _NAV_ICONS.start;
+    if (/^unibase/.test(f))          return _NAV_ICONS.unibase;
+    if (/^unidev/.test(f))           return _NAV_ICONS.unidev;
+    if (/library-overview/.test(f))  return _NAV_ICONS.overview;
+    if (/^examples/.test(f))         return _NAV_ICONS.examples;
+    if (/limitations/.test(f))       return _NAV_ICONS.limits;
+    if (/faq/.test(f))               return _NAV_ICONS.faq;
+    return '';
+}
+
+function renderSidebar() {
+    const aside = document.querySelector('.sidebar');
+    if (!aside || typeof window.NAV === 'undefined') return;
+
+    const lang = isRuPage ? 'ru' : 'en';
+    const items = window.NAV[lang];
+    if (!items) return;
+
+    const currentFile = (currentPath.split('/').pop() || 'index.html').split('#')[0];
+    const currentHash = window.location.hash.slice(1);
+    const homeHref = isRuPage ? 'index_ru.html' : 'index.html';
+
+    let html = `
+        <div class="sidebar-header">
+            <a href="${homeHref}" class="logo">
+                <svg class="logo-icon" width="30" height="36" viewBox="0 0 168 200" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M65.0275 93.6581L54.9206 82.2931C54.1615 81.4395 53.0738 80.9512 51.9316 80.9512H51C48.7909 80.9512 47 79.1604 47 76.9512V75C47 72.7909 48.7909 71 51 71H117C119.209 71 121 72.7909 121 75V76.9512C121 79.1604 119.209 80.9512 117 80.9512H116.068C114.926 80.9512 113.838 81.4395 113.079 82.2931L102.973 93.6581C102.213 94.5117 101.126 95 99.9835 95H68.0165C66.8743 95 65.7865 94.5117 65.0275 93.6581Z" fill="currentColor"/><path d="M47.4365 96H40C38.3431 96 37 97.3431 37 99V115.896C37 117.39 38.099 118.656 39.5779 118.866L54.5926 121H114.407L129.422 118.866C130.901 118.656 132 117.39 132 115.896V99C132 97.3431 130.657 96 129 96H121.015C120.168 96 119.361 96.3579 118.792 96.9853L107.091 109.896C106.522 110.523 105.715 110.881 104.868 110.881H64.0944C63.2697 110.881 62.4814 110.541 61.9148 109.942L49.6161 96.9386C49.0494 96.3395 48.2612 96 47.4365 96Z" fill="currentColor"/><path d="M132 172C132 174.209 130.209 176 128 176H41C38.7909 176 37 174.209 37 172V115C37 112.791 38.7909 111 41 111H128C130.209 111 132 112.791 132 115V172ZM58 128C55.7909 128 54 129.791 54 132V154C54 156.209 55.7909 158 58 158H111C113.209 158 115 156.209 115 154V132C115 129.791 113.209 128 111 128H58Z" fill="currentColor"/><path d="M128 24C130.209 24 132 25.7909 132 28V77C132 79.2091 130.209 81 128 81H41C38.7909 81 37 79.2091 37 77V28C37 25.7909 38.7909 24 41 24H128ZM58 38C55.7909 38 54 39.7909 54 42V64C54 66.2091 55.7909 68 58 68H111C113.209 68 115 66.2091 115 64V42C115 39.7909 113.209 38 111 38H58Z" fill="currentColor"/></svg>
+                UNI Docs
+            </a>
+            <span class="version-badge">v1.1</span>
+        </div>
+        <nav class="sidebar-nav">`;
+
+    let inUl = false;
+    items.forEach(item => {
+        if (item.section) {
+            if (inUl) { html += '</ul>'; inUl = false; }
+            html += `<div class="sidebar-section-title"><span>${item.section}</span></div>`;
+        } else {
+            if (!inUl) { html += '<ul>'; inUl = true; }
+            const itemFile = item.href.split('#')[0];
+            const isActive = currentFile === itemFile;
+            const activeClass = isActive ? ' class="active"' : '';
+            const icon = _getNavIcon(item.href);
+            const iconHtml = icon ? `<span class="nav-icon" aria-hidden="true">${icon}</span>` : '';
+
+            if (item.children) {
+                html += `<li>
+                    <a href="${item.href}"${activeClass}>${iconHtml}<span class="nav-label">${item.label}</span></a>
+                    <ul class="sidebar-subnav">`;
+                item.children.forEach(child => {
+                    const childAnchor = child.href.split('#')[1] || '';
+                    const childActive = isActive && childAnchor === currentHash;
+                    const childClass = childActive ? ' class="active"' : '';
+                    html += `<li><a href="${child.href}"${childClass}>${child.label}</a></li>`;
+                });
+                html += `</ul></li>`;
+            } else {
+                html += `<li><a href="${item.href}"${activeClass}>${iconHtml}<span class="nav-label">${item.label}</span></a></li>`;
+            }
+        }
+    });
+
+    if (inUl) html += '</ul>';
+    html += '</nav>';
+    aside.innerHTML = html;
+}
 const systemLang = navigator.language || navigator.userLanguage;
 const storedLang = localStorage.getItem('lang');
 
@@ -137,7 +220,10 @@ function initApiCards() {
     });
 }
 // Run init after DOM load
-document.addEventListener('DOMContentLoaded', initApiCards);
+document.addEventListener('DOMContentLoaded', () => {
+    renderSidebar();
+    initApiCards();
+});
 
 
 // Global Copy to Clipboard & Syntax Highlighting
@@ -162,7 +248,11 @@ document.querySelectorAll('pre').forEach(pre => {
 
         navigator.clipboard.writeText(codeBlock.innerText).then(() => {
             button.innerText = 'Copied!';
-            setTimeout(() => { button.innerText = 'Copy'; }, 2000);
+            button.classList.add('copied');
+            setTimeout(() => {
+                button.innerText = 'Copy';
+                button.classList.remove('copied');
+            }, 2000);
         }).catch(err => {
             console.error('Failed to copy!', err);
         });
@@ -212,594 +302,158 @@ function highlightCode(element) {
     element.innerHTML = html;
 }
 
-// Sidebar Active Link & TOC
-// currentPath is already defined at the top
-const sidebarLinks = document.querySelectorAll('.sidebar-nav a');
+// Sidebar active state is handled by renderSidebar() above.
 
-sidebarLinks.forEach(link => {
-    const href = link.getAttribute('href');
-    if (href && (currentPath === href || currentPath.endsWith('/' + href) || currentPath.endsWith(href))) {
-        link.classList.add('active');
-    }
-});
+// Global Search — built dynamically from the current page DOM
+// ------------------------------------------------------------
+// No hardcoded index: every api-card, section heading and example
+// on the page is indexed automatically on the first keystroke.
 
-// Global Search
-// Global Search
-const searchIndex = [
-    {
-        "page": "index.html",
-        "title": "UNI Library",
-        "id": "",
-        "text": "A clean, efficient Arduino library for controlling educational robotic platforms based on ESP32."
-    },
-    {
-        "page": "unibase.html",
-        "title": "UniBase Reference",
-        "id": "",
-        "text": "Core class for controlling the robot chassis, motors, and display."
-    },
-    {
-        "page": "unibase.html",
-        "title": "Constants",
-        "id": "constants",
-        "text": "Public constants available for control functions."
-    },
-    {
-        "page": "unibase.html",
-        "title": "Initialization",
-        "id": "initialization",
-        "text": "These functions block execution until the movement is complete. They use encoder feedback for\n                    precision."
-    },
-    {
-        "page": "unibase.html",
-        "title": "Motor Control",
-        "id": "motor-control",
-        "text": "These functions block execution until the movement is complete. They use encoder feedback for\n                    precision."
-    },
-    {
-        "page": "unibase.html",
-        "title": "Movement (Blocking)",
-        "id": "movement",
-        "text": "These functions block execution until the movement is complete. They use encoder feedback for\n                    precision."
-    },
-    {
-        "page": "unibase.html",
-        "title": "Odometry",
-        "id": "odometry",
-        "text": "Functions for tracking the robot's position relative to its starting point."
-    },
-    {
-        "page": "unibase.html",
-        "title": "Display",
-        "id": "display",
-        "text": ""
-    },
-    {
-        "page": "unibase.html",
-        "title": "Utility",
-        "id": "utility",
-        "text": ""
-    },
-    {
-        "page": "unibase.html",
-        "title": "begin",
-        "id": "initialization",
-        "text": "Initializes all robot components (Motors, Encoders, OLED, Sensors). This function starts the\n                            background tasks for odometry"
-    },
-    {
-        "page": "unibase.html",
-        "title": "motors",
-        "id": "motor-control",
-        "text": "Sets the power for both motors directly. Positive values match forward direction, negative\n                            match backward."
-    },
-    {
-        "page": "unibase.html",
-        "title": "motorLeft",
-        "id": "motor-control",
-        "text": "Sets power for the left motor only."
-    },
-    {
-        "page": "unibase.html",
-        "title": "motorRight",
-        "id": "motor-control",
-        "text": "Sets power for the right motor only."
-    },
-    {
-        "page": "unibase.html",
-        "title": "motorsArc",
-        "id": "motor-control",
-        "text": "Moves the robot along an arc with a specific turn intensity. This is a non-blocking control\n                            function."
-    },
-    {
-        "page": "unibase.html",
-        "title": "stop",
-        "id": "motor-control",
-        "text": "Stops both motors. Can perform a smooth coast to stop or a hard brake."
-    },
-    {
-        "page": "unibase.html",
-        "title": "stopLeft",
-        "id": "motor-control",
-        "text": "Stops the left motor only."
-    },
-    {
-        "page": "unibase.html",
-        "title": "stopRight",
-        "id": "motor-control",
-        "text": "Stops the right motor only."
-    },
-    {
-        "page": "unibase.html",
-        "title": "moveDist",
-        "id": "movement",
-        "text": "Moves the blind robot specific distance using PID control on encoders."
-    },
-    {
-        "page": "unibase.html",
-        "title": "moveTime",
-        "id": "movement",
-        "text": "Moves the motor for a specific duration of time."
-    },
-    {
-        "page": "unibase.html",
-        "title": "moveArcDist",
-        "id": "movement",
-        "text": "Moves along a curved path for a specific distance."
-    },
-    {
-        "page": "unibase.html",
-        "title": "moveArcTime",
-        "id": "movement",
-        "text": "Moves along a curved path for a specific duration."
-    },
-    {
-        "page": "unibase.html",
-        "title": "rotate",
-        "id": "movement",
-        "text": "Rotates the robot in place by a specific angle."
-    },
-    {
-        "page": "unibase.html",
-        "title": "getOdometry",
-        "id": "odometry",
-        "text": "Returns the current estimated position and orientation struct."
-    },
-    {
-        "page": "unibase.html",
-        "title": "getAbsX",
-        "id": "odometry",
-        "text": "Returns the absolute X coordinate in millimeters."
-    },
-    {
-        "page": "unibase.html",
-        "title": "getAbsY",
-        "id": "odometry",
-        "text": "Returns the absolute Y coordinate in millimeters."
-    },
-    {
-        "page": "unibase.html",
-        "title": "getAbsAngle",
-        "id": "odometry",
-        "text": "Returns the absolute heading angle in degrees."
-    },
-    {
-        "page": "unibase.html",
-        "title": "resetDistance",
-        "id": "odometry",
-        "text": "Resets the accumulated distance counter to 0. Used for relative measurements."
-    },
-    {
-        "page": "unibase.html",
-        "title": "getDistance",
-        "id": "odometry",
-        "text": "Returns the distance traveled since the last reset in millimeters."
-    },
-    {
-        "page": "unibase.html",
-        "title": "resetAngle",
-        "id": "odometry",
-        "text": "Resets the accumulated angle counter to 0."
-    },
-    {
-        "page": "unibase.html",
-        "title": "getAngle",
-        "id": "odometry",
-        "text": "Returns the angle turned since the last reset in degrees."
-    },
-    {
-        "page": "unibase.html",
-        "title": "getLeftTicks / getRightTicks",
-        "id": "odometry",
-        "text": "Returns the raw encoder tick count for the respective motor."
-    },
-    {
-        "page": "unibase.html",
-        "title": "printOdometry",
-        "id": "odometry",
-        "text": "Prints the current X, Y, and Theta values to the Serial Monitor. Useful for debugging."
-    },
-    {
-        "page": "unibase.html",
-        "title": "displayPrint (Simple)",
-        "id": "display",
-        "text": "Clears the OLED screen and prints the provided value in the center. Supports multiple types."
-    },
-    {
-        "page": "unibase.html",
-        "title": "displayPrint (Named)",
-        "id": "display",
-        "text": "Prints a name label at the top of the screen and a large value in the center. Supports all\n                            simple types as the value."
-    },
-    {
-        "page": "unibase.html",
-        "title": "displayClear",
-        "id": "display",
-        "text": "Clears the OLED screen."
-    },
-    {
-        "page": "unibase.html",
-        "title": "getBatteryPower",
-        "id": "utility",
-        "text": "Returns current battery level percentage (0-100). Returns -1 if offline or error."
-    },
-    {
-        "page": "unibase.html",
-        "title": "blinkLED",
-        "id": "utility",
-        "text": "Sets the background task to blink the onboard LED."
-    },
-    {
-        "page": "unibase.html",
-        "title": "UniBaseControl",
-        "id": "utility",
-        "text": "Activates the UART control loop. This is a blocking function calling `ctrlReceiveUART()`\n                            repeatedly."
-    },
-    {
-        "page": "unidev.html",
-        "title": "UniDev Reference",
-        "id": "",
-        "text": "Class for controlling sensors, addressable LEDs (Light Ring), and other peripherals."
-    },
-    {
-        "page": "unidev.html",
-        "title": "Port Definitions",
-        "id": "constants",
-        "text": "Pre-defined constants for connecting modules to correct ports."
-    },
-    {
-        "page": "unidev.html",
-        "title": "Initialization",
-        "id": "dev-init",
-        "text": "These are blocking animations."
-    },
-    {
-        "page": "unidev.html",
-        "title": "Sensors",
-        "id": "sensors",
-        "text": "These are blocking animations."
-    },
-    {
-        "page": "unidev.html",
-        "title": "Inputs",
-        "id": "inputs",
-        "text": "These are blocking animations."
-    },
-    {
-        "page": "unidev.html",
-        "title": "Light Ring (Basic)",
-        "id": "light-ring-basic",
-        "text": "These are blocking animations."
-    },
-    {
-        "page": "unidev.html",
-        "title": "Light Ring (Effects)",
-        "id": "light-ring-effects",
-        "text": "These are blocking animations."
-    },
-    {
-        "page": "unidev.html",
-        "title": "Traffic Light",
-        "id": "traffic-light",
-        "text": ""
-    },
-    {
-        "page": "unidev.html",
-        "title": "begin",
-        "id": "dev-init",
-        "text": "Initializes the UniDev instance, creating the NeoPixel object and setting pin modes."
-    },
-    {
-        "page": "unidev.html",
-        "title": "ultraSonic",
-        "id": "sensors",
-        "text": "Reads distance from an ultrasonic sensor (HC-SR04)."
-    },
-    {
-        "page": "unidev.html",
-        "title": "lineSensor",
-        "id": "sensors",
-        "text": "Reads an analog value from a line sensor."
-    },
-    {
-        "page": "unidev.html",
-        "title": "digitalSensor",
-        "id": "sensors",
-        "text": "Reads a generic digital value from a port."
-    },
-    {
-        "page": "unidev.html",
-        "title": "analogSensor",
-        "id": "sensors",
-        "text": "Reads a generic analog value from a port."
-    },
-    {
-        "page": "unidev.html",
-        "title": "getPinMode",
-        "id": "sensors",
-        "text": "Returns the current configured mode of a GPIO pin."
-    },
-    {
-        "page": "unidev.html",
-        "title": "waitButton",
-        "id": "inputs",
-        "text": "Blocking function that halts program execution until the specified button is pressed and\n                            released."
-    },
-    {
-        "page": "unidev.html",
-        "title": "getButtonState",
-        "id": "inputs",
-        "text": "Checks if a button is currently pressed."
-    },
-    {
-        "page": "unidev.html",
-        "title": "pixel",
-        "id": "light-ring-basic",
-        "text": "Sets the color of a single pixel in the memory buffer. RequirespixelsShow()to\n                            take effect."
-    },
-    {
-        "page": "unidev.html",
-        "title": "pixelsAll",
-        "id": "light-ring-basic",
-        "text": "Sets all LEDs in the ring to the specified RGB color. Implicitly callsshow()."
-    },
-    {
-        "page": "unidev.html",
-        "title": "pixelsClear",
-        "id": "light-ring-basic",
-        "text": "Turns off all LEDs."
-    },
-    {
-        "page": "unidev.html",
-        "title": "pixelsShow",
-        "id": "light-ring-basic",
-        "text": "Sends the current buffer to the LED strip. Must be called afterpixel()."
-    },
-    {
-        "page": "unidev.html",
-        "title": "pixelsBrightness",
-        "id": "light-ring-basic",
-        "text": "Sets the global brightness scaling."
-    },
-    {
-        "page": "unidev.html",
-        "title": "pixelsRainbow",
-        "id": "light-ring-effects",
-        "text": "Displays a rotating rainbow animation."
-    },
-    {
-        "page": "unidev.html",
-        "title": "pixelsRunning",
-        "id": "light-ring-effects",
-        "text": "Running light effect around the ring."
-    },
-    {
-        "page": "unidev.html",
-        "title": "pixelsBreathing",
-        "id": "light-ring-effects",
-        "text": "Pulse/Breathing effect with the specified color."
-    },
-    {
-        "page": "unidev.html",
-        "title": "pixelsFill",
-        "id": "light-ring-effects",
-        "text": "Gradually fills the ring with the color."
-    },
-    {
-        "page": "unidev.html",
-        "title": "pixelsSparkle",
-        "id": "light-ring-effects",
-        "text": "Randomly flashes pixels."
-    },
-    {
-        "page": "unidev.html",
-        "title": "pixelsRotating",
-        "id": "light-ring-effects",
-        "text": "Rotates a segment of LEDs around the ring."
-    },
-    {
-        "page": "unidev.html",
-        "title": "pixelsSpinner",
-        "id": "light-ring-effects",
-        "text": "Shows a spinner animation."
-    },
-    {
-        "page": "unidev.html",
-        "title": "setTrafficLight",
-        "id": "traffic-light",
-        "text": "Sets the traffic light module state."
-    },
-    {
-        "page": "unidev.html",
-        "title": "trafficLightSequence",
-        "id": "traffic-light",
-        "text": "Runs a standard standard traffic light sequence (Green -> Yellow -> Red -> Yellow -> Green)."
-    },
-    {
-        "page": "getting-started.html",
-        "title": "Getting Started",
-        "id": "",
-        "text": "Follow these steps to set up the UNI library and start programming your robot."
-    },
-    {
-        "page": "getting-started.html",
-        "title": "Installation",
-        "id": "installation",
-        "text": "Here is a minimal example to verify that your environment is set up correctly. This sketch\n                    initializes the robot and prints \"Hello"
-    },
-    {
-        "page": "getting-started.html",
-        "title": "Hello Robot",
-        "id": "hello-robot",
-        "text": "Here is a minimal example to verify that your environment is set up correctly. This sketch\n                    initializes the robot and prints \"Hello"
-    },
-    {
-        "page": "getting-started.html",
-        "title": "Uploading to ESP32",
-        "id": "uploading",
-        "text": "Make sure you have theESP32 Board Packageinstalled in your Arduino IDE."
-    },
-    {
-        "page": "examples.html",
-        "title": "Examples",
-        "id": "",
-        "text": "Learn by example. Here are some common snippets to get you started."
-    },
-    {
-        "page": "examples.html",
-        "title": "Basic Initialization",
-        "id": "basic",
-        "text": "The simplest way to initialize the robot (from Start.ino)."
-    },
-    {
-        "page": "examples.html",
-        "title": "Distance Sensors",
-        "id": "distance",
-        "text": "Reading values from ultrasonic sensors (from DistanceSensors.ino). Includes serial output."
-    },
-    {
-        "page": "examples.html",
-        "title": "Line Sensor",
-        "id": "line",
-        "text": "Reading values from a line sensor (from LineSensor.ino). Includes serial output."
-    },
-    {
-        "page": "index_ru.html",
-        "title": "Главная",
-        "url": "index_ru.html",
-        "text": "Добро пожаловать в документацию библиотеки UNI для роботов.",
-        "lang": "ru"
-    },
-    {
-        "page": "getting-started_ru.html",
-        "title": "Начало работы",
-        "id": "",
-        "text": "Следуйте этим шагам, чтобы настроить библиотеку UNI и начать программировать вашего робота.",
-        "lang": "ru"
-    },
-    {
-        "page": "getting-started_ru.html",
-        "title": "Установка",
-        "id": "installation",
-        "text": "Инструкции по установке библиотеки через Arduino Library Manager или вручную.",
-        "lang": "ru"
-    },
-    {
-        "page": "examples_ru.html",
-        "title": "Примеры",
-        "id": "",
-        "text": "Учитесь на примерах. Комментарии к коду переведены.",
-        "lang": "ru"
-    },
-    {
-        "page": "library-overview_ru.html",
-        "title": "Обзор библиотеки",
-        "id": "",
-        "text": "Поймите архитектуру и основные концепции библиотеки UNI (UniBase, UniDev).",
-        "lang": "ru"
-    },
-    {
-        "page": "faq_ru.html",
-        "title": "FAQ и Устранение неполадок",
-        "id": "",
-        "text": "Частые проблемы и решения. Робот не двигается, ошибки компиляции.",
-        "lang": "ru"
-    },
-    {
-        "page": "unibase_ru.html",
-        "title": "Справочник UniBase",
-        "id": "",
-        "text": "Основной класс для управления шасси робота, моторами и дисплеем.",
-        "lang": "ru"
-    },
-    {
-        "page": "unibase_ru.html",
-        "title": "Инициализация (UniBase)",
-        "id": "initialization",
-        "text": "void begin(String robotName)",
-        "lang": "ru"
-    },
-    {
-        "page": "unidev_ru.html",
-        "title": "Справочник UniDev",
-        "id": "",
-        "text": "Класс для управления датчиками, световым кольцом и периферией.",
-        "lang": "ru"
+let _searchIndex = null;
+
+function _nearestSection(el) {
+    let node = el;
+    while (node) {
+        let sib = node.previousElementSibling;
+        while (sib) {
+            if (sib.tagName === 'H2' && sib.id) return sib.id;
+            sib = sib.previousElementSibling;
+        }
+        node = node.parentElement;
     }
-];
-const searchInput = document.querySelector('.search-input');
+    return '';
+}
+
+function buildSearchIndex() {
+    const idx = [];
+    const currentFile = (currentPath.split('/').pop() || 'index.html').split('#')[0];
+
+    // Collapsible API cards (methods)
+    document.querySelectorAll('.api-card:not(.static)').forEach(card => {
+        const nameEl = card.querySelector('.api-name');
+        const sigEl  = card.querySelector('.api-signature');
+        const detEl  = card.querySelector('.api-details');
+        if (!nameEl) return;
+        idx.push({
+            type:      'method',
+            name:      nameEl.textContent.trim(),
+            signature: sigEl  ? sigEl.textContent.trim() : '',
+            detail:    detEl  ? detEl.textContent.replace(/\s+/g, ' ').trim().slice(0, 220) : '',
+            anchor:    _nearestSection(card),
+            file:      currentFile,
+            el:        card
+        });
+    });
+
+    // Static example cards
+    document.querySelectorAll('.api-card.static[id]').forEach(card => {
+        const h3 = card.querySelector('h3');
+        const p  = card.querySelector('p');
+        const pre = card.querySelector('pre');
+        if (!h3) return;
+        idx.push({
+            type:      'example',
+            name:      h3.textContent.trim(),
+            signature: '',
+            detail:    (p ? p.textContent : '') + ' ' + (pre ? pre.textContent.slice(0, 120) : ''),
+            anchor:    card.id,
+            file:      currentFile,
+            el:        card
+        });
+    });
+
+    // Section headings
+    document.querySelectorAll('h2[id]').forEach(h => {
+        idx.push({
+            type:      'section',
+            name:      h.textContent.trim(),
+            signature: '',
+            detail:    '',
+            anchor:    h.id,
+            file:      currentFile,
+            el:        h
+        });
+    });
+
+    // Cross-page links from nav.js (other pages only)
+    if (window.NAV) {
+        const lang = isRuPage ? 'ru' : 'en';
+        (window.NAV[lang] || []).forEach(item => {
+            if (!item.label || !item.href) return;
+            const push = (it) => {
+                const f = it.href.split('#')[0];
+                if (f !== currentFile) idx.push({ type: 'page', name: it.label, signature: '', detail: '', anchor: it.href.split('#')[1] || '', file: f, el: null });
+            };
+            push(item);
+            (item.children || []).forEach(push);
+        });
+    }
+
+    return idx;
+}
+
+function _scrollToEl(el) {
+    const hh = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-height')) || 60;
+    const top = el.getBoundingClientRect().top + window.scrollY - hh - 20;
+    window.scrollTo({ top, behavior: 'smooth' });
+}
+
+const searchInput     = document.querySelector('.search-input');
 const searchContainer = document.querySelector('.search-container');
 
 if (searchInput) {
-    const resultsContainer = document.createElement('div');
-    resultsContainer.className = 'search-results';
-    searchContainer.appendChild(resultsContainer);
+    const resultsDiv = document.createElement('div');
+    resultsDiv.className = 'search-results';
+    searchContainer.appendChild(resultsDiv);
+
+    const noResultsText = isRuPage ? 'Ничего не найдено' : 'No results found';
 
     searchInput.addEventListener('input', (e) => {
-        const query = e.target.value.toLowerCase();
+        const raw = e.target.value;
+        if (raw.length < 2) { resultsDiv.style.display = 'none'; return; }
 
-        // Removed Local Filtering (it was hiding page content)
+        if (!_searchIndex) _searchIndex = buildSearchIndex();
+        const q = raw.toLowerCase();
 
-        // Global Search Logic
-        if (query.length < 2) {
-            resultsContainer.style.display = 'none';
-            return;
-        }
+        const matches = _searchIndex.filter(item =>
+            item.name.toLowerCase().includes(q) ||
+            item.signature.toLowerCase().includes(q) ||
+            item.detail.toLowerCase().includes(q)
+        ).slice(0, 12);
 
-        const matches = searchIndex.filter(item => {
-            // Filter by language
-            const itemLang = item.lang || 'en'; // Default to EN if not specified
-            const pageLang = isRuPage ? 'ru' : 'en';
-            if (itemLang !== pageLang) return false;
-
-            return item.title.toLowerCase().includes(query) ||
-                item.text.toLowerCase().includes(query);
-        });
-
-        if (matches.length > 0) {
-            resultsContainer.innerHTML = '';
-            matches.slice(0, 10).forEach(match => {
+        resultsDiv.innerHTML = '';
+        if (matches.length === 0) {
+            resultsDiv.innerHTML = `<div class="search-no-results">${noResultsText}</div>`;
+        } else {
+            matches.forEach(match => {
                 const div = document.createElement('div');
                 div.className = 'search-result-item';
-                div.innerHTML = `
-                    <div class="result-title">${match.title}</div>
-                    <div class="result-context">${match.page}</div>
-                `;
+                let ctx = match.file;
+                if (match.signature) ctx = match.signature;
+                else if (match.detail) ctx = match.detail.slice(0, 90) + (match.detail.length > 90 ? '…' : '');
+                div.innerHTML = `<div class="result-title">${match.name}</div><div class="result-context">${ctx}</div>`;
                 div.addEventListener('click', () => {
-                    const target = match.id ? `${match.page}#${match.id}` : match.page;
-                    window.location.href = target;
+                    resultsDiv.style.display = 'none';
+                    searchInput.value = '';
+                    if (match.el) {
+                        if (match.type === 'method' && !match.el.classList.contains('expanded'))
+                            match.el.classList.add('expanded');
+                        _scrollToEl(match.el);
+                    } else {
+                        window.location.href = match.anchor ? `${match.file}#${match.anchor}` : match.file;
+                    }
                 });
-                resultsContainer.appendChild(div);
+                resultsDiv.appendChild(div);
             });
-            resultsContainer.style.display = 'block';
-        } else {
-            resultsContainer.innerHTML = '<div class="search-no-results">No results found</div>';
-            resultsContainer.style.display = 'block';
         }
+        resultsDiv.style.display = 'block';
     });
 
     document.addEventListener('click', (e) => {
-        if (!searchContainer.contains(e.target)) {
-            resultsContainer.style.display = 'none';
-        }
+        if (!searchContainer.contains(e.target)) resultsDiv.style.display = 'none';
+    });
+
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') { resultsDiv.style.display = 'none'; searchInput.value = ''; }
     });
 }

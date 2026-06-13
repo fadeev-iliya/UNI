@@ -17,57 +17,7 @@
 <body>
     <div class="app-container">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <a href="index.html" class="logo">UNI Docs</a>
-            </div>
-
-            <nav class="sidebar-nav">
-                <ul>
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="getting-started.html">Getting Started</a></li>
-                </ul>
-
-                <div class="sidebar-section-title">Reference</div>
-                <ul>
-                    <li>
-                        <a href="unibase.html">UniBase</a>
-                        
-                        <ul class="sidebar-subnav">
-                            <li><a href="unibase.html#constants">Constants</a></li>
-                            <li><a href="unibase.html#initialization">Initialization</a></li>
-                            <li><a href="unibase.html#motor-control">Motor Control</a></li>
-                            <li><a href="unibase.html#movement">Movement</a></li>
-                            <li><a href="unibase.html#odometry">Odometry</a></li>
-                            <li><a href="unibase.html#display">Display</a></li>
-                        </ul>
-                    </li>
-                    <li>
-                        <a href="unidev.html">UniDev</a>
-                        
-                         <ul class="sidebar-subnav">
-                            <li><a href="unidev.html#constants">Port Definitions</a></li>
-                            <li><a href="unidev.html#dev-init">Initialization</a></li>
-                            <li><a href="unidev.html#sensors">Sensors</a></li>
-                            <li><a href="unidev.html#inputs">Inputs</a></li>
-                            <li><a href="unidev.html#light-ring-basic">Light Ring (Basic)</a></li>
-                            <li><a href="unidev.html#light-ring-effects">Light Ring (Effects)</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            <div class="sidebar-section-title">Guides</div>
-                <ul>
-                    <li>
-                        <a href="examples.html" class="active">Examples</a>
-                        <ul class="sidebar-subnav">
-                            <li><a href="examples.html#basic">Basic Init</a></li>
-                            <li><a href="examples.html#distance">Distance Sensors</a></li>
-                            <li><a href="examples.html#line">Line Sensor</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </nav>
-        </aside>
+        <aside class="sidebar"></aside>
 
         <!-- Main Content -->
         <main class="main-content">
@@ -96,12 +46,13 @@
             <!-- Page Content -->
             <div class="page-content">
                 <h1>Examples</h1>
-                <p class="lead">Learn by example. Here are some common snippets from the library examples to get you
-                    started.</p>
+                <p class="lead">All examples from the <code>UNI/examples/</code> folder. Open them via <strong>File → Examples → UNI</strong> in Arduino IDE.</p>
 
-                <div class="api-card static" id="basic">
-                    <h3>Basic Initialization</h3>
-                    <p>The simplest way to initialize the robot (from Start.ino).</p>
+                <h2>Basics</h2>
+
+                <div class="api-card static" id="start">
+                    <h3>Start — minimal sketch</h3>
+                    <p>Creates the robot and initialises all peripherals: motors, encoders, OLED, LED and battery monitor. <code>begin()</code> is optional — the first command auto-initialises.</p>
                     <pre><code>#include &lt;UNI.h&gt;
 
 UniBase robot;
@@ -109,65 +60,480 @@ UniDev module;
 
 void setup() {
   robot.begin("UNI");
+
+  // Your one-time code here. For example:
+  // robot.moveDist(50, 300);
+  // robot.rotate(50, 90);
 }
 
 void loop() {
-  
+  // Your repeating code here
+}</code></pre>
+                </div>
+
+                <div class="api-card static" id="basic-movement">
+                    <h3>BasicMovement — blocking movement</h3>
+                    <p>The robot drives a 300 mm square: four straight segments and four 90° turns. Every command blocks until it completes.</p>
+                    <pre><code>#include &lt;UNI.h&gt;
+
+UniBase robot("UNI");
+
+void setup() {
+  robot.begin();
+
+  for (int i = 0; i &lt; 4; i++) {
+    robot.moveDist(50, 300); // forward 300 mm at power 50
+    robot.rotate(50, 90);    // turn right 90 degrees
+  }
+
+  // Extra: reverse and timed movement
+  robot.moveDist(-50, 200);  // reverse 200 mm
+  robot.moveTime(40, 1000);  // forward 1 second
+  robot.moveTime(-40, 1000); // reverse 1 second
+}
+
+void loop() {
+}</code></pre>
+                </div>
+
+                <h2>Movement</h2>
+
+                <div class="api-card static" id="precision-turns">
+                    <h3>PrecisionTurns — rotate vs rotateTo</h3>
+                    <p><code>rotate()</code> turns by a relative angle — errors accumulate. <code>rotateTo()</code> turns to an absolute odometry heading — accumulated drift is corrected every time.</p>
+                    <pre><code>#include &lt;UNI.h&gt;
+
+UniBase robot("UNI");
+
+void setup() {
+  robot.begin();
+
+  // Square using relative turns
+  robot.displayPrint("rotate");
+  delay(1000);
+  for (int i = 0; i &lt; 4; i++) {
+    robot.moveDist(50, 300);
+    robot.rotate(50, 90);
+  }
+  robot.displayPrint("Angle", robot.getAngle()); // accumulated heading
+  delay(3000);
+
+  // Square using absolute turns
+  robot.displayPrint("rotateTo");
+  delay(1000);
+  robot.setPosition(0, 0, 0); // reset odometry before run
+  for (int i = 0; i &lt; 4; i++) {
+    robot.moveDist(50, 300);
+    robot.rotateTo(50, (i + 1) * 90); // headings 90, 180, 270, 360
+  }
+  robot.displayPrint("Angle", robot.getAngle());
+}
+
+void loop() {
+}</code></pre>
+                </div>
+
+                <div class="api-card static" id="drive-to-point">
+                    <h3>DriveToPoint — waypoint navigation</h3>
+                    <p><code>setPosition()</code> anchors odometry to field coordinates. <code>moveTo()</code> automatically turns toward the target and drives straight to it.</p>
+                    <pre><code>#include &lt;UNI.h&gt;
+
+UniBase robot("UNI");
+
+// Route: array of {x, y} waypoints in millimetres
+const float route[][2] = {
+  {400, 0},
+  {400, 400},
+  {0, 400},
+  {0, 0},     // return to start
+};
+const int routeLen = sizeof(route) / sizeof(route[0]);
+
+void setup() {
+  robot.begin();
+
+  // Robot is at the origin, facing along the X axis
+  robot.setPosition(0, 0, 0);
+
+  for (int i = 0; i &lt; routeLen; i++) {
+    robot.displayPrint("Point", i + 1);
+    robot.moveTo(50, route[i][0], route[i][1]);
+    delay(300);
+  }
+
+  robot.rotateTo(50, 0); // restore original heading at end
+  robot.displayPrint("Route", "DONE");
+}
+
+void loop() {
+  robot.printOdometry(); // watch position in Serial Monitor
+  delay(1000);
+}</code></pre>
+                </div>
+
+                <div class="api-card static" id="arcs">
+                    <h3>Arcs — arc movement</h3>
+                    <p><code>moveArcDist()</code> — arc via wheel speed ratio. <code>moveArcRadius()</code> — arc with real geometry: radius and sector angle.</p>
+                    <pre><code>#include &lt;UNI.h&gt;
+
+UniBase robot("UNI");
+
+void setup() {
+  robot.begin();
+
+  // Square with rounded corners:
+  // straight segments + quarter-circles of radius 100 mm
+  robot.displayPrint("Round sq");
+  delay(1000);
+  for (int i = 0; i &lt; 4; i++) {
+    robot.moveDist(50, 250);
+    robot.moveArcRadius(50, 100, 90); // quarter-circle R = 100 mm
+  }
+  delay(1000);
+
+  // Slalom via wheel speed ratio
+  robot.displayPrint("Slalom");
+  delay(1000);
+  for (int i = 0; i &lt; 3; i++) {
+    robot.moveArcDist(50, 30, 250);   // arc right
+    robot.moveArcDist(50, -30, 250);  // arc left
+  }
+
+  robot.displayPrint("Arcs", "DONE");
+}
+
+void loop() {
+}</code></pre>
+                </div>
+
+                <div class="api-card static" id="async">
+                    <h3>AsyncMovement — non-blocking commands</h3>
+                    <p>Commands with the <code>Async</code> suffix start movement and return immediately. <code>isMoving()</code> — check if moving. <code>waitMove(timeout)</code> — wait with a stuck-protection timeout.</p>
+                    <pre><code>#include &lt;UNI.h&gt;
+
+UniBase robot("UNI");
+
+void setup() {
+  robot.begin();
+  robot.blinkLED(0);
+
+  // 1. Do useful work while the robot moves
+  robot.moveDistAsync(50, 800);
+  while (robot.isMoving()) {
+    robot.displayPrint("Dist", robot.getDistance()); // live progress
+    delay(100);
+  }
+  robot.displayClear();
+  delay(500);
+
+  // 2. Start and just wait
+  robot.rotateAsync(50, 180);
+  robot.blinkLED(100);   // blink during the turn
+  robot.waitMove();
+  robot.blinkLED(0);
+  delay(500);
+
+  // 3. Wait with timeout — guards against getting stuck
+  robot.moveDistAsync(50, 800);
+  if (!robot.waitMove(5000)) {  // didn't finish within 5 s?
+    robot.stop(HARD);
+    robot.displayPrint("STUCK!");
+    return;
+  }
+  delay(500);
+
+  // 4. Cancel movement on a custom condition
+  robot.moveDistAsync(30, 2000);     // distant target...
+  delay(1500);                       // ...but after 1.5 s
+  robot.stop(HARD);                  // changed our mind
+  robot.displayPrint("Async", "DONE");
+}
+
+void loop() {
+}</code></pre>
+                </div>
+
+                <div class="api-card static" id="manual-control">
+                    <h3>ManualControl — direct motor control</h3>
+                    <p><code>motorsSync()</code> holds the speed ratio via encoders. <code>holdPosition()</code> actively resists being pushed. All commands run until <code>stop()</code> is called.</p>
+                    <pre><code>#include &lt;UNI.h&gt;
+
+UniBase robot("UNI");
+
+void setup() {
+  robot.begin();
+
+  // Straight ahead without stabilisation (may drift)
+  robot.displayPrint("motors");
+  robot.motors(40, 40);
+  delay(1500);
+  robot.stop(HARD);
+  delay(500);
+
+  // Straight ahead with encoder synchronisation
+  robot.displayPrint("motorsSync");
+  robot.motorsSync(40, 40);
+  delay(1500);
+
+  // Arc: right wheel half the speed of the left
+  robot.motorsSync(50, 25);
+  delay(1500);
+
+  // Reverse with synchronisation
+  robot.motorsSync(-40, -40);
+  delay(1500);
+  robot.stop(HARD);
+  delay(500);
+
+  // Arc via power + steering angle
+  robot.displayPrint("motorsArc");
+  robot.motorsArc(40, 20);
+  delay(2000);
+  robot.stop(SOFT); // soft stop — no wheel lock
+
+  // Active position hold (10 seconds)
+  robot.displayPrint("HOLD");
+  robot.holdPosition();
+  delay(10000);
+  robot.stop(SOFT);
+  robot.displayPrint("Done");
+}
+
+void loop() {
+}</code></pre>
+                </div>
+
+                <h2>Sensors</h2>
+
+                <div class="api-card static" id="obstacle-stop">
+                    <h3>ObstacleStop — obstacle reaction</h3>
+                    <p>The robot drives forward while watching an ultrasonic sensor. Obstacle closer than 150 mm — stop; obstacle removed — resume. Wiring: sensor on P6 (trig) and P7 (echo).</p>
+                    <pre><code>#include &lt;UNI.h&gt;
+
+UniBase robot("UNI");
+UniDev module;
+
+const int OBSTACLE_MM = 150;   // stop distance
+const int TARGET_MM   = 1500;  // total travel distance
+
+void setup() {
+  robot.begin();
+  robot.resetDistance();
+}
+
+void loop() {
+  // Goal reached — stay stopped
+  if (robot.getDistance() &gt;= TARGET_MM) {
+    robot.displayPrint("DONE");
+    return;
+  }
+
+  int dist = module.ultraSonic(P6, P7);
+  bool blocked = (dist &gt; 0 &amp;&amp; dist &lt; OBSTACLE_MM);
+
+  if (blocked) {
+    if (robot.isMoving()) {
+      robot.stop(HARD);
+      robot.displayPrint("Obstacle", dist);
+    }
+  } else {
+    if (!robot.isMoving()) {
+      // Resume remaining distance asynchronously
+      int remaining = TARGET_MM - (int)robot.getDistance();
+      robot.moveDistAsync(50, remaining);
+      robot.displayClear();
+    }
+  }
+
+  delay(50);
 }</code></pre>
                 </div>
 
                 <div class="api-card static" id="distance">
-                    <h3>Distance Sensors</h3>
-                    <p>Reading values from ultrasonic sensors (from DistanceSensors.ino).</p>
+                    <h3>DistanceSensors — ultrasonic sensors</h3>
+                    <p>Reads distance in mm from multiple sensors. Wiring: front — P6/P7, side — P3/P4. Open Serial Monitor (115200 baud).</p>
                     <pre><code>#include &lt;UNI.h&gt;
 
 UniBase robot;
 UniDev module;
 
 void setup() {
-  Serial.begin(115200);
   robot.begin("Dist");
 }
 
 void loop() {
-  // Получаем значения с датчиков
   int front = module.ultraSonic(P6, P7);
-  int side = module.ultraSonic(P3, P4);
-  
-  // Выводим в Serial Monitor
+  int side  = module.ultraSonic(P3, P4);
+
   Serial.print("Front: ");
   Serial.print(front);
   Serial.print(" mm, Side: ");
   Serial.print(side);
   Serial.println(" mm");
+
+  robot.displayPrint("Front", front);
+
+  delay(100);
 }</code></pre>
                 </div>
 
                 <div class="api-card static" id="line">
-                    <h3>Line Sensor</h3>
-                    <p>Reading values from a line sensor (from LineSensor.ino).</p>
+                    <h3>LineSensor — line sensor</h3>
+                    <p>Analogue reading 0–4095. Calibrate the threshold between the light floor and dark line. Wiring: sensor on P2.</p>
                     <pre><code>#include &lt;UNI.h&gt;
 
 UniBase robot;
 UniDev module;
+
+const int THRESHOLD = 2000; // calibrate for your floor
+
+void setup() {
+  robot.begin("Line");
+}
+
+void loop() {
+  int value = module.lineSensor(P2);
+  bool onLine = (value &gt; THRESHOLD);
+
+  Serial.print("Line sensor: ");
+  Serial.print(value);
+  Serial.println(onLine ? "  [LINE]" : "");
+
+  robot.displayPrint(onLine ? "LINE" : "floor", value);
+
+  delay(100);
+}</code></pre>
+                </div>
+
+                <div class="api-card static" id="servo">
+                    <h3>ServoControl — servo: angles, attach, detach</h3>
+                    <p>Cycles a servo between 0°, 90° and 180°, then detaches it so the arm can move freely without straining the motor. The next <code>servo()</code> call re-attaches automatically. Wiring: servo on P3.</p>
+                    <pre><code>#include &lt;UNI.h&gt;
+
+UniBase robot;
+UniDev module;
+
+void setup() {
+  robot.begin("Servo");
+}
+
+void loop() {
+  // Servo on — hold angles
+  robot.displayPrint("Servo", "ON");
+  module.servo(P3, 0);
+  delay(1000);
+  module.servo(P3, 90);
+  delay(1000);
+  module.servo(P3, 180);
+  delay(1000);
+
+  // Detach: motor goes limp, arm can be moved by hand
+  robot.displayPrint("Servo", "OFF");
+  module.servoDetach(P3);
+  delay(3000);
+
+  // Next servo() at the top of the loop re-attaches automatically
+}</code></pre>
+                </div>
+
+                <h2>Configuration</h2>
+
+                <div class="api-card static" id="tuning">
+                    <h3>Tuning — precision tuning</h3>
+                    <p>All PID parameters are collected in <code>TuningConfig</code>. Platform geometry is set in <code>UniConfig</code> and passed to the constructor.</p>
+                    <pre><code>#include &lt;UNI.h&gt;
+
+UniConfig cfg;          // default values
+// cfg.trackLengthMM = 106.0f; // override before creating the robot if needed
+
+UniBase robot("UNI", cfg);
+
+void setup() {
+  robot.begin();
+
+  // Fetch current settings, change what's needed, apply
+  TuningConfig tuning = robot.getTuning();
+  tuning.rotateTolDeg = 0.5f;    // tighter turn tolerance
+  tuning.moveAccel    = 1500.0f; // gentler deceleration on straight
+  robot.setTuning(tuning);
+
+  // Test run with new settings
+  robot.moveDist(70, 500);
+  robot.rotate(70, 180);
+  robot.moveDist(70, 500);
+  robot.rotate(70, 180);
+
+  // Odometry shows return accuracy
+  robot.displayPrint("X err", robot.getAbsX());
+}
+
+void loop() {
+}</code></pre>
+                </div>
+
+                <h2>UniBaseControl — UART control</h2>
+                <p>Examples from <code>UniBaseControl/examples/</code>. Flash the ESP32 with <strong>UniBaseControl_Start</strong>; program the Arduino Nano with <strong>Start</strong> or <strong>BasicMovement</strong>.</p>
+
+                <div class="api-card static" id="uart-control">
+                    <h3>UniBaseControl_Start — ESP32 side</h3>
+                    <p>Turns the platform into a UART command executor. Flash to ESP32. Wiring: UART2 (RX 16, TX 17, 38400 baud) to the Nano's TX/RX.</p>
+                    <pre><code>#include &lt;UNI.h&gt;
+
+UniBase robot;
+
+void setup() {
+  robot.begin("UNI");
+  robot.UniBaseControl(); // start listening for commands
+}
+
+void loop() {
+  // Command reception, movement and display run on core 1.
+  // loop() is free — add your own logic here.
+}</code></pre>
+                </div>
+
+                <div class="api-card static" id="ubc-start">
+                    <h3>Start — Arduino Nano side</h3>
+                    <p>Minimal sketch for the controller board. Flash to Arduino Nano with the <code>UniBaseControl</code> library installed.</p>
+                    <pre><code>#include &lt;UniBaseControl.h&gt;
+
+UniBaseControl robot;
 
 void setup() {
   robot.begin();
 }
 
 void loop() {
-  // Считываем значение с датчика линии на пине P2
-  int sensorValue = module.lineSensor(P2);
-  
-  // Выводим значение в монитор порта
-  Serial.print("Line sensor: ");
-  Serial.println(sensorValue);
+
+}</code></pre>
+                </div>
+
+                <div class="api-card static" id="ubc-movement">
+                    <h3>BasicMovement — movement from Nano</h3>
+                    <p>The robot drives a square; commands are sent from an Arduino Nano over UART.</p>
+                    <pre><code>#include &lt;UniBaseControl.h&gt;
+
+UniBaseControl robot;
+
+void setup() {
+  robot.begin();
+}
+
+void loop() {
+  for (int i = 0; i &lt; 4; i++) {
+    robot.moveDist(50, 100);
+    delay(2000);
+
+    robot.rotate(50, 90);
+    delay(1000);
+  }
 }</code></pre>
                 </div>
 
             </div>
         </main>
-        <script src="script.js"></script>
+        <script src="nav.js"></script>
+    <script src="script.js"></script>
 </body>
 
 </html>

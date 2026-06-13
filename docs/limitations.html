@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limitations - UNI Library</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar"></aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <button id="mobile-menu-toggle" class="mobile-menu-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="search-container">
+                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" class="search-input" placeholder="Search...">
+                </div>
+                <button id="theme-toggle" class="theme-toggle" title="Toggle theme"></button>
+            </header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <h1>Library Limitations</h1>
+
+                <p>This page documents the boundaries of the UNI library: things worth knowing in advance so the
+                    robot's behavior never comes as a surprise. Most of these are deliberate trade-offs rather
+                    than bugs, and each one comes with a recommended way to work with it.</p>
+
+                <h2 id="movement">Movement and Commands</h2>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Only one movement command runs at a time</h3>
+                    <p>There is no command queue: a new movement command silently cancels the current one. The code
+                        <code>moveDistAsync(50, 500); rotateAsync(50, 90);</code> will only perform the rotation —
+                        the distance move is aborted right after it starts.</p>
+                    <p><strong>How to work with it:</strong> wait for completion between async commands using
+                        <code>waitMove()</code>, or use the blocking versions (<code>moveDist</code>,
+                        <code>rotate</code>) which wait on their own.</p>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Minimum movement power — minPower</h3>
+                    <p>Power below <code>minPower</code> (default 15) in movement commands is automatically raised
+                        to it: below that level the motors cannot overcome static friction. You cannot drive slower
+                        than ~15% with <code>moveDist</code>/<code>rotate</code> and similar commands.</p>
+                    <p><strong>How to work with it:</strong> the direct motor commands <code>motors()</code> and
+                        <code>motorsSync()</code> do not apply this limit — use them for very slow motion. The
+                        threshold is configurable via <code>TuningConfig::minPower</code>.</p>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Speed is a percentage, not mm/s</h3>
+                    <p>The <code>power</code> parameter is a percentage of maximum, not a physical speed. Actual
+                        speed depends on battery charge: the robot drives faster on a fresh battery than on a
+                        drained one. Closed-loop control compensates by <em>position</em> (stopping accuracy is
+                        preserved), but the <em>time</em> a command takes will vary.</p>
+                    <p><strong>How to work with it:</strong> never base your logic on movement timing — verify
+                        results via odometry (<code>getDistance()</code>, <code>getAngle()</code>).</p>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">The safety timeout ends movements silently</h3>
+                    <p>If the robot has not reached its target within ~3× the estimated time (pushed against a
+                        wall, wheels blocked), the command finishes on its own — with no error code. A blocking
+                        call simply returns as if the move had completed.</p>
+                    <p><strong>How to work with it:</strong> where getting stuck is likely, use
+                        <code>moveDistAsync()</code> + <code>waitMove(timeout)</code>: a <code>false</code> return
+                        means the robot did not arrive in time. Then compare <code>getDistance()</code> against the
+                        expected distance.</p>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Arc limitations</h3>
+                    <ul>
+                        <li><code>moveArcRadius()</code> requires a radius of at least half the track width
+                            (~53 mm). For turning in place use <code>rotate()</code>.</li>
+                        <li>In <code>moveArcDist()</code> / <code>moveArcTime()</code> / <code>motorsArc()</code>,
+                            an <code>angle</code> with |angle| &gt; 90 makes the inner wheel spin backwards — the
+                            path is still an arc, but behavior is less predictable.</li>
+                        <li><code>moveTime()</code> and <code>moveArcTime()</code> stop on a timer without a
+                            deceleration profile — the stop is sharper than distance-based commands.</li>
+                    </ul>
+                </div>
+
+                <h2 id="accuracy">Accuracy and Odometry</h2>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Physical accuracy equals calibration accuracy</h3>
+                    <p>Turns are physically accurate to the extent the track width (<code>trackLengthMM</code>) is
+                        accurate; distances depend on wheel diameter (<code>wheelDiameterMM</code>) and ticks per
+                        revolution (<code>ticksPerRev</code>).</p>
+                    <p><strong>Calibration rule:</strong> if odometry reads exactly the target
+                        (<code>getAngle()</code> = 90 after <code>rotate(50, 90)</code>) but the robot physically
+                        turned more or less — calibrate the geometry in <code>UniConfig</code>, not the PID
+                        gains.</p>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Odometry accumulates drift</h3>
+                    <p>Position is computed from wheel encoders only: wheel slip, floor bumps and collisions are
+                        invisible to odometry. There is no gyroscope or external correction.
+                        <code>moveTo()</code> and <code>setPosition()</code> work well over routes of a few meters,
+                        but the error grows with mileage and aggressive maneuvers.</p>
+                    <p><strong>How to work with it:</strong> on long routes, periodically "re-ground" the pose
+                        against an external reference (wall, line) and call <code>setPosition()</code> with known
+                        coordinates.</p>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Completion tolerances and no reverse correction</h3>
+                    <p>Movement commands finish when entering a tolerance band <em>by odometry</em>:
+                        <code>rotateTolDeg</code> (default 1°) for turns and <code>moveTolMM</code> (1 mm) for
+                        distances. If the robot overshoots the target it is fixed by the brake — it never backs up
+                        to correct (this removes end-of-move jitter).</p>
+                    <p><strong>How to work with it:</strong> need higher precision — reduce the tolerance and lower
+                        <code>moveAccel</code>/<code>rotateAccel</code> in <code>TuningConfig</code> (gentler
+                        braking means less overshoot).</p>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">moveTo: lateral drift is proportional to the turn tolerance</h3>
+                    <p><code>moveTo()</code> first turns toward the target (within <code>rotateTolDeg</code>), then
+                        drives straight holding the heading — but it does <em>not steer onto the point</em> along
+                        the way. A 1° heading error produces ~5 mm of lateral drift per 300 mm of travel.</p>
+                    <p><strong>How to work with it:</strong> reduce <code>rotateTolDeg</code>, or split a long leg
+                        into two <code>moveTo()</code> calls — the intermediate point recalculates the heading.</p>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Coordinate system and resets</h3>
+                    <ul>
+                        <li>The X axis points forward from the robot's starting pose, Y points sideways, and a
+                            positive angle is a turn to the right.</li>
+                        <li><code>resetDistance()</code> and <code>resetAngle()</code> reset only the trip counters
+                            for distance and angle — they do <em>not</em> touch the X/Y pose.</li>
+                        <li>To anchor odometry to the field (or reset everything at once), use
+                            <code>setPosition(x, y, angle)</code>.</li>
+                    </ul>
+                </div>
+
+                <h2 id="behavior">Behavior and Blocking</h2>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Blocking calls</h3>
+                    <p>Some functions halt program execution:</p>
+                    <ul>
+                        <li><code>stop(HARD)</code> — blocks ~50 ms (braking time);</li>
+                        <li><code>waitButton()</code> — waits forever for a press;</li>
+                        <li><code>ultraSonic()</code> — up to ~70 ms when no echo returns (3 attempts);</li>
+                        <li>all light ring effects (<code>pixelsRainbow</code> etc.) — block for the entire
+                            <code>duration</code>.</li>
+                    </ul>
+                    <p><strong>How to work with it:</strong> in a loop that watches sensors while driving, avoid
+                        long effects; for lighting during movement use the basic
+                        <code>pixel()</code>/<code>pixelsAll()</code> calls.</p>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Lazy initialization</h3>
+                    <p>Calling <code>begin()</code> is optional — the first command initializes the robot
+                        automatically. The consequence: a sketch that never calls <em>any</em> robot method will
+                        not bring up the display or odometry.</p>
+                    <p><strong>How to work with it:</strong> if the robot should "just stand there showing the
+                        screen" — call <code>robot.begin()</code> explicitly in <code>setup()</code>.</p>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">The API is designed for setup() and loop()</h3>
+                    <p>The library itself uses the second ESP32 core for odometry and control loops, and API calls
+                        are synchronized assuming a single user core. Calling robot methods from your own FreeRTOS
+                        tasks is unsupported and may cause race conditions.</p>
+                </div>
+
+                <h2 id="peripherals">Peripherals</h2>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Display</h3>
+                    <ul>
+                        <li><code>displayPrint()</code> strings — 15 characters maximum, longer ones are
+                            truncated.</li>
+                        <li>The screen refreshes ~10 times per second: values changing faster are partially
+                            skipped — this is normal.</li>
+                    </ul>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Servos</h3>
+                    <ul>
+                        <li>At most 12 servos at once (16 ESP32 PWM channels minus 4 for the motors).</li>
+                        <li>A PWM channel is bound to a port on first use and is not reused for another port
+                            (though <code>servoDetach()</code> does not consume channels).</li>
+                        <li>Pulses are fixed: 0.5–2.5 ms at 50 Hz. Servos with non-standard calibration cannot be
+                            adjusted.</li>
+                        <li>Horn speed is not controlled — the servo moves to the angle at full speed. Smooth
+                            motion is achieved with a series of small angle steps and delays.</li>
+                    </ul>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Ultrasonic sensor</h3>
+                    <p>The working range of <code>ultraSonic()</code> is 20–4000 mm. A return value of
+                        <code>0</code> means "no echo": the target is too close, too far, or does not reflect
+                        sound.</p>
+                    <p><strong>Important:</strong> always check for zero separately, otherwise the condition
+                        <code>dist &lt; threshold</code> falsely triggers as "obstacle right here":</p>
+                    <pre><code>int dist = module.ultraSonic(P6, P7);
+if (dist > 0 && dist < 150) {
+    robot.stop(HARD); // the obstacle really is close
+}</code></pre>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">No analog input on P5 and P6</h3>
+                    <p>When an analog read is attempted on P5/P6, the library prints a warning to Serial.</p>
+                    <p><strong>How to work with it:</strong> for the line sensor and any analog sensors, use
+                        ADC-capable ports — <strong>P1, P2, P3, P4</strong> (ADC2) or <strong>P7</strong>
+                        (ADC1). Digital sensors (<code>digitalSensor()</code>) work on any port, including
+                        P5/P6.</p>
+                    <p><strong>Wi-Fi note:</strong> P1–P4 use ADC2, which is unavailable while Wi-Fi is active.
+                        The library itself does not use Wi-Fi, so P1–P4 are safe; but if you add Wi-Fi to your
+                        sketch, the only independent analog input is <strong>P7</strong> (ADC1).</p>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="nav.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>

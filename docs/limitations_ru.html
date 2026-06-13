@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ограничения - Библиотека UNI</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar"></aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <button id="mobile-menu-toggle" class="mobile-menu-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="search-container">
+                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" class="search-input" placeholder="Поиск...">
+                </div>
+                <button id="theme-toggle" class="theme-toggle" title="Переключить тему"></button>
+            </header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <h1>Ограничения библиотеки</h1>
+
+                <p>Эта страница описывает границы возможностей библиотеки UNI: что важно знать заранее, чтобы
+                    поведение робота не стало сюрпризом. Большинство пунктов — не ошибки, а осознанные
+                    компромиссы, и для каждого указано, как с ним работать.</p>
+
+                <h2 id="movement">Движение и команды</h2>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Одновременно выполняется только одна команда движения</h3>
+                    <p>Очереди команд нет: новая команда движения молча отменяет текущую. Код
+                        <code>moveDistAsync(50, 500); rotateAsync(50, 90);</code> выполнит только поворот —
+                        движение по дистанции будет прервано сразу после запуска.</p>
+                    <p><strong>Как работать:</strong> между асинхронными командами дожидайтесь завершения через
+                        <code>waitMove()</code> или используйте блокирующие версии (<code>moveDist</code>,
+                        <code>rotate</code>), которые ждут сами.</p>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Минимальная мощность движения — minPower</h3>
+                    <p>Мощность ниже <code>minPower</code> (по умолчанию 15) в командах движения автоматически
+                        поднимается до него: на меньшей мощности моторы не страгиваются с места. Ехать медленнее
+                        ~15% командами <code>moveDist</code>/<code>rotate</code> и т.п. нельзя.</p>
+                    <p><strong>Как работать:</strong> прямые команды моторов <code>motors()</code> и
+                        <code>motorsSync()</code> это ограничение не применяют — для очень медленного движения
+                        используйте их. Порог настраивается в <code>TuningConfig::minPower</code>.</p>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Скорость задается в процентах, а не в мм/с</h3>
+                    <p>Параметр <code>power</code> — процент от максимума, а не физическая скорость. Реальная
+                        скорость зависит от заряда батареи: на свежей батарее робот едет быстрее, чем на
+                        подсевшей. Замкнутые контуры компенсируют это по <em>положению</em> (точность остановки
+                        сохраняется), но <em>время</em> выполнения команды плавает.</p>
+                    <p><strong>Как работать:</strong> не завязывайте логику на время движения — проверяйте
+                        результат по одометрии (<code>getDistance()</code>, <code>getAngle()</code>).</p>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Таймаут безопасности завершает движение молча</h3>
+                    <p>Если робот не достиг цели за ~3× расчетного времени (уперся в стену, колеса
+                        заблокированы), команда завершается сама — без кода ошибки. Блокирующий вызов просто
+                        вернет управление, как будто движение закончилось.</p>
+                    <p><strong>Как работать:</strong> там, где застревание вероятно, используйте
+                        <code>moveDistAsync()</code> + <code>waitMove(timeout)</code>: возврат <code>false</code>
+                        означает, что робот не доехал за отведенное время. После этого сравните
+                        <code>getDistance()</code> с ожидаемой дистанцией.</p>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Ограничения дуг</h3>
+                    <ul>
+                        <li><code>moveArcRadius()</code> требует радиус не меньше половины колеи (~53 мм).
+                            Для разворота на месте используйте <code>rotate()</code>.</li>
+                        <li>В <code>moveArcDist()</code> / <code>moveArcTime()</code> / <code>motorsArc()</code>
+                            параметр <code>angle</code> с |angle| &gt; 90 заставляет внутреннее колесо вращаться
+                            назад — траектория остается дугой, но поведение менее предсказуемо.</li>
+                        <li><code>moveTime()</code> и <code>moveArcTime()</code> останавливаются по времени без
+                            профиля замедления — остановка резче, чем у команд по дистанции.</li>
+                    </ul>
+                </div>
+
+                <h2 id="accuracy">Точность и одометрия</h2>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Физическая точность равна точности калибровки</h3>
+                    <p>Повороты физически точны настолько, насколько точно задана колея
+                        (<code>trackLengthMM</code>), дистанции — насколько точны диаметр колеса
+                        (<code>wheelDiameterMM</code>) и тики на оборот (<code>ticksPerRev</code>).</p>
+                    <p><strong>Правило калибровки:</strong> если одометрия показывает ровно цель
+                        (<code>getAngle()</code> = 90 после <code>rotate(50, 90)</code>), а физически робот
+                        повернул больше или меньше — калибруйте геометрию в <code>UniConfig</code>, а не
+                        коэффициенты ПИД.</p>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Одометрия накапливает дрейф</h3>
+                    <p>Позиция считается только по энкодерам колес: проскальзывание, неровности пола и удары
+                        одометрия не видит. Гироскопа или внешней коррекции нет. <code>moveTo()</code> и
+                        <code>setPosition()</code> хорошо работают на маршрутах в несколько метров, но ошибка
+                        растет с пробегом и количеством резких маневров.</p>
+                    <p><strong>Как работать:</strong> на длинных маршрутах периодически «заземляйте» позицию по
+                        внешнему ориентиру (стена, линия) и вызывайте <code>setPosition()</code> с известными
+                        координатами.</p>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Допуски завершения и отсутствие обратной доводки</h3>
+                    <p>Команды движения завершаются при входе в допуск <em>по одометрии</em>:
+                        <code>rotateTolDeg</code> (по умолчанию 1°) для поворотов и <code>moveTolMM</code>
+                        (1 мм) для дистанций. Если робот проскочил цель, он фиксируется тормозом — назад для
+                        коррекции он принципиально не сдает (это убирает дерганье в конце движения).</p>
+                    <p><strong>Как работать:</strong> нужна точность выше — уменьшайте допуск и
+                        <code>moveAccel</code>/<code>rotateAccel</code> в <code>TuningConfig</code> (плавнее
+                        торможение — меньше перелет).</p>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">moveTo: боковой снос пропорционален допуску поворота</h3>
+                    <p><code>moveTo()</code> сначала доворачивает на курс к цели (с точностью
+                        <code>rotateTolDeg</code>), затем едет по прямой, удерживая курс, — но <em>не
+                        подруливает на точку</em> по ходу движения. Ошибка курса в 1° дает боковой снос
+                        ~5 мм на каждые 300 мм пути.</p>
+                    <p><strong>Как работать:</strong> для повышения точности уменьшите <code>rotateTolDeg</code>
+                        или разбейте длинный отрезок на два <code>moveTo()</code> — промежуточная точка
+                        пересчитает курс.</p>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Система координат и сбросы</h3>
+                    <ul>
+                        <li>Ось X направлена вперед от стартовой позы робота, Y — вбок, положительный угол —
+                            поворот направо.</li>
+                        <li><code>resetDistance()</code> и <code>resetAngle()</code> сбрасывают только счетчики
+                            пройденного пути и угла — позу X/Y они <em>не</em> трогают.</li>
+                        <li>Чтобы привязать одометрию к полю (или обнулить все сразу), используйте
+                            <code>setPosition(x, y, angle)</code>.</li>
+                    </ul>
+                </div>
+
+                <h2 id="behavior">Поведение и блокировки</h2>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Блокирующие вызовы</h3>
+                    <p>Некоторые функции останавливают выполнение программы:</p>
+                    <ul>
+                        <li><code>stop(HARD)</code> — блокирует ~50 мс (время торможения);</li>
+                        <li><code>waitButton()</code> — ждет нажатия бесконечно;</li>
+                        <li><code>ultraSonic()</code> — до ~70 мс, если эхо не приходит (3 попытки);</li>
+                        <li>все эффекты светового кольца (<code>pixelsRainbow</code> и др.) — блокируют на всю
+                            длительность <code>duration</code>.</li>
+                    </ul>
+                    <p><strong>Как работать:</strong> в цикле, который следит за датчиками во время движения,
+                        не вызывайте длинные эффекты; для подсветки во время езды используйте базовые
+                        <code>pixel()</code>/<code>pixelsAll()</code>.</p>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Ленивая инициализация</h3>
+                    <p><code>begin()</code> вызывать не обязательно — любая первая команда инициализирует робота
+                        сама. Но у этого есть следствие: скетч, который не вызывает <em>ни одного</em> метода
+                        робота, не оживит экран и одометрию.</p>
+                    <p><strong>Как работать:</strong> если робот должен «просто стоять и показывать экран» —
+                        вызовите <code>robot.begin()</code> явно в <code>setup()</code>.</p>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">API рассчитан на вызовы из setup() и loop()</h3>
+                    <p>Библиотека сама использует второе ядро ESP32 для одометрии и регуляторов, а вызовы API
+                        синхронизированы в расчете на одно пользовательское ядро. Вызовы методов робота из
+                        собственных задач FreeRTOS пользователя не поддерживаются и могут привести к гонкам.</p>
+                </div>
+
+                <h2 id="peripherals">Периферия</h2>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Дисплей</h3>
+                    <ul>
+                        <li>Строки <code>displayPrint()</code> — максимум 15 символов, длиннее обрезаются.</li>
+                        <li>Экран обновляется ~10 раз в секунду: значения, меняющиеся быстрее, частично
+                            теряются — это нормально.</li>
+                    </ul>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Сервоприводы</h3>
+                    <ul>
+                        <li>Максимум 12 серво одновременно (16 PWM-каналов ESP32 минус 4 на моторы).</li>
+                        <li>PWM-канал закрепляется за портом при первом использовании и не переиспользуется для
+                            другого порта (но <code>servoDetach()</code> каналы не расходует).</li>
+                        <li>Импульсы фиксированы: 0.5–2.5 мс при 50 Гц. Серво с нестандартной калибровкой
+                            подстроить нельзя.</li>
+                        <li>Скорость движения качалки не контролируется — серво идет к углу с максимальной
+                            скоростью. Плавность достигается серией мелких шагов угла с задержками.</li>
+                    </ul>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Ультразвуковой датчик</h3>
+                    <p>Рабочий диапазон <code>ultraSonic()</code> — 20–4000 мм. Возврат <code>0</code> означает
+                        «нет эха»: цель слишком близко, слишком далеко или не отражает звук.</p>
+                    <p><strong>Важно:</strong> всегда проверяйте ноль отдельно, иначе условие
+                        <code>dist &lt; порог</code> ложно сработает как «препятствие вплотную»:</p>
+                    <pre><code>int dist = module.ultraSonic(P6, P7);
+if (dist > 0 && dist < 150) {
+    robot.stop(HARD); // препятствие действительно близко
+}</code></pre>
+                </div>
+
+                <div class="api-card mb-4"
+                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
+                    <h3 style="margin-top: 0;">Аналоговый вход недоступен на P5 и P6</h3>
+                    <p>При попытке аналогового чтения с P5/P6 библиотека выводит предупреждение в Serial.</p>
+                    <p><strong>Как работать:</strong> для датчика линии и любых аналоговых датчиков
+                        используйте порты с АЦП — <strong>P1, P2, P3, P4</strong> (ADC2) или
+                        <strong>P7</strong> (ADC1). Цифровые датчики (<code>digitalSensor()</code>)
+                        работают на любом порту, включая P5/P6.</p>
+                    <p><strong>Примечание про Wi-Fi:</strong> P1–P4 используют ADC2, который недоступен,
+                        пока активен Wi-Fi. Сама библиотека Wi-Fi не использует, поэтому P1–P4 безопасны;
+                        но если вы добавите Wi-Fi в свой скетч, единственный независимый аналоговый вход —
+                        <strong>P7</strong> (ADC1).</p>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="nav.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
