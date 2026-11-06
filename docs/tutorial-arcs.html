@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 3. Arcs - UNI Library</title>
+    <link rel="stylesheet" href="styles.css?v=7">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="icon" href="logoUni.svg" type="image/svg+xml">
+    <meta name="color-scheme" content="light dark">
+    <script src="boot.js?v=5"></script>
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar"></aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header: breadcrumb and page actions, built by script.js -->
+            <header class="top-header"></header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <h1>Arcs</h1>
+                <p class="lead">Turning on the spot means stopping. An arc changes direction on the move: it rounds corners
+                    and takes the robot along a smooth path.</p>
+
+                <h2 id="two-ways">Two ways to describe an arc</h2>
+                <p><strong>By the ratio of wheel speeds.</strong> This is how <code>moveArcDist()</code>,
+                    <code>moveArcTime()</code> and <code>motorsArc()</code> work. The <code>angle</code> parameter, from −90 to
+                    90, sets how sharp the arc is: the left wheel gets <code>power × (1 + angle / 90)</code>, the right one
+                    <code>power × (1 − angle / 90)</code>.</p>
+                <div class="table-scroll">
+                    <table class="constants-table prose-table">
+                        <thead>
+                            <tr>
+                                <th>angle</th>
+                                <th>Left wheel</th>
+                                <th>Right wheel</th>
+                                <th>What the robot does</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>0</td><td>× 1</td><td>× 1</td><td>Drives straight</td></tr>
+                            <tr><td>30</td><td>× 1.33</td><td>× 0.67</td><td>Gentle arc to the right</td></tr>
+                            <tr><td>45</td><td>× 1.5</td><td>× 0.5</td><td>Sharp arc to the right</td></tr>
+                            <tr><td>90</td><td>× 2</td><td>0</td><td>Pivots around the right wheel</td></tr>
+                            <tr><td>-30</td><td>× 0.67</td><td>× 1.33</td><td>Gentle arc to the left</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p><strong>By geometry.</strong> <code>moveArcRadius()</code> takes the arc radius at the robot's centre and
+                    the angle of the sector.</p>
+                <figure class="figure">
+                <svg viewBox="0 0 360 262" role="img" aria-label="An arc of a given radius: the robot centre follows a circle of radius R" style="max-width: 430px"><path class="dg-dash" d="M153.0 206.0 A109 109 0 0 1 262.0 97.0"/><path class="dg-dash" d="M115.0 206.0 A147 147 0 0 1 262.0 59.0"/><line class="dg-line" x1="262.0" y1="206.0" x2="164.0" y2="206.0"/><line class="dg-line" x1="262.0" y1="206.0" x2="262.0" y2="112.0"/><path class="dg-accent" d="M139.0 170.7 A128 128 0 0 1 216.1 86.5"/><polygon class="dg-accent-fill" points="231.0,81.8 221.6,89.3 219.2,79.6"/><g transform="translate(134.0 206.0) rotate(0)"><rect class="dg-wheel" x="-19.2" y="-7.7" width="5.0" height="15.4" rx="1.4"/><rect class="dg-wheel" x="14.3" y="-7.7" width="5.0" height="15.4" rx="1.4"/><rect class="dg-body" x="-14.3" y="-17.1" width="28.6" height="34.1" rx="5.0"/><polygon class="dg-ink" points="0,-13.8 -3.9,-7.7 3.9,-7.7"/></g><g transform="translate(262.0 78.0) rotate(90)"><rect class="dg-wheel" x="-19.2" y="-7.7" width="5.0" height="15.4" rx="1.4"/><rect class="dg-wheel" x="14.3" y="-7.7" width="5.0" height="15.4" rx="1.4"/><rect class="dg-body" x="-14.3" y="-17.1" width="28.6" height="34.1" rx="5.0"/><polygon class="dg-ink" points="0,-13.8 -3.9,-7.7 3.9,-7.7"/></g><path class="dg-line" d="M232.0 206.0 A30 30 0 0 1 262.0 176.0"/><circle class="dg-ink" cx="262.0" cy="206.0" r="3.5"/><text class="dg-text dg-text-accent" x="228.0" y="180.0" text-anchor="end">angle</text><text class="dg-text dg-text-accent" x="180.0" y="198.0" text-anchor="middle">R</text><text class="dg-text dg-small dg-faint" x="262.0" y="230.0" text-anchor="middle">centre of turn</text><text class="dg-text dg-small dg-faint" x="134.0" y="250.0" text-anchor="middle">start</text><text class="dg-text dg-small dg-faint" x="306.0" y="82.0">finish</text></svg>
+                <figcaption>moveArcRadius(50, R, 90): the robot's centre follows an arc of radius R, the wheels follow the inner and outer tracks. A positive angle is an arc to the right.</figcaption>
+                </figure>
+                <p>Both describe the same thing: <code>angle = 90 × (track / 2) / radius</code>. With the standard 107 mm track, <code>angle = 30</code> corresponds to a radius of about 160 mm.</p>
+
+                <h2 id="steps">Steps</h2>
+                <ol class="steps">
+                    <li>
+                        <h3>Round the corners of the square</h3>
+                <pre><code>for (int i = 0; i &lt; 4; i++) {
+  robot.moveDist(50, 250);
+  robot.moveArcRadius(50, 100, 90);   // a quarter circle of radius 100 mm
+}</code></pre>
+                <figure class="figure">
+                <svg viewBox="0 0 290 222" role="img" aria-label="A square with rounded corners: four 250 mm straights and four arcs of 100 mm radius" style="max-width: 350px"><path class="dg-accent" d="M84.0 162.0 L84.0 62.0 A40.0 40.0 0 0 1 124.0 22.0 L224.0 22.0 A40.0 40.0 0 0 1 264.0 62.0 L264.0 162.0 A40.0 40.0 0 0 1 224.0 202.0 L124.0 202.0 A40.0 40.0 0 0 1 84.0 162.0"/><polygon class="dg-accent-fill" points="84.0,107.0 88.5,117.0 79.5,117.0"/><polygon class="dg-accent-fill" points="179.0,22.0 169.0,26.5 169.0,17.5"/><polygon class="dg-accent-fill" points="264.0,77.0 259.5,67.0 268.5,67.0"/><polygon class="dg-accent-fill" points="169.0,202.0 179.0,197.5 179.0,206.5"/><line class="dg-line" x1="124.0" y1="62.0" x2="95.7" y2="33.7"/><circle class="dg-ink" cx="124.0" cy="62.0" r="2.5"/><text class="dg-text dg-small dg-text-accent" x="130.0" y="76.0">R 100</text><text class="dg-text dg-small dg-strong" x="62.0" y="116.0" text-anchor="end">250 mm</text><g transform="translate(84.0 162.0) rotate(0)"><rect class="dg-wheel" x="-17.5" y="-7.0" width="4.5" height="14.0" rx="1.2"/><rect class="dg-wheel" x="13.0" y="-7.0" width="4.5" height="14.0" rx="1.2"/><rect class="dg-body" x="-13.0" y="-15.5" width="26.0" height="31.0" rx="4.5"/><polygon class="dg-ink" points="0,-12.5 -3.5,-7.0 3.5,-7.0"/></g><text class="dg-text dg-small dg-faint" x="62.0" y="192.0" text-anchor="end">start</text></svg>
+                <figcaption>Four 250 mm straights and four arcs of 100 mm radius: the robot goes round a 45 × 45 cm square and comes back to the start.</figcaption>
+                </figure>
+                        <p>Instead of turning on the spot, the robot takes the corner along a quarter circle.</p>
+                    </li>
+                    <li>
+                        <h3>Drive a slalom</h3>
+                <pre><code>for (int i = 0; i &lt; 3; i++) {
+  robot.moveArcDist(50, 30, 250);    // arc to the right
+  robot.moveArcDist(50, -30, 250);   // arc to the left
+}</code></pre>
+                <figure class="figure">
+                <svg viewBox="0 0 330 284" role="img" aria-label="A snake of three pairs of arcs, right and left, drifts diagonally: about 95 cm forward and 95 cm to the right" style="max-width: 396px"><line class="dg-dash" x1="78.0" y1="240.0" x2="78.0" y2="49.2"/><line class="dg-dash" x1="78.0" y1="49.2" x2="269.1" y2="49.2"/><path class="dg-accent" d="M78.0 240.0 A31.8 31.8 0 0 1 109.8 208.2 A31.8 31.8 0 0 0 141.7 176.4 A31.8 31.8 0 0 1 173.5 144.6 A31.8 31.8 0 0 0 205.4 112.8 A31.8 31.8 0 0 1 237.2 81.0 A31.8 31.8 0 0 0 269.1 49.2"/><polygon class="dg-accent-fill" points="114.8,208.2 105.8,212.2 105.8,204.2"/><polygon class="dg-accent-fill" points="178.4,144.6 169.4,148.6 169.4,140.6"/><polygon class="dg-accent-fill" points="242.0,81.0 233.0,85.0 233.0,77.0"/><line class="dg-line" x1="109.8" y1="240.0" x2="87.3" y2="217.5"/><circle class="dg-ink" cx="109.8" cy="240.0" r="2.5"/><text class="dg-text dg-small dg-text-accent" x="117.8" y="244.0">R ≈ 160 mm</text><text class="dg-text dg-small dg-faint" x="100.3" y="198.2" text-anchor="middle">right</text><text class="dg-text dg-small dg-faint" x="140.3" y="208.9">left</text><g transform="translate(78.0 240.0) rotate(0)"><rect class="dg-wheel" x="-14.7" y="-5.9" width="3.8" height="11.8" rx="1.1"/><rect class="dg-wheel" x="10.9" y="-5.9" width="3.8" height="11.8" rx="1.1"/><rect class="dg-body" x="-10.9" y="-13.0" width="21.8" height="26.0" rx="3.8"/><polygon class="dg-ink" points="0,-10.5 -2.9,-5.9 2.9,-5.9"/></g><g transform="translate(269.1 49.2) rotate(0.0)"><rect class="dg-wheel" x="-14.7" y="-5.9" width="3.8" height="11.8" rx="1.1"/><rect class="dg-wheel" x="10.9" y="-5.9" width="3.8" height="11.8" rx="1.1"/><rect class="dg-body" x="-10.9" y="-13.0" width="21.8" height="26.0" rx="3.8"/><polygon class="dg-ink" points="0,-10.5 -2.9,-5.9 2.9,-5.9"/></g><text class="dg-text dg-small dg-strong" x="68.0" y="148.6" text-anchor="end">≈ 95 cm</text><text class="dg-text dg-small dg-strong" x="173.5" y="37.2" text-anchor="middle">≈ 95 cm</text><text class="dg-text dg-small dg-faint" x="78.0" y="274.0" text-anchor="middle">start</text><text class="dg-text dg-small dg-faint" x="289.1" y="53.2">finish</text></svg>
+                <figcaption>The snake drifts diagonally: three pairs of arcs take the robot about 95 cm forward and as far to the right, and it ends up facing the way it started. Clear about a metre by a metre of floor.</figcaption>
+                </figure>
+                        <p>The third number is the arc length at the robot's centre in millimetres. At <code>angle = 30</code>
+                            a 250 mm arc is roughly a quarter circle.</p>
+                    </li>
+                    <li>
+                        <h3>Steer an arc by hand</h3>
+                <pre><code>robot.motorsArc(40, 20);   // follows the arc until it is stopped
+delay(2000);
+robot.stop(SOFT);</code></pre>
+                        <p><code>motorsArc()</code> has no target: the robot follows the arc until <code>stop()</code> is
+                            called. <code>SOFT</code> stops without locking the wheels, <code>HARD</code> brakes.</p>
+                    </li>
+                </ol>
+                <p>Finished sketches: <span class="menu-path">File › Examples › UNI › Arcs</span> and
+                    <span class="menu-path">ManualControl</span>. The code is on the
+                    <a href="examples.html#arcs">Examples</a> page.</p>
+
+                <h2 id="experiments">Try changing it</h2>
+                <ul>
+                    <li>Compare radii of 60, 150 and 300 mm in <code>moveArcRadius()</code>.</li>
+                    <li>Drive a full circle: <code>robot.moveArcRadius(50, 150, 360)</code>, then the same to the left with an
+                        angle of <code>-360</code> — that makes a figure of eight.</li>
+                    <li>Give <code>moveArcDist()</code> an <code>angle</code> above 90 and watch what the inner wheel does.</li>
+                </ul>
+
+                <h2 id="problems">If it does not work</h2>
+                <ul>
+                    <li><strong><code>moveArcRadius()</code> does nothing.</strong> The radius must be at least half the track
+                        — 53 mm — and the angle must not be zero. To turn on the spot use <code>rotate()</code>.</li>
+                    <li><strong>The arc has the wrong curvature.</strong> Curvature depends on the track: check that the wheels do
+                        not slip — see the <a href="faq.html#calibrate">FAQ</a>.</li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script src="nav.js?v=6"></script>
+    <script src="script.js?v=6"></script>
+</body>
+
+</html>

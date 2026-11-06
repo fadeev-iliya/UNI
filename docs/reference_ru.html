@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Справочник UNI.h - Библиотека UNI</title>
+    <link rel="stylesheet" href="styles.css?v=7">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="icon" href="logoUni.svg" type="image/svg+xml">
+    <meta name="color-scheme" content="light dark">
+    <script src="boot.js?v=5"></script>
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar"></aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header: breadcrumb and page actions, built by script.js -->
+            <header class="top-header"></header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <h1>Справочник UNI.h</h1>
+                <p class="lead">Все функции библиотеки на одной странице. Нажмите на функцию — откроется её описание с параметрами и примером.</p>
+                <p>Библиотека подключается одной строкой и даёт два класса: <code>UniBase</code> управляет самой платформой, <code>UniDev</code> — портами P1–P8 и модулями на них.</p>
+                <pre><code>#include &lt;UNI.h&gt;
+
+UniBase robot;   // платформа: моторы, движение, одометрия, экран
+UniDev module;   // порты P1–P8: датчики, сервоприводы, кольцо, светофор</code></pre>
+
+                <h2 id="unibase">UniBase</h2>
+                <p>Платформа: моторы, движение, одометрия, экран. В примерах объект называется <code>robot</code>. Константы — на странице <a href="unibase_ru.html">Класс UniBase</a>.</p>
+
+                <div class="api-card static fn-group" id="unibase-initialization">
+                    <h3>Инициализация</h3>
+                    <ul class="fn-list">
+                        <li><a href="unibase_ru.html#api-UniBase"><code class="fn-sig"><span class="fn-name">UniBase</span>(const char* robotName = "UNI Robot", UniBoardVersion board = UNI_BOARD_AUTO)</code><span class="fn-desc">Создаёт объект робота.</span></a></li>
+                        <li><a href="unibase_ru.html#api-begin"><code class="fn-sig">void <span class="fn-name">begin</span>(const char* robotName = nullptr)</code><span class="fn-desc">Инициализирует все компоненты робота (Моторы, Энкодеры, OLED, Датчики).</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="api-card static fn-group" id="unibase-motor-control">
+                    <h3>Управление моторами</h3>
+                    <ul class="fn-list">
+                        <li><a href="unibase_ru.html#api-motors"><code class="fn-sig">void <span class="fn-name">motors</span>(int powerLeft, int powerRight)</code><span class="fn-desc">Устанавливает мощность для обоих моторов напрямую.</span></a></li>
+                        <li><a href="unibase_ru.html#api-motorLeft"><code class="fn-sig">void <span class="fn-name">motorLeft</span>(int power)</code><span class="fn-desc">Устанавливает мощность только для левого мотора.</span></a></li>
+                        <li><a href="unibase_ru.html#api-motorRight"><code class="fn-sig">void <span class="fn-name">motorRight</span>(int power)</code><span class="fn-desc">Устанавливает мощность только для правого мотора.</span></a></li>
+                        <li><a href="unibase_ru.html#api-motorsArc"><code class="fn-sig">void <span class="fn-name">motorsArc</span>(int power, float angle)</code><span class="fn-desc">Перемещает робота по дуге с заданной интенсивностью поворота.</span></a></li>
+                        <li><a href="unibase_ru.html#api-motorsSync"><code class="fn-sig">void <span class="fn-name">motorsSync</span>(int powerLeft, int powerRight)</code><span class="fn-desc">Движение с раздельными скоростями и синхронизацией по энкодерам.</span></a></li>
+                        <li><a href="unibase_ru.html#api-motorsSpeed"><code class="fn-sig">void <span class="fn-name">motorsSpeed</span>(float leftMMperSec, float rightMMperSec)</code><span class="fn-desc">То же, что motorsSync(), но скорости колёс задаются в мм/с.</span></a></li>
+                        <li><a href="unibase_ru.html#api-holdPosition"><code class="fn-sig">void <span class="fn-name">holdPosition</span>()</code><span class="fn-desc">Активное удержание текущей позиции: робот сопротивляется сдвигу с помощью ПИД-регулятора.</span></a></li>
+                        <li><a href="unibase_ru.html#api-stop"><code class="fn-sig">void <span class="fn-name">stop</span>(int stopType = HARD)</code><span class="fn-desc">Останавливает оба мотора.</span></a></li>
+                        <li><a href="unibase_ru.html#api-stopLeft"><code class="fn-sig">void <span class="fn-name">stopLeft</span>(int stopType = HARD)</code><span class="fn-desc">Останавливает только левый мотор.</span></a></li>
+                        <li><a href="unibase_ru.html#api-stopRight"><code class="fn-sig">void <span class="fn-name">stopRight</span>(int stopType = HARD)</code><span class="fn-desc">Останавливает только правый мотор.</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="api-card static fn-group" id="unibase-movement">
+                    <h3>Движение (Блокирующее)</h3>
+                    <ul class="fn-list">
+                        <li><a href="unibase_ru.html#api-moveDist"><code class="fn-sig">bool <span class="fn-name">moveDist</span>(int power, int millimeters)</code><span class="fn-desc">Перемещает робота на определенное расстояние, используя PID-контроль энкодеров.</span></a></li>
+                        <li><a href="unibase_ru.html#api-moveTime"><code class="fn-sig">bool <span class="fn-name">moveTime</span>(int power, int milliseconds)</code><span class="fn-desc">Включает моторы на определенное время.</span></a></li>
+                        <li><a href="unibase_ru.html#api-moveArcDist"><code class="fn-sig">bool <span class="fn-name">moveArcDist</span>(int power, int angle, int millimeters)</code><span class="fn-desc">Движение по изогнутой траектории на определенное расстояние.</span></a></li>
+                        <li><a href="unibase_ru.html#api-moveArcTime"><code class="fn-sig">bool <span class="fn-name">moveArcTime</span>(int power, int angle, int milliseconds)</code><span class="fn-desc">Движение по изогнутой траектории в течение определенного времени.</span></a></li>
+                        <li><a href="unibase_ru.html#api-rotate"><code class="fn-sig">bool <span class="fn-name">rotate</span>(int power, int angle)</code><span class="fn-desc">Вращает робота на месте на заданный угол.</span></a></li>
+                        <li><a href="unibase_ru.html#api-rotateTo"><code class="fn-sig">bool <span class="fn-name">rotateTo</span>(int power, float angleDeg)</code><span class="fn-desc">Поворот к абсолютному курсу одометрии кратчайшим путём.</span></a></li>
+                        <li><a href="unibase_ru.html#api-moveTo"><code class="fn-sig">bool <span class="fn-name">moveTo</span>(int power, float x, float y)</code><span class="fn-desc">Движение к заданной точке одометрии: автоматически разворачивается на курс к цели, затем едет прямо.</span></a></li>
+                        <li><a href="unibase_ru.html#api-moveArcRadius"><code class="fn-sig">bool <span class="fn-name">moveArcRadius</span>(int power, float radiusMM, float angleDeg)</code><span class="fn-desc">Дуга с точной геометрией: задаётся радиус поворота и угол дуги.</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="api-card static fn-group" id="unibase-async-movement">
+                    <h3>Асинхронное движение</h3>
+                    <ul class="fn-list">
+                        <li><a href="unibase_ru.html#api-moveDistAsync"><code class="fn-sig">void <span class="fn-name">moveDistAsync</span>(int power, int millimeters)</code><span class="fn-desc">Асинхронный аналог moveDist().</span></a></li>
+                        <li><a href="unibase_ru.html#api-moveTimeAsync"><code class="fn-sig">void <span class="fn-name">moveTimeAsync</span>(int power, int milliseconds)</code><span class="fn-desc">Асинхронный аналог moveTime().</span></a></li>
+                        <li><a href="unibase_ru.html#api-moveArcDistAsync"><code class="fn-sig">void <span class="fn-name">moveArcDistAsync</span>(int power, int angle, int millimeters)</code><span class="fn-desc">Асинхронный аналог moveArcDist().</span></a></li>
+                        <li><a href="unibase_ru.html#api-moveArcTimeAsync"><code class="fn-sig">void <span class="fn-name">moveArcTimeAsync</span>(int power, int angle, int milliseconds)</code><span class="fn-desc">Асинхронный аналог moveArcTime().</span></a></li>
+                        <li><a href="unibase_ru.html#api-moveArcRadiusAsync"><code class="fn-sig">void <span class="fn-name">moveArcRadiusAsync</span>(int power, float radiusMM, float angleDeg)</code><span class="fn-desc">Асинхронный аналог moveArcRadius().</span></a></li>
+                        <li><a href="unibase_ru.html#api-rotateAsync"><code class="fn-sig">void <span class="fn-name">rotateAsync</span>(int power, int angle)</code><span class="fn-desc">Асинхронный аналог rotate().</span></a></li>
+                        <li><a href="unibase_ru.html#api-rotateToAsync"><code class="fn-sig">void <span class="fn-name">rotateToAsync</span>(int power, float angleDeg)</code><span class="fn-desc">Асинхронный аналог rotateTo().</span></a></li>
+                        <li><a href="unibase_ru.html#api-moveToAsync"><code class="fn-sig">void <span class="fn-name">moveToAsync</span>(int power, float x, float y)</code><span class="fn-desc">Асинхронный аналог moveTo().</span></a></li>
+                        <li><a href="unibase_ru.html#api-isMoving"><code class="fn-sig">bool <span class="fn-name">isMoving</span>()</code><span class="fn-desc">Возвращает true, пока активна задача асинхронного движения.</span></a></li>
+                        <li><a href="unibase_ru.html#api-waitMove"><code class="fn-sig">bool <span class="fn-name">waitMove</span>(unsigned long timeoutMs = 0)</code><span class="fn-desc">Блокирует выполнение до завершения текущей асинхронной команды движения.</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="api-card static fn-group" id="unibase-odometry">
+                    <h3>Одометрия</h3>
+                    <ul class="fn-list">
+                        <li><a href="unibase_ru.html#api-getOdometry"><code class="fn-sig">OdometryData <span class="fn-name">getOdometry</span>()</code><span class="fn-desc">Возвращает текущую структуру оценки положения и ориентации.</span></a></li>
+                        <li><a href="unibase_ru.html#api-getAbsX"><code class="fn-sig">float <span class="fn-name">getAbsX</span>()</code><span class="fn-desc">Возвращает абсолютную координату X в миллиметрах.</span></a></li>
+                        <li><a href="unibase_ru.html#api-getAbsY"><code class="fn-sig">float <span class="fn-name">getAbsY</span>()</code><span class="fn-desc">Возвращает абсолютную координату Y в миллиметрах.</span></a></li>
+                        <li><a href="unibase_ru.html#api-getAbsAngle"><code class="fn-sig">float <span class="fn-name">getAbsAngle</span>()</code><span class="fn-desc">Возвращает абсолютный угол курса в градусах.</span></a></li>
+                        <li><a href="unibase_ru.html#api-resetDistance"><code class="fn-sig">void <span class="fn-name">resetDistance</span>()</code><span class="fn-desc">Сбрасывает накопленный счетчик расстояния в 0.</span></a></li>
+                        <li><a href="unibase_ru.html#api-getDistance"><code class="fn-sig">float <span class="fn-name">getDistance</span>()</code><span class="fn-desc">Возвращает расстояние, пройденное с момента последнего сброса, в миллиметрах.</span></a></li>
+                        <li><a href="unibase_ru.html#api-resetAngle"><code class="fn-sig">void <span class="fn-name">resetAngle</span>()</code><span class="fn-desc">Сбрасывает накопленный счетчик угла в 0.</span></a></li>
+                        <li><a href="unibase_ru.html#api-getAngle"><code class="fn-sig">float <span class="fn-name">getAngle</span>()</code><span class="fn-desc">Возвращает угол поворота с момента последнего сброса, в градусах.</span></a></li>
+                        <li><a href="unibase_ru.html#api-setPosition"><code class="fn-sig">void <span class="fn-name">setPosition</span>(float x, float y, float angleDeg)</code><span class="fn-desc">Задаёт начальную позу одометрии.</span></a></li>
+                        <li><a href="unibase_ru.html#api-getLeftTicks"><code class="fn-sig">long <span class="fn-name">getLeftTicks</span>() / long <span class="fn-name">getRightTicks</span>()</code><span class="fn-desc">Возвращает количество тиков энкодера для соответствующего мотора.</span></a></li>
+                        <li><a href="unibase_ru.html#api-printOdometry"><code class="fn-sig">void <span class="fn-name">printOdometry</span>()</code><span class="fn-desc">Выводит текущие значения X, Y и Theta в Serial Monitor.</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="api-card static fn-group" id="unibase-speed">
+                    <h3>Скорость</h3>
+                    <ul class="fn-list">
+                        <li><a href="unibase_ru.html#api-speedToPower"><code class="fn-sig">int <span class="fn-name">speedToPower</span>(float mmPerSec)</code><span class="fn-desc">Переводит скорость в мм/с в значение power для команд движения.</span></a></li>
+                        <li><a href="unibase_ru.html#api-turnRateToPower"><code class="fn-sig">int <span class="fn-name">turnRateToPower</span>(float degPerSec)</code><span class="fn-desc">Переводит скорость поворота в градусах в секунду в значение power для rotate() и rotateTo().</span></a></li>
+                        <li><a href="unibase_ru.html#api-getSpeed"><code class="fn-sig">float <span class="fn-name">getSpeed</span>()</code><span class="fn-desc">Возвращает измеренную скорость центра робота в мм/с.</span></a></li>
+                        <li><a href="unibase_ru.html#api-getTurnRate"><code class="fn-sig">float <span class="fn-name">getTurnRate</span>()</code><span class="fn-desc">Возвращает измеренную скорость поворота в градусах в секунду.</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="api-card static fn-group" id="unibase-display">
+                    <h3>Дисплей</h3>
+                    <ul class="fn-list">
+                        <li><a href="unibase_ru.html#api-displayPrint"><code class="fn-sig">void <span class="fn-name">displayPrint</span>(ValueType value)</code><span class="fn-desc">Очищает экран OLED и выводит переданное значение по центру.</span></a></li>
+                        <li><a href="unibase_ru.html#api-displayPrint-2"><code class="fn-sig">void <span class="fn-name">displayPrint</span>(const char* name, ValueType value)</code><span class="fn-desc">Выводит название вверху экрана и значение по центру.</span></a></li>
+                        <li><a href="unibase_ru.html#api-displayText"><code class="fn-sig">void <span class="fn-name">displayText</span>(const char* text)</code><span class="fn-desc">Выводит до 8 строк мелким шрифтом, по 21 символу.</span></a></li>
+                        <li><a href="unibase_ru.html#api-displayClear"><code class="fn-sig">void <span class="fn-name">displayClear</span>()</code><span class="fn-desc">Возвращает экран OLED в обычное состояние.</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="api-card static fn-group" id="unibase-utility">
+                    <h3>Утилиты</h3>
+                    <ul class="fn-list">
+                        <li><a href="unibase_ru.html#api-getBatteryPower"><code class="fn-sig">int <span class="fn-name">getBatteryPower</span>()</code><span class="fn-desc">Возвращает текущий уровень заряда батареи в процентах (0-100).</span></a></li>
+                        <li><a href="unibase_ru.html#api-getBatteryVoltage"><code class="fn-sig">float <span class="fn-name">getBatteryVoltage</span>()</code><span class="fn-desc">Возвращает напряжение батареи в вольтах.</span></a></li>
+                        <li><a href="unibase_ru.html#api-blinkLED"><code class="fn-sig">void <span class="fn-name">blinkLED</span>(int interval)</code><span class="fn-desc">Задает фоновую задачу мигания встроенным светодиодом.</span></a></li>
+                        <li><a href="unibase_ru.html#api-UniBaseControl"><code class="fn-sig">void <span class="fn-name">UniBaseControl</span>()</code><span class="fn-desc">Включает приём команд по UART от внешнего контроллера (Arduino Nano).</span></a></li>
+                    </ul>
+                </div>
+
+                <h2 id="unidev">UniDev</h2>
+                <p>Порты P1–P8 и модули на них: датчики, кнопки, сервоприводы, световое кольцо, светофор. В примерах объект называется <code>module</code>. Имена портов — на странице <a href="unidev_ru.html">Класс UniDev</a>.</p>
+
+                <div class="api-card static fn-group" id="unidev-dev-init">
+                    <h3>Инициализация</h3>
+                    <ul class="fn-list">
+                        <li><a href="unidev_ru.html#api-begin"><code class="fn-sig">void <span class="fn-name">begin</span>()</code><span class="fn-desc">Инициализирует экземпляр UniDev, создавая объект NeoPixel и настраивая режимы пинов.</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="api-card static fn-group" id="unidev-sensors">
+                    <h3>Датчики</h3>
+                    <ul class="fn-list">
+                        <li><a href="unidev_ru.html#api-ultraSonic"><code class="fn-sig">int <span class="fn-name">ultraSonic</span>(int trig, int echo)</code><span class="fn-desc">Считывает расстояние с ультразвукового датчика (HC-SR04).</span></a></li>
+                        <li><a href="unidev_ru.html#api-lineSensor"><code class="fn-sig">int <span class="fn-name">lineSensor</span>(int port)</code><span class="fn-desc">Считывает аналоговое значение с датчика линии.</span></a></li>
+                        <li><a href="unidev_ru.html#api-digitalSensor"><code class="fn-sig">int <span class="fn-name">digitalSensor</span>(int port)</code><span class="fn-desc">Считывает цифровое значение с порта.</span></a></li>
+                        <li><a href="unidev_ru.html#api-analogSensor"><code class="fn-sig">int <span class="fn-name">analogSensor</span>(int port)</code><span class="fn-desc">Считывает общее аналоговое значение с порта.</span></a></li>
+                        <li><a href="unidev_ru.html#api-getPinMode"><code class="fn-sig">int <span class="fn-name">getPinMode</span>(uint8_t pin)</code><span class="fn-desc">Возвращает текущий настроенный режим GPIO пина.</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="api-card static fn-group" id="unidev-inputs">
+                    <h3>Входы</h3>
+                    <ul class="fn-list">
+                        <li><a href="unidev_ru.html#api-waitButton"><code class="fn-sig">void <span class="fn-name">waitButton</span>(int port)</code><span class="fn-desc">Блокирующая функция, останавливающая выполнение программы до тех пор, пока кнопка не будет нажата и отпущена.</span></a></li>
+                        <li><a href="unidev_ru.html#api-getButtonState"><code class="fn-sig">bool <span class="fn-name">getButtonState</span>(int port)</code><span class="fn-desc">Проверяет, нажата ли кнопка в данный момент.</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="api-card static fn-group" id="unidev-servo">
+                    <h3>Сервопривод</h3>
+                    <ul class="fn-list">
+                        <li><a href="unidev_ru.html#api-servo"><code class="fn-sig">void <span class="fn-name">servo</span>(int port, int angle)</code><span class="fn-desc">Устанавливает угол сервопривода, подключённого к указанному порту.</span></a></li>
+                        <li><a href="unidev_ru.html#api-servoAttach"><code class="fn-sig">void <span class="fn-name">servoAttach</span>(int port)</code><span class="fn-desc">Подключает сервопривод к порту и резервирует PWM-канал без задания угла.</span></a></li>
+                        <li><a href="unidev_ru.html#api-servoDetach"><code class="fn-sig">void <span class="fn-name">servoDetach</span>(int port)</code><span class="fn-desc">Отключает сервопривод: PWM-импульсы прекращаются, привод расслабляется и не держит нагрузку.</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="api-card static fn-group" id="unidev-light-ring-basic">
+                    <h3>Световое кольцо (Базовое)</h3>
+                    <ul class="fn-list">
+                        <li><a href="unidev_ru.html#api-pixel"><code class="fn-sig">void <span class="fn-name">pixel</span>(int index, int r, int g, int b)</code><span class="fn-desc">Устанавливает цвет одного пикселя.</span></a></li>
+                        <li><a href="unidev_ru.html#api-pixelsAll"><code class="fn-sig">void <span class="fn-name">pixelsAll</span>(int r, int g, int b)</code><span class="fn-desc">Устанавливает все светодиоды кольца в указанный RGB цвет.</span></a></li>
+                        <li><a href="unidev_ru.html#api-pixelsClear"><code class="fn-sig">void <span class="fn-name">pixelsClear</span>()</code><span class="fn-desc">Выключает все светодиоды.</span></a></li>
+                        <li><a href="unidev_ru.html#api-pixelsShow"><code class="fn-sig">void <span class="fn-name">pixelsShow</span>()</code><span class="fn-desc">Отправляет текущий буфер на светодиодную ленту.</span></a></li>
+                        <li><a href="unidev_ru.html#api-pixelsBrightness"><code class="fn-sig">void <span class="fn-name">pixelsBrightness</span>(int brightness)</code><span class="fn-desc">Устанавливает глобальное масштабирование яркости.</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="api-card static fn-group" id="unidev-light-ring-effects">
+                    <h3>Световое кольцо (Эффекты)</h3>
+                    <ul class="fn-list">
+                        <li><a href="unidev_ru.html#api-pixelsRainbow"><code class="fn-sig">void <span class="fn-name">pixelsRainbow</span>(int speed, int duration)</code><span class="fn-desc">Отображает вращающуюся радугу.</span></a></li>
+                        <li><a href="unidev_ru.html#api-pixelsRunning"><code class="fn-sig">void <span class="fn-name">pixelsRunning</span>(int r, int g, int b, int duration)</code><span class="fn-desc">Эффект бегущего огня: один пиксель пробегает по кругу один раз.</span></a></li>
+                        <li><a href="unidev_ru.html#api-pixelsBreathing"><code class="fn-sig">void <span class="fn-name">pixelsBreathing</span>(int r, int g, int b, int duration)</code><span class="fn-desc">Плавно меняет яркость светодиодов (эффект дыхания).</span></a></li>
+                        <li><a href="unidev_ru.html#api-pixelsFill"><code class="fn-sig">void <span class="fn-name">pixelsFill</span>(int r, int g, int b, int duration)</code><span class="fn-desc">Постепенно заполняет кольцо цветом, затем постепенно очищает его.</span></a></li>
+                        <li><a href="unidev_ru.html#api-pixelsSparkle"><code class="fn-sig">void <span class="fn-name">pixelsSparkle</span>(int r, int g, int b, int duration, int count)</code><span class="fn-desc">Случайным образом мигает отдельными пикселями.</span></a></li>
+                        <li><a href="unidev_ru.html#api-pixelsRotating"><code class="fn-sig">void <span class="fn-name">pixelsRotating</span>(int r, int g, int b, int duration, int segmentLength, int rotations)</code><span class="fn-desc">Вращает сегмент зажженных светодиодов вокруг кольца несколько раз.</span></a></li>
+                        <li><a href="unidev_ru.html#api-pixelsSpinner"><code class="fn-sig">void <span class="fn-name">pixelsSpinner</span>(int r, int g, int b, int duration)</code><span class="fn-desc">Анимация спиннера, зажигающая по одному пикселю, пока кольцо не заполнится, затем перезапускается.</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="api-card static fn-group" id="unidev-traffic-light">
+                    <h3>Светофор</h3>
+                    <ul class="fn-list">
+                        <li><a href="unidev_ru.html#api-setTrafficLight"><code class="fn-sig">void <span class="fn-name">setTrafficLight</span>(TrafficLightColor color)</code><span class="fn-desc">Устанавливает состояние модуля светофора.</span></a></li>
+                        <li><a href="unidev_ru.html#api-trafficLightSequence"><code class="fn-sig">void <span class="fn-name">trafficLightSequence</span>()</code><span class="fn-desc">Запускает последовательность светофора: красный, жёлтый, зелёный — по одной секунде на каждый сигнал, затем гасит все.</span></a></li>
+                    </ul>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="nav.js?v=6"></script>
+    <script src="script.js?v=6"></script>
+</body>
+
+</html>

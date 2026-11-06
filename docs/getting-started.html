@@ -1,17 +1,20 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Getting Started - UNI Library</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=7">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
+    <link rel="icon" href="logoUni.svg" type="image/svg+xml">
+    <meta name="color-scheme" content="light dark">
+    <script src="boot.js?v=5"></script>
 </head>
 
 <body>
@@ -22,91 +25,169 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Top Header -->
-            <header class="top-header">
-                <button id="mobile-menu-toggle" class="mobile-menu-toggle">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="3" y1="12" x2="21" y2="12"></line>
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
-                </button>
-                <div class="search-container">
-                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                    <input type="text" class="search-input" placeholder="Search documentation...">
-                </div>
-                <button id="theme-toggle" class="theme-toggle" title="Toggle Theme"></button>
-            </header>
+            <!-- Header: breadcrumb and page actions, built by script.js -->
+            <header class="top-header"></header>
 
             <!-- Page Content -->
             <div class="page-content">
                 <h1>Getting Started</h1>
-                <p class="lead">Follow these steps to set up the UNI library and start programming your robot.</p>
+                <p class="lead">From installation to the first movement: set up the Arduino IDE, upload a ready-made sketch and
+                    check that the robot responds. It takes about 15 minutes.</p>
+
+                <h2 id="requirements">What you need</h2>
+                <ul>
+                    <li>A UniBase robot with a charged battery.</li>
+                    <li>A USB cable that carries data (a charge-only cable will not work).</li>
+                    <li>A computer with <a href="https://www.arduino.cc/en/software">Arduino IDE</a> version 2.</li>
+                </ul>
 
                 <h2 id="installation">Installation</h2>
-
-                <h3>Method 1: Arduino Library Manager (Recommended)</h3>
-                <ol>
-                    <li>Open the Arduino IDE.</li>
-                    <li>Go to <strong>Sketch</strong> > <strong>Include Library</strong> > <strong>Manage
-                            Libraries...</strong></li>
-                    <li>Search for <code>UNI</code> / <code>UniBase</code>.</li>
-                    <li>Click <strong>Install</strong> on the latest version.</li>
+                <ol class="steps">
+                    <li>
+                        <h3>Add ESP32 support</h3>
+                        <p>In the Arduino IDE open <span class="menu-path">Tools › Board › Boards Manager</span>, search for
+                            <strong>esp32</strong> and install the <strong>esp32</strong> package by Espressif Systems.</p>
+                    </li>
+                    <li>
+                        <h3>Install the UNI library</h3>
+                        <p>Open <span class="menu-path">Sketch › Include Library › Manage Libraries</span>, search for
+                            <strong>UNI</strong> and click Install. When asked about dependencies, choose “Install all”: the
+                            library needs Adafruit GFX Library, Adafruit SSD1306 and Adafruit NeoPixel.</p>
+                    </li>
+                    <li>
+                        <h3>Select the board and the port</h3>
+                        <p>Connect the robot over USB and switch it on. Select
+                            <span class="menu-path">Tools › Board › esp32 › ESP32 Dev Module</span>, then the port under
+                            <span class="menu-path">Tools › Port</span>.</p>
+                    </li>
                 </ol>
 
-                <h3>Method 2: Manual Installation</h3>
-                <ol>
-                    <li>Download the latest release zip from the <a href="https://github.com/fadeev-iliya/UNI">GitHub
-                            repository</a>.</li>
-                    <li>In Arduino IDE, go to <strong>Sketch</strong> > <strong>Include Library</strong> > <strong>Add
-                            .ZIP Library...</strong></li>
-                    <li>Select the downloaded zip file.</li>
-                </ol>
+                <h3 id="manual-install">Installing from a ZIP archive</h3>
+                <p>If the Library Manager is not available, download the archive from the
+                    <a href="https://github.com/fadeev-iliya/UNI/releases">releases page on GitHub</a> and add it with
+                    <span class="menu-path">Sketch › Include Library › Add .ZIP Library</span>. Dependencies are not pulled in
+                    this way: install the three Adafruit libraries through the Library Manager separately.</p>
 
-                <h2 id="hello-robot">Hello Robot</h2>
-                <p>Here is a minimal example to verify that your environment is set up correctly. This sketch
-                    initializes the robot and prints "Hello Robot!" to the OLED display.</p>
-
+                <h2 id="hello-robot">First sketch</h2>
+                <ol class="steps">
+                    <li>
+                        <h3>Open the Start example</h3>
+                        <p><span class="menu-path">File › Examples › UNI › Start</span>. It is a minimal program: it creates the
+                            robot and turns the screen on.</p>
                 <pre><code>#include &lt;UNI.h&gt;
 
-// Create the robot instance
 UniBase robot;
+UniDev module;
 
 void setup() {
-  // Initialize the robot
-  robot.begin();
-  
-  // Display a greeting
-  robot.displayPrint("Hello Robot!");
-  
-  // Blink the LED to show activity
-  robot.blinkLED(500);
+  robot.begin("UNI");
 }
 
 void loop() {
-  // Your main logic here
-  delay(100);
 }</code></pre>
-
-                <h2 id="uploading">Uploading to ESP32</h2>
-                <p>Make sure you have the <strong>ESP32 Board Package</strong> installed in your Arduino IDE.</p>
-                <ol>
-                    <li>Select your board: <strong>Tools > Board > ESP32 Dev Module</strong>.</li>
-                    <li>Select the correct Port.</li>
-                    <li>Click <strong>Upload</strong>.</li>
+                    </li>
+                    <li>
+                        <h3 id="uploading">Upload it to the robot</h3>
+                        <p>Click Upload and wait for the message that the upload has finished. The program starts right
+                            after it.</p>
+                    </li>
+                    <li>
+                        <h3>Look at the screen</h3>
+                        <p>A second later the screen shows the robot's status:</p>
+                <figure class="figure">
+                <svg viewBox="0 0 374 172" role="img" aria-label="The robot status screen: name, coordinates, heading, encoder ticks, command and battery charge" style="max-width: 460px"><rect class="dg-screen" x="50" y="10" width="280" height="152" rx="12"/><text class="dg-pixel" x="190.0" y="50.0" font-size="36" text-anchor="middle" font-weight="600">UNI</text><text class="dg-pixel" x="62.0" y="72.0" font-size="19">X: 0 mm</text><text class="dg-pixel" x="202.0" y="72.0" font-size="19">Y: 0 mm</text><text class="dg-pixel" x="62.0" y="96.0" font-size="19">Angle: 0°</text><text class="dg-pixel" x="62.0" y="120.0" font-size="19">L: 0</text><text class="dg-pixel" x="202.0" y="120.0" font-size="19">R: 0</text><text class="dg-pixel" x="62.0" y="146.0" font-size="19">Ready</text><text class="dg-pixel" x="266.0" y="146.0" font-size="19" text-anchor="end">85%</text><rect class="dg-pixel-line" x="270.0" y="128.0" width="40.0" height="20.0"/><rect class="dg-pixel" x="310.0" y="132.0" width="4.0" height="12.0"/><rect class="dg-pixel" x="274.0" y="132.0" width="26.0" height="12.0"/><circle class="dg-accent-soft" cx="24.0" cy="40.0" r="10"/><text class="dg-text dg-small dg-text-accent" x="24.0" y="44.0" text-anchor="middle">1</text><circle class="dg-accent-soft" cx="24.0" cy="66.0" r="10"/><text class="dg-text dg-small dg-text-accent" x="24.0" y="70.0" text-anchor="middle">2</text><circle class="dg-accent-soft" cx="24.0" cy="90.0" r="10"/><text class="dg-text dg-small dg-text-accent" x="24.0" y="94.0" text-anchor="middle">3</text><circle class="dg-accent-soft" cx="24.0" cy="114.0" r="10"/><text class="dg-text dg-small dg-text-accent" x="24.0" y="118.0" text-anchor="middle">4</text><circle class="dg-accent-soft" cx="24.0" cy="140.0" r="10"/><text class="dg-text dg-small dg-text-accent" x="24.0" y="144.0" text-anchor="middle">5</text><circle class="dg-accent-soft" cx="350.0" cy="140.0" r="10"/><text class="dg-text dg-small dg-text-accent" x="350.0" y="144.0" text-anchor="middle">6</text></svg>
+                <figcaption>The status screen: 1 — robot name, 2 — coordinates, 3 — heading, 4 — encoder ticks, 5 — current command, 6 — battery charge.</figcaption>
+                </figure>
+                        <p>The name, zero coordinates and the word <code>Ready</code> mean that the screen, motors and encoders
+                            are running and the library works.</p>
+                    </li>
                 </ol>
+
+                <h2 id="first-move">First movement</h2>
+                <div class="callout warning">
+                    <div class="callout-body">
+                        <p>The program starts right after the upload and every time the robot is switched on. Before you add
+                            movement, put the robot on the floor or lift its wheels so that it does not drive off the table
+                            with the cable attached.</p>
+                    </div>
+                </div>
+                <p>Add two commands to <code>setup()</code> and upload the sketch again:</p>
+                <pre><code>void setup() {
+  robot.begin("UNI");
+
+  robot.moveDist(50, 300);  // forward 300 mm at power 50
+  robot.rotate(50, 90);     // turn right by 90 degrees
+}</code></pre>
+                <p>The robot drives 30 cm and turns right. <code>X</code> and <code>Angle</code> change on the screen — that
+                    is odometry: the robot keeps track of where it is.</p>
+                <div class="callout tip">
+                    <div class="callout-body">
+                        <p>It is handier to start movement with a button. If a button is connected to port P5, put
+                            <code>module.waitButton(P5);</code> before the movement commands — the robot will wait for a
+                            press.</p>
+                    </div>
+                </div>
+
+                <h2 id="troubleshooting">If something goes wrong</h2>
+                <div class="table-scroll">
+                    <table class="constants-table prose-table">
+                        <thead>
+                            <tr>
+                                <th>What you see</th>
+                                <th>What to check</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>The port does not appear in the menu</td>
+                                <td>The cable must carry data. Try another cable and another USB socket.</td>
+                            </tr>
+                            <tr>
+                                <td>Error <code>Adafruit_SSD1306.h: No such file or directory</code></td>
+                                <td>The dependencies are missing — the three Adafruit libraries from step 2.</td>
+                            </tr>
+                            <tr>
+                                <td>Error <code>UNI.h: No such file or directory</code></td>
+                                <td>The UNI library is not installed. Repeat step 2 and restart the Arduino IDE.</td>
+                            </tr>
+                            <tr>
+                                <td>The screen stays dark</td>
+                                <td>Make sure the robot is switched on. Open the Serial Monitor at 115200 baud: if the screen
+                                    is not found, the library reports it there.</td>
+                            </tr>
+                            <tr>
+                                <td>The screen works but the robot does not move</td>
+                                <td>Check the battery switch and the battery charge.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>More cases are covered in the <a href="faq.html">FAQ</a>.</p>
+
+                <h2 id="next">Where to go next</h2>
+                <div class="card-grid cols-3">
+                    <a href="tutorial-first-drive.html" class="nav-card">
+                        <span class="nav-card-icon" data-icon="lesson"></span>
+                        <span class="nav-card-title">Lesson 1. First drive</span>
+                        <span class="nav-card-desc">A square of straights and turns, step by step.</span>
+                    </a>
+                    <a href="reference.html" class="nav-card">
+                        <span class="nav-card-icon" data-icon="reference"></span>
+                        <span class="nav-card-title">UNI.h Reference</span>
+                        <span class="nav-card-desc">Every function of the library on one page.</span>
+                    </a>
+                    <a href="examples.html" class="nav-card">
+                        <span class="nav-card-icon" data-icon="examples"></span>
+                        <span class="nav-card-title">Examples</span>
+                        <span class="nav-card-desc">Every ready-made sketch in the library.</span>
+                    </a>
+                </div>
             </div>
         </main>
     </div>
 
-    <script src="nav.js"></script>
-    <script src="script.js"></script>
+    <script src="nav.js?v=6"></script>
+    <script src="script.js?v=6"></script>
 </body>
 
 </html>

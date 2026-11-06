@@ -1,17 +1,20 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UniDev Reference - UNI Library</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=7">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
+    <link rel="icon" href="logoUni.svg" type="image/svg+xml">
+    <meta name="color-scheme" content="light dark">
+    <script src="boot.js?v=5"></script>
 </head>
 
 <body>
@@ -22,27 +25,8 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Top Header -->
-            <header class="top-header">
-                <button id="mobile-menu-toggle" class="mobile-menu-toggle">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="3" y1="12" x2="21" y2="12"></line>
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
-                </button>
-                <div class="search-container">
-                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                    <input type="text" class="search-input" placeholder="Search documentation...">
-                </div>
-                <button id="theme-toggle" class="theme-toggle" title="Toggle Theme"></button>
-            </header>
+            <!-- Header: breadcrumb and page actions, built by script.js -->
+            <header class="top-header"></header>
 
             <!-- Page Content -->
             <div class="page-content">
@@ -53,6 +37,7 @@
                 <p>The badges on each port show its available capabilities: analog input
                     (<strong>ADC</strong>), digital I/O (<strong>DIG</strong>), and servo/PWM
                     (<strong>PWM</strong>). Below is the default usage.</p>
+                <p>The GPIO numbers below are for board V1.</p>
                 <div class="port-list">
                     <div class="port-item">
                         <div class="port-head">
@@ -177,9 +162,9 @@
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Initializes the UniDev instance, creating the NeoPixel object and setting pin modes. But it
-                            is not necessary to call this function, because it is called automatically when the UniDev
-                            object is created. </p>
+                        <p>Initializes the UniDev instance, creating the NeoPixel object and setting pin modes. It is
+                            not necessary to call this function: it runs automatically on the first call of any UniDev
+                            function and in <code>robot.begin()</code>.</p>
                         <h4>Example</h4>
                         <pre><code>UniDev module;
 void setup() {
@@ -492,7 +477,7 @@ module.pixel(0, 0, 0, 255);</code></pre>
                         <p>Sets the global brightness scaling.</p>
                         <h4>Parameters</h4>
                         <ul>
-                            <li><code>brightness</code>: from 0 to 100.</li>
+                            <li><code>brightness</code>: from 0 to 255; 100 is set at start-up.</li>
                         </ul>
                         <h4>Example</h4>
                         <pre><code>module.pixelsBrightness(50); // Dim the LEDs</code></pre>
@@ -639,7 +624,7 @@ module.pixelsRotating(255, 0, 0, 2000, 5, 3);</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>A spinner animation that lights up one pixel at a time until the ring is full, then restarts.
+                        <p>A single lit pixel runs once around the ring — the same effect as <code>pixelsRunning()</code>.
                         </p>
                         <h4>Parameters</h4>
                         <ul>
@@ -684,8 +669,7 @@ module.pixelsRotating(255, 0, 0, 2000, 5, 3);</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Runs a standard standard traffic light sequence (Green -> Yellow -> Red -> Yellow -> Green).
-                        </p>
+                        <p>Runs the traffic light sequence: red, yellow, green — one second each — then switches every signal off. Blocks the program for three seconds.</p>
                         <h4>Example</h4>
                         <pre><code>module.trafficLightSequence();</code></pre>
                     </div>
@@ -695,8 +679,8 @@ module.pixelsRotating(255, 0, 0, 2000, 5, 3);</code></pre>
         </main>
     </div>
 
-    <script src="nav.js"></script>
-    <script src="script.js"></script>
+    <script src="nav.js?v=6"></script>
+    <script src="script.js?v=6"></script>
 </body>
 
 </html>

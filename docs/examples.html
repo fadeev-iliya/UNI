@@ -5,13 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Examples - UNI Library</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=7">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
+    <link rel="icon" href="logoUni.svg" type="image/svg+xml">
+    <meta name="color-scheme" content="light dark">
+    <script src="boot.js?v=5"></script>
 </head>
 
 <body>
@@ -21,34 +24,15 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Top Header -->
-            <header class="top-header">
-                <button id="mobile-menu-toggle" class="mobile-menu-toggle">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="3" y1="12" x2="21" y2="12"></line>
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
-                </button>
-                <div class="search-container">
-                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                    <input type="text" class="search-input" placeholder="Search documentation...">
-                </div>
-                <button id="theme-toggle" class="theme-toggle" title="Toggle Theme"></button>
-            </header>
+            <!-- Header: breadcrumb and page actions, built by script.js -->
+            <header class="top-header"></header>
 
             <!-- Page Content -->
             <div class="page-content">
                 <h1>Examples</h1>
                 <p class="lead">All examples from the <code>UNI/examples/</code> folder. Open them via <strong>File → Examples → UNI</strong> in Arduino IDE.</p>
 
-                <h2>Basics</h2>
+                <h2 id="basics">Basics</h2>
 
                 <div class="api-card static" id="start">
                     <h3>Start — minimal sketch</h3>
@@ -71,36 +55,11 @@ void loop() {
 }</code></pre>
                 </div>
 
-                <div class="api-card static" id="basic-movement">
-                    <h3>BasicMovement — blocking movement</h3>
-                    <p>The robot drives a 300 mm square: four straight segments and four 90° turns. Every command blocks until it completes.</p>
-                    <pre><code>#include &lt;UNI.h&gt;
-
-UniBase robot("UNI");
-
-void setup() {
-  robot.begin();
-
-  for (int i = 0; i &lt; 4; i++) {
-    robot.moveDist(50, 300); // forward 300 mm at power 50
-    robot.rotate(50, 90);    // turn right 90 degrees
-  }
-
-  // Extra: reverse and timed movement
-  robot.moveDist(-50, 200);  // reverse 200 mm
-  robot.moveTime(40, 1000);  // forward 1 second
-  robot.moveTime(-40, 1000); // reverse 1 second
-}
-
-void loop() {
-}</code></pre>
-                </div>
-
-                <h2>Movement</h2>
+                <h2 id="movement">Movement</h2>
 
                 <div class="api-card static" id="precision-turns">
                     <h3>PrecisionTurns — rotate vs rotateTo</h3>
-                    <p><code>rotate()</code> turns by a relative angle — errors accumulate. <code>rotateTo()</code> turns to an absolute odometry heading — accumulated drift is corrected every time.</p>
+                    <p><code>rotate()</code> turns by an angle counted from the previous target, so the errors of separate turns do not add up. <code>rotateTo()</code> turns to an absolute odometry heading and works even after manual driving or after the robot was pushed. <a href="tutorial-odometry.html">Step-by-step walkthrough in Lesson 2.</a></p>
                     <pre><code>#include &lt;UNI.h&gt;
 
 UniBase robot("UNI");
@@ -173,7 +132,7 @@ void loop() {
 
                 <div class="api-card static" id="arcs">
                     <h3>Arcs — arc movement</h3>
-                    <p><code>moveArcDist()</code> — arc via wheel speed ratio. <code>moveArcRadius()</code> — arc with real geometry: radius and sector angle.</p>
+                    <p><code>moveArcDist()</code> — arc via wheel speed ratio. <code>moveArcRadius()</code> — arc with real geometry: radius and sector angle. <a href="tutorial-arcs.html">Step-by-step walkthrough in Lesson 3.</a></p>
                     <pre><code>#include &lt;UNI.h&gt;
 
 UniBase robot("UNI");
@@ -208,7 +167,7 @@ void loop() {
 
                 <div class="api-card static" id="async">
                     <h3>AsyncMovement — non-blocking commands</h3>
-                    <p>Commands with the <code>Async</code> suffix start movement and return immediately. <code>isMoving()</code> — check if moving. <code>waitMove(timeout)</code> — wait with a stuck-protection timeout.</p>
+                    <p>Commands with the <code>Async</code> suffix start movement and return immediately. <code>isMoving()</code> — check if moving. <code>waitMove(timeout)</code> — wait with a stuck-protection timeout. <a href="tutorial-async.html">Step-by-step walkthrough in Lesson 4.</a></p>
                     <pre><code>#include &lt;UNI.h&gt;
 
 UniBase robot("UNI");
@@ -235,7 +194,7 @@ void setup() {
 
   // 3. Wait with timeout — guards against getting stuck
   robot.moveDistAsync(50, 800);
-  if (!robot.waitMove(5000)) {  // didn't finish within 5 s?
+  if (!robot.waitMove(8000)) {  // didn't finish within 8 s?
     robot.stop(HARD);
     robot.displayPrint("STUCK!");
     return;
@@ -303,7 +262,7 @@ void loop() {
 }</code></pre>
                 </div>
 
-                <h2>Sensors</h2>
+                <h2 id="sensors">Sensors</h2>
 
                 <div class="api-card static" id="obstacle-stop">
                     <h3>ObstacleStop — obstacle reaction</h3>
@@ -315,6 +274,7 @@ UniDev module;
 
 const int OBSTACLE_MM = 150;   // stop distance
 const int TARGET_MM   = 1500;  // total travel distance
+const int FINISH_MM   = 5;     // closer than this to the goal counts as arrived
 
 void setup() {
   robot.begin();
@@ -322,9 +282,13 @@ void setup() {
 }
 
 void loop() {
-  // Goal reached — stay stopped
-  if (robot.getDistance() &gt;= TARGET_MM) {
+  // Goal reached — stay stopped. A move ends with a small residual to the goal,
+  // so the remainder is compared with a margin rather than with zero:
+  // otherwise the robot would keep "finishing" the last millimetre forever
+  int remaining = TARGET_MM - (int)robot.getDistance();
+  if (remaining &lt;= FINISH_MM) {
     robot.displayPrint("DONE");
+    delay(500);
     return;
   }
 
@@ -338,8 +302,7 @@ void loop() {
     }
   } else {
     if (!robot.isMoving()) {
-      // Resume remaining distance asynchronously
-      int remaining = TARGET_MM - (int)robot.getDistance();
+      // Drive the rest of the way asynchronously while still watching the sensor
       robot.moveDistAsync(50, remaining);
       robot.displayClear();
     }
@@ -436,47 +399,12 @@ void loop() {
 }</code></pre>
                 </div>
 
-                <h2>Configuration</h2>
-
-                <div class="api-card static" id="tuning">
-                    <h3>Tuning — precision tuning</h3>
-                    <p>All PID parameters are collected in <code>TuningConfig</code>. Platform geometry is set in <code>UniConfig</code> and passed to the constructor.</p>
-                    <pre><code>#include &lt;UNI.h&gt;
-
-UniConfig cfg;          // default values
-// cfg.trackLengthMM = 106.0f; // override before creating the robot if needed
-
-UniBase robot("UNI", cfg);
-
-void setup() {
-  robot.begin();
-
-  // Fetch current settings, change what's needed, apply
-  TuningConfig tuning = robot.getTuning();
-  tuning.rotateTolDeg = 0.5f;    // tighter turn tolerance
-  tuning.moveAccel    = 1500.0f; // gentler deceleration on straight
-  robot.setTuning(tuning);
-
-  // Test run with new settings
-  robot.moveDist(70, 500);
-  robot.rotate(70, 180);
-  robot.moveDist(70, 500);
-  robot.rotate(70, 180);
-
-  // Odometry shows return accuracy
-  robot.displayPrint("X err", robot.getAbsX());
-}
-
-void loop() {
-}</code></pre>
-                </div>
-
-                <h2>UniBaseControl — UART control</h2>
-                <p>Examples from <code>UniBaseControl/examples/</code>. Flash the ESP32 with <strong>UniBaseControl_Start</strong>; program the Arduino Nano with <strong>Start</strong> or <strong>BasicMovement</strong>.</p>
+                <h2 id="unibasecontrol">UniBaseControl — UART control</h2>
+                <p>Flash the ESP32 with <strong>UniBaseControl_Start</strong> from this library. The Arduino Nano side — <strong>Start</strong> and <strong>BasicMovement</strong> — are examples of the separate UniBaseControl library for the Nano.</p>
 
                 <div class="api-card static" id="uart-control">
                     <h3>UniBaseControl_Start — ESP32 side</h3>
-                    <p>Turns the platform into a UART command executor. Flash to ESP32. Wiring: UART2 (RX 16, TX 17, 38400 baud) to the Nano's TX/RX.</p>
+                    <p>Turns the platform into a UART command executor. Flash to ESP32. Wiring: UART2 at 38400 baud to the Nano's TX/RX. The platform's RX is port P6 and TX is port P5 (GPIO 16/17 on board V1, GPIO 14/27 on board V2).</p>
                     <pre><code>#include &lt;UNI.h&gt;
 
 UniBase robot;
@@ -487,7 +415,7 @@ void setup() {
 }
 
 void loop() {
-  // Command reception, movement and display run on core 1.
+  // Command reception, movement and display run on the other core.
   // loop() is free — add your own logic here.
 }</code></pre>
                 </div>
@@ -532,8 +460,8 @@ void loop() {
 
             </div>
         </main>
-        <script src="nav.js"></script>
-    <script src="script.js"></script>
+        <script src="nav.js?v=6"></script>
+    <script src="script.js?v=6"></script>
 </body>
 
 </html>

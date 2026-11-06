@@ -1,17 +1,20 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FAQ & Troubleshooting - UNI Library</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>FAQ &amp; Troubleshooting - UNI Library</title>
+    <link rel="stylesheet" href="styles.css?v=7">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
+    <link rel="icon" href="logoUni.svg" type="image/svg+xml">
+    <meta name="color-scheme" content="light dark">
+    <script src="boot.js?v=5"></script>
 </head>
 
 <body>
@@ -22,77 +25,136 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Top Header -->
-            <header class="top-header">
-                <button id="mobile-menu-toggle" class="mobile-menu-toggle">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="3" y1="12" x2="21" y2="12"></line>
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
-                </button>
-                <div class="search-container">
-                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                    <input type="text" class="search-input" placeholder="Search documentation...">
-                </div>
-                <button id="theme-toggle" class="theme-toggle" title="Toggle Theme"></button>
-            </header>
+            <!-- Header: breadcrumb and page actions, built by script.js -->
+            <header class="top-header"></header>
 
             <!-- Page Content -->
             <div class="page-content">
-                <h1>FAQ & Troubleshooting</h1>
+                <h1>FAQ &amp; Troubleshooting</h1>
+                <p class="lead">Short answers to what most often goes wrong. If your case is not here, look at
+                    <a href="limitations.html">Limitations</a>: it describes how the library behaves at the edges of what it
+                    can do.</p>
 
-                <h2>Common Issues</h2>
+                <h2 id="install">Installing and uploading</h2>
 
-                <div class="api-card mb-4"
-                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
-                    <h3 style="margin-top: 0;">Robot doesn't move but screen is on</h3>
-                    <p><strong>Possible Cause:</strong> Battery switch is off, or low battery.</p>
-                    <p><strong>Solution:</strong> Check the physical switch on the UniBase. Ensure the battery icon
-                        shows a charged state.</p>
+                <div class="api-card static">
+                    <h3>Compilation error: "UNI.h: No such file or directory"</h3>
+                    <p><strong>Possible Cause:</strong> The library is not installed or sits in the wrong folder. The same goes
+                        for an error about <code>UniBase.h</code>.</p>
+                    <p><strong>Solution:</strong> Install UNI through the Library Manager. After a manual install make sure the
+                        <code>UNI</code> folder is inside your <code>Arduino/libraries</code> directory, then restart the
+                        Arduino IDE.</p>
                 </div>
 
-                <div class="api-card mb-4"
-                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
-                    <h3 style="margin-top: 0;">Compilation Error: "UniBase.h: No such file"</h3>
-                    <p><strong>Possible Cause:</strong> Library not installed correctly.</p>
-                    <p><strong>Solution:</strong> Verify that the <code>UNI</code> folder is inside your
-                        <code>Arduino/libraries</code> directory. Restart Arduino IDE.</p>
+                <div class="api-card static">
+                    <h3>Compilation error: "Adafruit_SSD1306.h: No such file or directory"</h3>
+                    <p><strong>Possible Cause:</strong> The dependencies are missing. This happens after installing from a ZIP
+                        archive.</p>
+                    <p><strong>Solution:</strong> Install three libraries through the Library Manager: Adafruit GFX Library,
+                        Adafruit SSD1306 and Adafruit NeoPixel.</p>
                 </div>
 
-                <div class="api-card mb-4"
-                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
-                    <h3 style="margin-top: 0;">UART commands are ignored</h3>
+                <h2 id="movement">Movement</h2>
+
+                <div class="api-card static">
+                    <h3>Robot doesn't move but screen is on</h3>
+                    <p><strong>Possible Cause:</strong> The battery switch is off, or the battery is low.</p>
+                    <p><strong>Solution:</strong> Check the physical switch on the UniBase. Make sure the battery icon on the
+                        screen shows a charge.</p>
+                </div>
+
+                <div class="api-card static" id="calibrate">
+                    <h3>The robot drives or turns inaccurately</h3>
+                    <p><strong>Possible Cause:</strong> The wheels slip on the floor, are dirty or worn, or the robot was
+                        pushed or bumped. Odometry counts wheel turns and cannot see slipping.</p>
+                    <p><strong>Solution:</strong> Check on the surface the robot will work on, with a charged battery: the
+                        wheels must be clean and must not slip. The wheel diameter (45 mm) and the track (107 mm) of the
+                        standard UniBase platform are built into the library, so there is nothing to set in the sketch.</p>
+                    <p>If the screen shows exactly 300 mm or 90° but the floor says otherwise, the robot did what the program
+                        asked: the difference comes from slipping or from wheels that differ from the standard platform.
+                        For an exact heading after several manoeuvres use <code>rotateTo()</code>, for an exact position
+                        <code>moveTo()</code>.</p>
+                </div>
+
+                <div class="api-card static">
+                    <h3>Only the last of two commands runs</h3>
+                    <p><strong>Possible Cause:</strong> There is no command queue: a new movement command cancels the current
+                        one.</p>
+                    <p><strong>Solution:</strong> Call <code>waitMove()</code> between async commands or use the blocking
+                        versions — <code>moveDist()</code>, <code>rotate()</code>. See
+                        <a href="limitations.html#movement">Movement and Commands</a> for details.</p>
+                </div>
+
+                <div class="api-card static">
+                    <h3>The robot will not drive below a certain speed</h3>
+                    <p><strong>Possible Cause:</strong> <code>motors()</code> sends the power straight to the motors: below
+                        about 15 % they cannot overcome friction and the wheels stand still.</p>
+                    <p><strong>Solution:</strong> For slow driving use <code>motorsSync()</code> or
+                        <code>motorsSpeed()</code> — they hold the speed with the encoders. Movement commands such as
+                        <code>moveDist()</code> work the same way: power is the speed as a percentage of the maximum,
+                        so even a small power drives slowly.</p>
+                </div>
+
+                <h2 id="peripherals">Sensors, screen and link</h2>
+
+                <div class="api-card static">
+                    <h3>The distance sensor returns 0</h3>
+                    <p><strong>Possible Cause:</strong> No echo came back: the target is closer than 20 mm, further than 4 m,
+                        or does not reflect sound. Zero also appears when trig and echo are swapped.</p>
+                    <p><strong>Solution:</strong> Check the wiring with the DistanceSensors example. Always filter zero out in
+                        conditions: <code>dist &gt; 0 &amp;&amp; dist &lt; 150</code>.</p>
+                </div>
+
+                <div class="api-card static">
+                    <h3>The line sensor shows random numbers</h3>
+                    <p><strong>Possible Cause:</strong> The sensor is on a port without an analog input — P5, P6 or P8. The
+                        library prints a warning to the Serial Monitor when that happens.</p>
+                    <p><strong>Solution:</strong> Move the sensor to P1–P4 or P7.</p>
+                </div>
+
+                <div class="api-card static">
+                    <h3>Text on the screen is cut off</h3>
+                    <p><strong>Possible Cause:</strong> <code>displayPrint()</code> shows at most 15 characters.</p>
+                    <p><strong>Solution:</strong> Shorten the label. Long messages are easier to print to the Serial
+                        Monitor.</p>
+                </div>
+
+                <div class="api-card static">
+                    <h3>The screen stays dark</h3>
+                    <p><strong>Possible Cause:</strong> The screen was not found at start-up — then the Serial Monitor
+                        (115200 baud) shows <code>SSD1306 allocation failed</code> and the robot keeps working without a
+                        screen. Or the sketch never calls a robot command, so initialisation never ran.</p>
+                    <p><strong>Solution:</strong> Check that the robot is switched on. Add <code>robot.begin()</code> to
+                        <code>setup()</code>.</p>
+                </div>
+
+                <div class="api-card static">
+                    <h3>UART commands are ignored</h3>
                     <p><strong>Possible Cause:</strong> Wiring issue or incorrect baud rate.</p>
-                    <p><strong>Solution:</strong>
+                    <p><strong>Solution:</strong></p>
                     <ul>
                         <li>Ensure RX connects to TX, and TX connects to RX.</li>
-                        <li>Check if you are calling <code>robot.UniBaseControl()</code> in the ESP32 loop.</li>
+                        <li>Check that <code>robot.UniBaseControl()</code> is called in <code>setup()</code> of the ESP32 sketch.</li>
                         <li>Verify GND is shared between boards.</li>
+                        <li>Do not connect modules to ports P5 and P6: they are the same pins that carry UART.</li>
                     </ul>
-                    </p>
                 </div>
 
-                <h2>Debug Tips</h2>
+                <h2 id="debug-tips">Debug Tips</h2>
                 <ul>
-                    <li>Use <code>robot.displayPrint("Debug Info")</code> to show status on the OLED if Serial monitor
+                    <li>Use <code>robot.displayPrint("Debug Info")</code> to show status on the screen when the Serial Monitor
                         is unavailable.</li>
-                    <li>In UART mode, the ESP32 logs received commands to its main Serial monitor (USB) if
-                        <code>DEBUG_MODE</code> is enabled in `UniBase.h`.</li>
+                    <li><code>robot.printOdometry()</code> prints the encoder ticks, the coordinates and the heading to the
+                        Serial Monitor. The port speed is 115200 baud.</li>
+                    <li>With <code>DEBUG_MODE</code> enabled in <code>UniBase.h</code>, the library prints start-up details
+                        (robot name, board version) to the Serial Monitor.</li>
                 </ul>
-
             </div>
         </main>
     </div>
 
-    <script src="nav.js"></script>
-    <script src="script.js"></script>
+    <script src="nav.js?v=6"></script>
+    <script src="script.js?v=6"></script>
 </body>
 
 </html>

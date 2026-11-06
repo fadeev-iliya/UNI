@@ -9,8 +9,8 @@
 OdometryData	KEYWORD1
 UniBase	KEYWORD1
 UniDev	KEYWORD1
-UniConfig	KEYWORD1
-TuningConfig	KEYWORD1
+UniBoard	KEYWORD1
+UniBoardVersion	KEYWORD1
 TrafficLightColor	KEYWORD1
 
 #######################################
@@ -23,6 +23,7 @@ motorLeft	KEYWORD2
 motorRight	KEYWORD2
 motorsArc	KEYWORD2
 motorsSync	KEYWORD2
+motorsSpeed	KEYWORD2
 moveDist	KEYWORD2
 moveTime	KEYWORD2
 moveArcDist	KEYWORD2
@@ -41,10 +42,12 @@ rotateToAsync	KEYWORD2
 moveToAsync	KEYWORD2
 isMoving	KEYWORD2
 waitMove	KEYWORD2
+speedToPower	KEYWORD2
+turnRateToPower	KEYWORD2
+getSpeed	KEYWORD2
+getTurnRate	KEYWORD2
 holdPosition	KEYWORD2
 setPosition	KEYWORD2
-setTuning	KEYWORD2
-getTuning	KEYWORD2
 UniBaseControl	KEYWORD2
 stop	KEYWORD2
 stopLeft	KEYWORD2
@@ -61,9 +64,11 @@ getLeftTicks	KEYWORD2
 getRightTicks	KEYWORD2
 displayPrint	KEYWORD2
 displayClear	KEYWORD2
+displayText	KEYWORD2
 printOdometry	KEYWORD2
 blinkLED	KEYWORD2
 getBatteryPower	KEYWORD2
+getBatteryVoltage	KEYWORD2
 ultraSonic	KEYWORD2
 lineSensor	KEYWORD2
 digitalSensor	KEYWORD2
@@ -99,6 +104,9 @@ TRAFFIC_GREEN	LITERAL1
 TRAFFIC_OFF	LITERAL1
 TRAFFIC_RED	LITERAL1
 TRAFFIC_YELLOW	LITERAL1
+UNI_BOARD_AUTO	LITERAL1
+UNI_BOARD_V1	LITERAL1
+UNI_BOARD_V2	LITERAL1
 P1	LITERAL1
 P2	LITERAL1
 P3	LITERAL1

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNI.h Reference - UNI Library</title>
+    <link rel="stylesheet" href="styles.css?v=7">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="icon" href="logoUni.svg" type="image/svg+xml">
+    <meta name="color-scheme" content="light dark">
+    <script src="boot.js?v=5"></script>
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar"></aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header: breadcrumb and page actions, built by script.js -->
+            <header class="top-header"></header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <h1>UNI.h Reference</h1>
+                <p class="lead">Every function of the library on one page. Click a function to open its description with parameters and an example.</p>
+                <p>The library is included with one line and provides two classes: <code>UniBase</code> drives the platform itself, <code>UniDev</code> the ports P1–P8 and the modules on them.</p>
+                <pre><code>#include &lt;UNI.h&gt;
+
+UniBase robot;   // the platform: motors, movement, odometry, screen
+UniDev module;   // ports P1–P8: sensors, servos, light ring, traffic light</code></pre>
+
+                <h2 id="unibase">UniBase</h2>
+                <p>The platform: motors, movement, odometry, screen. In the examples the object is called <code>robot</code>. Constants are on the <a href="unibase.html">UniBase class</a> page.</p>
+
+                <div class="api-card static fn-group" id="unibase-initialization">
+                    <h3>Initialization</h3>
+                    <ul class="fn-list">
+                        <li><a href="unibase.html#api-UniBase"><code class="fn-sig"><span class="fn-name">UniBase</span>(const char* robotName = "UNI Robot", UniBoardVersion board = UNI_BOARD_AUTO)</code><span class="fn-desc">Creates the robot object.</span></a></li>
+                        <li><a href="unibase.html#api-begin"><code class="fn-sig">void <span class="fn-name">begin</span>(const char* robotName = nullptr)</code><span class="fn-desc">Initializes all robot components (Motors, Encoders, OLED, Sensors).</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="api-card static fn-group" id="unibase-motor-control">
+                    <h3>Motor Control</h3>
+                    <ul class="fn-list">
+                        <li><a href="unibase.html#api-motors"><code class="fn-sig">void <span class="fn-name">motors</span>(int powerLeft, int powerRight)</code><span class="fn-desc">Sets the power for both motors directly.</span></a></li>
+                        <li><a href="unibase.html#api-motorLeft"><code class="fn-sig">void <span class="fn-name">motorLeft</span>(int power)</code><span class="fn-desc">Sets power for the left motor only.</span></a></li>
+                        <li><a href="unibase.html#api-motorRight"><code class="fn-sig">void <span class="fn-name">motorRight</span>(int power)</code><span class="fn-desc">Sets power for the right motor only.</span></a></li>
+                        <li><a href="unibase.html#api-motorsArc"><code class="fn-sig">void <span class="fn-name">motorsArc</span>(int power, float angle)</code><span class="fn-desc">Moves the robot along an arc with a specific turn intensity.</span></a></li>
+                        <li><a href="unibase.html#api-motorsSync"><code class="fn-sig">void <span class="fn-name">motorsSync</span>(int powerLeft, int powerRight)</code><span class="fn-desc">Like motors() but with encoder-based synchronisation — maintains the set speed ratio between left and right wheels.</span></a></li>
+                        <li><a href="unibase.html#api-motorsSpeed"><code class="fn-sig">void <span class="fn-name">motorsSpeed</span>(float leftMMperSec, float rightMMperSec)</code><span class="fn-desc">Same as motorsSync(), but the wheel speeds are given in mm/s.</span></a></li>
+                        <li><a href="unibase.html#api-holdPosition"><code class="fn-sig">void <span class="fn-name">holdPosition</span>()</code><span class="fn-desc">Actively holds the current wheel position using PID.</span></a></li>
+                        <li><a href="unibase.html#api-stop"><code class="fn-sig">void <span class="fn-name">stop</span>(int stopType = HARD)</code><span class="fn-desc">Stops both motors.</span></a></li>
+                        <li><a href="unibase.html#api-stopLeft"><code class="fn-sig">void <span class="fn-name">stopLeft</span>(int stopType = HARD)</code><span class="fn-desc">Stops the left motor only.</span></a></li>
+                        <li><a href="unibase.html#api-stopRight"><code class="fn-sig">void <span class="fn-name">stopRight</span>(int stopType = HARD)</code><span class="fn-desc">Stops the right motor only.</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="api-card static fn-group" id="unibase-movement">
+                    <h3>Movement (Blocking)</h3>
+                    <ul class="fn-list">
+                        <li><a href="unibase.html#api-moveDist"><code class="fn-sig">bool <span class="fn-name">moveDist</span>(int power, int millimeters)</code><span class="fn-desc">Moves the robot specific distance using PID control on encoders.</span></a></li>
+                        <li><a href="unibase.html#api-moveTime"><code class="fn-sig">bool <span class="fn-name">moveTime</span>(int power, int milliseconds)</code><span class="fn-desc">Moves the motor for a specific duration of time.</span></a></li>
+                        <li><a href="unibase.html#api-moveArcDist"><code class="fn-sig">bool <span class="fn-name">moveArcDist</span>(int power, int angle, int millimeters)</code><span class="fn-desc">Moves along a curved path for a specific distance.</span></a></li>
+                        <li><a href="unibase.html#api-moveArcTime"><code class="fn-sig">bool <span class="fn-name">moveArcTime</span>(int power, int angle, int milliseconds)</code><span class="fn-desc">Moves along a curved path for a specific duration.</span></a></li>
+                        <li><a href="unibase.html#api-rotate"><code class="fn-sig">bool <span class="fn-name">rotate</span>(int power, int angle)</code><span class="fn-desc">Rotates the robot in place by a specific angle.</span></a></li>
+                        <li><a href="unibase.html#api-rotateTo"><code class="fn-sig">bool <span class="fn-name">rotateTo</span>(int power, float angleDeg)</code><span class="fn-desc">Rotates to an absolute odometry heading via the shortest path.</span></a></li>
+                        <li><a href="unibase.html#api-moveTo"><code class="fn-sig">bool <span class="fn-name">moveTo</span>(int power, float x, float y)</code><span class="fn-desc">Drives to a target odometry coordinate: turns to face the target then moves in a straight line.</span></a></li>
+                        <li><a href="unibase.html#api-moveArcRadius"><code class="fn-sig">bool <span class="fn-name">moveArcRadius</span>(int power, float radiusMM, float angleDeg)</code><span class="fn-desc">Arc with precise geometry: specify the turning radius and arc angle.</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="api-card static fn-group" id="unibase-async-movement">
+                    <h3>Async Movement</h3>
+                    <ul class="fn-list">
+                        <li><a href="unibase.html#api-moveDistAsync"><code class="fn-sig">void <span class="fn-name">moveDistAsync</span>(int power, int millimeters)</code><span class="fn-desc">Async version of moveDist().</span></a></li>
+                        <li><a href="unibase.html#api-moveTimeAsync"><code class="fn-sig">void <span class="fn-name">moveTimeAsync</span>(int power, int milliseconds)</code><span class="fn-desc">Async version of moveTime().</span></a></li>
+                        <li><a href="unibase.html#api-moveArcDistAsync"><code class="fn-sig">void <span class="fn-name">moveArcDistAsync</span>(int power, int angle, int millimeters)</code><span class="fn-desc">Async version of moveArcDist().</span></a></li>
+                        <li><a href="unibase.html#api-moveArcTimeAsync"><code class="fn-sig">void <span class="fn-name">moveArcTimeAsync</span>(int power, int angle, int milliseconds)</code><span class="fn-desc">Async version of moveArcTime().</span></a></li>
+                        <li><a href="unibase.html#api-moveArcRadiusAsync"><code class="fn-sig">void <span class="fn-name">moveArcRadiusAsync</span>(int power, float radiusMM, float angleDeg)</code><span class="fn-desc">Async version of moveArcRadius().</span></a></li>
+                        <li><a href="unibase.html#api-rotateAsync"><code class="fn-sig">void <span class="fn-name">rotateAsync</span>(int power, int angle)</code><span class="fn-desc">Async version of rotate().</span></a></li>
+                        <li><a href="unibase.html#api-rotateToAsync"><code class="fn-sig">void <span class="fn-name">rotateToAsync</span>(int power, float angleDeg)</code><span class="fn-desc">Async version of rotateTo().</span></a></li>
+                        <li><a href="unibase.html#api-moveToAsync"><code class="fn-sig">void <span class="fn-name">moveToAsync</span>(int power, float x, float y)</code><span class="fn-desc">Async version of moveTo().</span></a></li>
+                        <li><a href="unibase.html#api-isMoving"><code class="fn-sig">bool <span class="fn-name">isMoving</span>()</code><span class="fn-desc">Returns true while an async movement task is active.</span></a></li>
+                        <li><a href="unibase.html#api-waitMove"><code class="fn-sig">bool <span class="fn-name">waitMove</span>(unsigned long timeoutMs = 0)</code><span class="fn-desc">Blocks until the current async movement command finishes.</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="api-card static fn-group" id="unibase-odometry">
+                    <h3>Odometry</h3>
+                    <ul class="fn-list">
+                        <li><a href="unibase.html#api-getOdometry"><code class="fn-sig">OdometryData <span class="fn-name">getOdometry</span>()</code><span class="fn-desc">Returns the current estimated position and orientation struct.</span></a></li>
+                        <li><a href="unibase.html#api-getAbsX"><code class="fn-sig">float <span class="fn-name">getAbsX</span>()</code><span class="fn-desc">Returns the absolute X coordinate in millimeters.</span></a></li>
+                        <li><a href="unibase.html#api-getAbsY"><code class="fn-sig">float <span class="fn-name">getAbsY</span>()</code><span class="fn-desc">Returns the absolute Y coordinate in millimeters.</span></a></li>
+                        <li><a href="unibase.html#api-getAbsAngle"><code class="fn-sig">float <span class="fn-name">getAbsAngle</span>()</code><span class="fn-desc">Returns the absolute heading angle in degrees.</span></a></li>
+                        <li><a href="unibase.html#api-resetDistance"><code class="fn-sig">void <span class="fn-name">resetDistance</span>()</code><span class="fn-desc">Resets the accumulated distance counter to 0.</span></a></li>
+                        <li><a href="unibase.html#api-getDistance"><code class="fn-sig">float <span class="fn-name">getDistance</span>()</code><span class="fn-desc">Returns the distance traveled since the last reset in millimeters.</span></a></li>
+                        <li><a href="unibase.html#api-resetAngle"><code class="fn-sig">void <span class="fn-name">resetAngle</span>()</code><span class="fn-desc">Resets the accumulated angle counter to 0.</span></a></li>
+                        <li><a href="unibase.html#api-getAngle"><code class="fn-sig">float <span class="fn-name">getAngle</span>()</code><span class="fn-desc">Returns the angle turned since the last reset in degrees.</span></a></li>
+                        <li><a href="unibase.html#api-setPosition"><code class="fn-sig">void <span class="fn-name">setPosition</span>(float x, float y, float angleDeg)</code><span class="fn-desc">Sets the odometry pose.</span></a></li>
+                        <li><a href="unibase.html#api-getLeftTicks"><code class="fn-sig">long <span class="fn-name">getLeftTicks</span>() / long <span class="fn-name">getRightTicks</span>()</code><span class="fn-desc">Returns the raw encoder tick count for the respective motor.</span></a></li>
+                        <li><a href="unibase.html#api-printOdometry"><code class="fn-sig">void <span class="fn-name">printOdometry</span>()</code><span class="fn-desc">Prints the current X, Y, and Theta values to the Serial Monitor.</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="api-card static fn-group" id="unibase-speed">
+                    <h3>Speed</h3>
+                    <ul class="fn-list">
+                        <li><a href="unibase.html#api-speedToPower"><code class="fn-sig">int <span class="fn-name">speedToPower</span>(float mmPerSec)</code><span class="fn-desc">Converts a speed in mm/s into a power value for movement commands.</span></a></li>
+                        <li><a href="unibase.html#api-turnRateToPower"><code class="fn-sig">int <span class="fn-name">turnRateToPower</span>(float degPerSec)</code><span class="fn-desc">Converts a turn rate in degrees per second into a power value for rotate() and rotateTo().</span></a></li>
+                        <li><a href="unibase.html#api-getSpeed"><code class="fn-sig">float <span class="fn-name">getSpeed</span>()</code><span class="fn-desc">Returns the measured speed of the robot centre in mm/s.</span></a></li>
+                        <li><a href="unibase.html#api-getTurnRate"><code class="fn-sig">float <span class="fn-name">getTurnRate</span>()</code><span class="fn-desc">Returns the measured turn rate in degrees per second.</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="api-card static fn-group" id="unibase-display">
+                    <h3>Display</h3>
+                    <ul class="fn-list">
+                        <li><a href="unibase.html#api-displayPrint"><code class="fn-sig">void <span class="fn-name">displayPrint</span>(ValueType value)</code><span class="fn-desc">Clears the OLED screen and prints the provided value in the center.</span></a></li>
+                        <li><a href="unibase.html#api-displayPrint-2"><code class="fn-sig">void <span class="fn-name">displayPrint</span>(const char* name, ValueType value)</code><span class="fn-desc">Prints a name label at the top of the screen and a large value in the center.</span></a></li>
+                        <li><a href="unibase.html#api-displayText"><code class="fn-sig">void <span class="fn-name">displayText</span>(const char* text)</code><span class="fn-desc">Displays up to 8 lines of small text, 21 characters each.</span></a></li>
+                        <li><a href="unibase.html#api-displayClear"><code class="fn-sig">void <span class="fn-name">displayClear</span>()</code><span class="fn-desc">Clears the OLED screen.</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="api-card static fn-group" id="unibase-utility">
+                    <h3>Utility</h3>
+                    <ul class="fn-list">
+                        <li><a href="unibase.html#api-getBatteryPower"><code class="fn-sig">int <span class="fn-name">getBatteryPower</span>()</code><span class="fn-desc">Returns current battery level percentage (0-100).</span></a></li>
+                        <li><a href="unibase.html#api-getBatteryVoltage"><code class="fn-sig">float <span class="fn-name">getBatteryVoltage</span>()</code><span class="fn-desc">Returns the battery voltage in volts.</span></a></li>
+                        <li><a href="unibase.html#api-blinkLED"><code class="fn-sig">void <span class="fn-name">blinkLED</span>(int interval)</code><span class="fn-desc">Sets the background task to blink the onboard LED.</span></a></li>
+                        <li><a href="unibase.html#api-UniBaseControl"><code class="fn-sig">void <span class="fn-name">UniBaseControl</span>()</code><span class="fn-desc">Starts listening for UART commands from an external controller (Arduino Nano).</span></a></li>
+                    </ul>
+                </div>
+
+                <h2 id="unidev">UniDev</h2>
+                <p>Ports P1–P8 and the modules on them: sensors, buttons, servos, the light ring, the traffic light. In the examples the object is called <code>module</code>. Port names are on the <a href="unidev.html">UniDev class</a> page.</p>
+
+                <div class="api-card static fn-group" id="unidev-dev-init">
+                    <h3>Initialization</h3>
+                    <ul class="fn-list">
+                        <li><a href="unidev.html#api-begin"><code class="fn-sig">void <span class="fn-name">begin</span>()</code><span class="fn-desc">Initializes the UniDev instance, creating the NeoPixel object and setting pin modes.</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="api-card static fn-group" id="unidev-sensors">
+                    <h3>Sensors</h3>
+                    <ul class="fn-list">
+                        <li><a href="unidev.html#api-ultraSonic"><code class="fn-sig">int <span class="fn-name">ultraSonic</span>(int trig, int echo)</code><span class="fn-desc">Reads distance from an ultrasonic sensor (HC-SR04).</span></a></li>
+                        <li><a href="unidev.html#api-lineSensor"><code class="fn-sig">int <span class="fn-name">lineSensor</span>(int port)</code><span class="fn-desc">Reads an analog value from a line sensor.</span></a></li>
+                        <li><a href="unidev.html#api-digitalSensor"><code class="fn-sig">int <span class="fn-name">digitalSensor</span>(int port)</code><span class="fn-desc">Reads a generic digital value from a port.</span></a></li>
+                        <li><a href="unidev.html#api-analogSensor"><code class="fn-sig">int <span class="fn-name">analogSensor</span>(int port)</code><span class="fn-desc">Reads a generic analog value from a port.</span></a></li>
+                        <li><a href="unidev.html#api-getPinMode"><code class="fn-sig">int <span class="fn-name">getPinMode</span>(uint8_t pin)</code><span class="fn-desc">Returns the current configured mode of a GPIO pin.</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="api-card static fn-group" id="unidev-inputs">
+                    <h3>Inputs</h3>
+                    <ul class="fn-list">
+                        <li><a href="unidev.html#api-waitButton"><code class="fn-sig">void <span class="fn-name">waitButton</span>(int port)</code><span class="fn-desc">Blocking function that halts program execution until the specified button is pressed and released.</span></a></li>
+                        <li><a href="unidev.html#api-getButtonState"><code class="fn-sig">bool <span class="fn-name">getButtonState</span>(int port)</code><span class="fn-desc">Checks if a button is currently pressed.</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="api-card static fn-group" id="unidev-servo">
+                    <h3>Servo</h3>
+                    <ul class="fn-list">
+                        <li><a href="unidev.html#api-servo"><code class="fn-sig">void <span class="fn-name">servo</span>(int port, int angle)</code><span class="fn-desc">Sets the angle of a servo motor connected to the specified port.</span></a></li>
+                        <li><a href="unidev.html#api-servoAttach"><code class="fn-sig">void <span class="fn-name">servoAttach</span>(int port)</code><span class="fn-desc">Pre-attaches a servo to a port and reserves a PWM channel without setting an angle.</span></a></li>
+                        <li><a href="unidev.html#api-servoDetach"><code class="fn-sig">void <span class="fn-name">servoDetach</span>(int port)</code><span class="fn-desc">Detaches a servo from its port — PWM pulses stop and the motor goes limp.</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="api-card static fn-group" id="unidev-light-ring-basic">
+                    <h3>Light Ring (Basic)</h3>
+                    <ul class="fn-list">
+                        <li><a href="unidev.html#api-pixel"><code class="fn-sig">void <span class="fn-name">pixel</span>(int index, int r, int g, int b)</code><span class="fn-desc">Sets the color of a single pixel.</span></a></li>
+                        <li><a href="unidev.html#api-pixelsAll"><code class="fn-sig">void <span class="fn-name">pixelsAll</span>(int r, int g, int b)</code><span class="fn-desc">Sets all LEDs in the ring to the specified RGB color.</span></a></li>
+                        <li><a href="unidev.html#api-pixelsClear"><code class="fn-sig">void <span class="fn-name">pixelsClear</span>()</code><span class="fn-desc">Turns off all LEDs.</span></a></li>
+                        <li><a href="unidev.html#api-pixelsShow"><code class="fn-sig">void <span class="fn-name">pixelsShow</span>()</code><span class="fn-desc">Sends the current buffer to the LED strip.</span></a></li>
+                        <li><a href="unidev.html#api-pixelsBrightness"><code class="fn-sig">void <span class="fn-name">pixelsBrightness</span>(int brightness)</code><span class="fn-desc">Sets the global brightness scaling.</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="api-card static fn-group" id="unidev-light-ring-effects">
+                    <h3>Light Ring (Effects)</h3>
+                    <ul class="fn-list">
+                        <li><a href="unidev.html#api-pixelsRainbow"><code class="fn-sig">void <span class="fn-name">pixelsRainbow</span>(int speed, int duration)</code><span class="fn-desc">Displays a rotating rainbow animation.</span></a></li>
+                        <li><a href="unidev.html#api-pixelsRunning"><code class="fn-sig">void <span class="fn-name">pixelsRunning</span>(int r, int g, int b, int duration)</code><span class="fn-desc">Running light effect: a single pixel moves around the ring once.</span></a></li>
+                        <li><a href="unidev.html#api-pixelsBreathing"><code class="fn-sig">void <span class="fn-name">pixelsBreathing</span>(int r, int g, int b, int duration)</code><span class="fn-desc">Smoothly fades the LEDs up and down (breathing effect).</span></a></li>
+                        <li><a href="unidev.html#api-pixelsFill"><code class="fn-sig">void <span class="fn-name">pixelsFill</span>(int r, int g, int b, int duration)</code><span class="fn-desc">Gradually fills the ring with color, then gradually clears it.</span></a></li>
+                        <li><a href="unidev.html#api-pixelsSparkle"><code class="fn-sig">void <span class="fn-name">pixelsSparkle</span>(int r, int g, int b, int duration, int count)</code><span class="fn-desc">Randomly flashes individual pixels.</span></a></li>
+                        <li><a href="unidev.html#api-pixelsRotating"><code class="fn-sig">void <span class="fn-name">pixelsRotating</span>(int r, int g, int b, int duration, int segmentLength, int rotations)</code><span class="fn-desc">Rotates a segment of lit LEDs around the ring multiple times.</span></a></li>
+                        <li><a href="unidev.html#api-pixelsSpinner"><code class="fn-sig">void <span class="fn-name">pixelsSpinner</span>(int r, int g, int b, int duration)</code><span class="fn-desc">A spinner animation that lights up one pixel at a time until the ring is full, then restarts.</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="api-card static fn-group" id="unidev-traffic-light">
+                    <h3>Traffic Light</h3>
+                    <ul class="fn-list">
+                        <li><a href="unidev.html#api-setTrafficLight"><code class="fn-sig">void <span class="fn-name">setTrafficLight</span>(TrafficLightColor color)</code><span class="fn-desc">Sets the traffic light module state.</span></a></li>
+                        <li><a href="unidev.html#api-trafficLightSequence"><code class="fn-sig">void <span class="fn-name">trafficLightSequence</span>()</code><span class="fn-desc">Runs the traffic light sequence: red, yellow, green — one second each — then switches every signal off.</span></a></li>
+                    </ul>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="nav.js?v=6"></script>
+    <script src="script.js?v=6"></script>
+</body>
+
+</html>

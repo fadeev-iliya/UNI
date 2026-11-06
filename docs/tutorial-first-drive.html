@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 1. First drive - UNI Library</title>
+    <link rel="stylesheet" href="styles.css?v=7">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="icon" href="logoUni.svg" type="image/svg+xml">
+    <meta name="color-scheme" content="light dark">
+    <script src="boot.js?v=5"></script>
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar"></aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header: breadcrumb and page actions, built by script.js -->
+            <header class="top-header"></header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <h1>First drive: a square</h1>
+                <p class="lead">The robot drives a square with 30 cm sides and comes back to the start. On the way you learn
+                    the two main commands: drive a distance and turn by an angle.</p>
+                <div class="callout note">
+                    <div class="callout-body">
+                        <p>Work through <a href="getting-started.html">Getting Started</a> first: the library is installed and the
+                            Start example uploads. You need about a metre by a metre of flat floor.</p>
+                    </div>
+                </div>
+
+                <h2 id="goal">What you will build</h2>
+                <figure class="figure">
+                <svg viewBox="0 0 360 258" role="img" aria-label="The robot drives a 300 mm square clockwise, turns on the spot at each corner and stops at the start" style="max-width: 432px"><polyline class="dg-accent" points="82.0,196.0 82.0,46.0 232.0,46.0 232.0,196.0 82.0,196.0"/><polygon class="dg-accent-fill" points="82.0,116.0 86.5,126.0 77.5,126.0"/><polygon class="dg-accent-fill" points="162.0,46.0 152.0,50.5 152.0,41.5"/><polygon class="dg-accent-fill" points="232.0,126.0 227.5,116.0 236.5,116.0"/><polygon class="dg-accent-fill" points="152.0,196.0 162.0,191.5 162.0,200.5"/><path class="dg-accent" d="M69.7 54.6 A15.0 15.0 0 0 1 83.2 31.0"/><polygon class="dg-accent-fill" points="90.6,33.7 81.9,32.2 86.2,26.0"/><path class="dg-accent" d="M223.4 33.7 A15.0 15.0 0 0 1 247.0 47.2"/><polygon class="dg-accent-fill" points="244.3,54.6 245.8,45.9 252.0,50.2"/><path class="dg-accent" d="M244.3 187.4 A15.0 15.0 0 0 1 230.8 211.0"/><polygon class="dg-accent-fill" points="223.4,208.3 232.1,209.8 227.8,216.0"/><path class="dg-accent" d="M79.1 228.9 A33.0 33.0 0 0 1 51.2 184.1"/><polygon class="dg-accent-fill" points="55.0,177.1 53.5,185.8 47.3,181.4"/><g transform="translate(82.0 196.0) rotate(0)"><rect class="dg-wheel" x="-21.0" y="-8.4" width="5.4" height="16.8" rx="1.5"/><rect class="dg-wheel" x="15.6" y="-8.4" width="5.4" height="16.8" rx="1.5"/><rect class="dg-body" x="-15.6" y="-18.6" width="31.2" height="37.2" rx="5.4"/><polygon class="dg-ink" points="0,-15.0 -4.2,-8.4 4.2,-8.4"/></g><text class="dg-text dg-strong" x="60.0" y="125.0" text-anchor="end">300 mm</text><text class="dg-text dg-strong" x="157.0" y="32.0" text-anchor="middle">300 mm</text><text class="dg-text dg-small dg-faint" x="252.0" y="24.0">turn on the spot</text><text class="dg-text dg-small dg-faint" x="82.0" y="246.0" text-anchor="middle">start and finish</text></svg>
+                <figcaption>Four 300 mm legs and four 90° right turns, each on the spot. The robot stops where it started, facing the same way.</figcaption>
+                </figure>
+
+                <h2 id="steps">Steps</h2>
+                <ol class="steps">
+                    <li>
+                        <h3>Create the robot</h3>
+                <pre><code>#include &lt;UNI.h&gt;
+
+UniBase robot("UNI");
+
+void setup() {
+  robot.begin();
+}
+
+void loop() {
+}</code></pre>
+                        <p>The <code>robot</code> object is the whole platform: motors, encoders and screen. The name in quotes
+                            appears on the screen. <code>robot.begin()</code> switches all of it on; you may leave it out — the
+                            very first command does it by itself.</p>
+                    </li>
+                    <li>
+                        <h3>Drive straight</h3>
+                <pre><code>robot.moveDist(50, 300);   // power 50, distance 300 mm</code></pre>
+                        <p>The first number is power in percent, from −100 to 100; the second is distance in millimetres. The
+                            command is blocking: the next line runs only once the robot has arrived.</p>
+                        <p>Power is the speed as a percentage of the maximum: 100 is about 0.3 m/s. The robot holds this speed with
+                            the encoders, so a small power simply drives slowly.</p>
+                    </li>
+                    <li>
+                        <h3>Turn</h3>
+                <pre><code>robot.rotate(50, 90);      // power 50, turn by 90 degrees</code></pre>
+                        <p>A positive angle turns right, a negative one turns left. The robot turns on the spot: the wheels
+                            spin in opposite directions.</p>
+                    </li>
+                    <li>
+                        <h3>Repeat four times</h3>
+                <pre><code>void setup() {
+  robot.begin();
+
+  for (int i = 0; i &lt; 4; i++) {
+    robot.moveDist(50, 300);
+    robot.rotate(50, 90);
+  }
+}</code></pre>
+                        <p>Upload the sketch and put the robot on the floor.</p>
+                    </li>
+                </ol>
+                <p>That is the whole sketch: the loop goes into <code>setup()</code> of the sketch from the first step. A square
+                    with turns is also driven by the <span class="menu-path">File › Examples › UNI › PrecisionTurns</span>
+                    example; its code is on the <a href="examples.html#precision-turns">Examples</a> page.</p>
+
+                <h2 id="experiments">Try changing it</h2>
+                <ul>
+                    <li>Make the side 500 mm. Compare power 30 and 80: how does stopping accuracy change?</li>
+                    <li>Drive the square counter-clockwise: <code>robot.rotate(50, -90)</code>.</li>
+                    <li>Draw a triangle: three sides and three 120° turns.</li>
+                    <li>Add driving backwards and by time:
+                <pre><code>robot.moveDist(-50, 200);  // back 200 mm
+robot.moveTime(40, 1000);  // forward for one second</code></pre>
+                        Negative power is reverse. <code>moveTime()</code> drives for a set time rather than a distance; the robot slows down smoothly so that
+                        it stops when the time is up.</li>
+                </ul>
+
+                <h2 id="problems">If it does not work</h2>
+                <ul>
+                    <li><strong>The screen works but the robot does not move.</strong> Check the battery switch and the charge
+                        — see the <a href="faq.html#movement">FAQ</a>.</li>
+                    <li><strong>The square does not close; the corners are clearly more or less than 90°.</strong> Check the wheels and the floor — see the <a href="faq.html#calibrate">FAQ</a>.</li>
+                    <li><strong>The robot drifts on a slippery floor.</strong> Odometry counts wheel rotation and cannot see
+                        slipping — see <a href="limitations.html#accuracy">Accuracy and Odometry</a>.</li>
+                    <li><strong>The robot hit something and moved on to the next command about a second later.</strong> The
+                        library noticed that the wheels had stopped and ended the command — see
+                        <a href="limitations.html#movement">Movement and Commands</a>.</li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script src="nav.js?v=6"></script>
+    <script src="script.js?v=6"></script>
+</body>
+
+</html>

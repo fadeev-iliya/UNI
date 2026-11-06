@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 4. Moving without waiting - UNI Library</title>
+    <link rel="stylesheet" href="styles.css?v=7">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="icon" href="logoUni.svg" type="image/svg+xml">
+    <meta name="color-scheme" content="light dark">
+    <script src="boot.js?v=5"></script>
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar"></aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header: breadcrumb and page actions, built by script.js -->
+            <header class="top-header"></header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <h1>Moving without waiting, and stopping for an obstacle</h1>
+                <p class="lead">While <code>moveDist()</code> runs, the program stands still. Commands ending in
+                    <code>Async</code> start the movement and return at once: the robot drives while the program reads
+                    sensors.</p>
+                <div class="callout note">
+                    <div class="callout-body">
+                        <p>The second half of the lesson needs an ultrasonic distance sensor connected to ports P6 (trig)
+                            and P7 (echo).</p>
+                    </div>
+                </div>
+
+                <h2 id="blocking-vs-async">Blocking and async commands</h2>
+                <figure class="figure">
+                <div class="figure-scroll"><svg viewBox="0 0 560 236" role="img" aria-label="A blocking and an async command compared over time"><text class="dg-text dg-mono dg-strong" x="150.0" y="18.0">moveDist(50, 500)</text><text class="dg-text dg-small dg-faint" x="138.0" y="44.0" text-anchor="end">program</text><text class="dg-text dg-small dg-faint" x="138.0" y="74.0" text-anchor="end">robot</text><rect class="dg-box" x="150.0" y="28.0" width="60.0" height="24" rx="6"/><text class="dg-text dg-small" x="180.0" y="44.0" text-anchor="middle">call</text><rect class="dg-dash" x="214.0" y="28.0" width="206.0" height="24" rx="6"/><text class="dg-text dg-small dg-faint" x="317.0" y="44.0" text-anchor="middle">waits</text><rect class="dg-box" x="424.0" y="28.0" width="124.0" height="24" rx="6"/><text class="dg-text dg-small" x="486.0" y="44.0" text-anchor="middle">next line</text><rect class="dg-accent-soft" x="214.0" y="58.0" width="206.0" height="24" rx="6"/><text class="dg-text dg-small dg-text-accent" x="317.0" y="74.0" text-anchor="middle">moving</text><text class="dg-text dg-mono dg-strong" x="150.0" y="122.0">moveDistAsync(50, 500)</text><text class="dg-text dg-small dg-faint" x="138.0" y="148.0" text-anchor="end">program</text><text class="dg-text dg-small dg-faint" x="138.0" y="178.0" text-anchor="end">robot</text><rect class="dg-box" x="150.0" y="132.0" width="60.0" height="24" rx="6"/><text class="dg-text dg-small" x="180.0" y="148.0" text-anchor="middle">call</text><rect class="dg-box" x="214.0" y="132.0" width="334.0" height="24" rx="6"/><text class="dg-text dg-small" x="381.0" y="148.0" text-anchor="middle">your code keeps running</text><rect class="dg-accent-soft" x="214.0" y="162.0" width="206.0" height="24" rx="6"/><text class="dg-text dg-small dg-text-accent" x="317.0" y="178.0" text-anchor="middle">moving</text><line class="dg-line" x1="150.0" y1="210.0" x2="540.0" y2="210.0"/><polygon class="dg-ink" points="548.0,210.0 539.0,214.0 539.0,206.0"/><text class="dg-text dg-small dg-faint" x="548.0" y="228.0" text-anchor="end">time</text></svg></div>
+                <figcaption>A blocking command holds the program until the movement ends. An async one only starts it.</figcaption>
+                </figure>
+                <p>Every movement command has an async twin: <code>moveDist()</code> and <code>moveDistAsync()</code>,
+                    <code>rotate()</code> and <code>rotateAsync()</code>, <code>moveTo()</code> and <code>moveToAsync()</code>.
+                    Three helpers go with them:</p>
+                <ul>
+                    <li><code>isMoving()</code> — is the robot moving right now;</li>
+                    <li><code>waitMove()</code> — wait for the movement to end;</li>
+                    <li><code>stop()</code> — interrupt the movement.</li>
+                </ul>
+
+                <h2 id="steps">Steps</h2>
+                <ol class="steps">
+                    <li>
+                        <h3>Show progress while moving</h3>
+                <pre><code>robot.moveDistAsync(50, 800);
+while (robot.isMoving()) {
+  robot.displayPrint("Dist", robot.getDistance());
+  delay(100);
+}
+robot.displayClear();</code></pre>
+                        <p>The robot drives while the loop puts the distance travelled on the screen ten times a second.</p>
+                    </li>
+                    <li>
+                        <h3>Guard against getting stuck</h3>
+                <pre><code>robot.moveDistAsync(50, 800);
+if (!robot.waitMove(5000)) {   // not there after 5 seconds?
+  robot.stop(HARD);
+  robot.displayPrint("STUCK!");
+}</code></pre>
+                        <p><code>waitMove()</code> with a number waits no longer than that many milliseconds and returns
+                            <code>false</code> if the robot still has not arrived.</p>
+                    </li>
+                    <li>
+                        <h3>Remember: one command at a time</h3>
+                        <div class="callout warning">
+                            <div class="callout-body">
+                                <p>There is no command queue. A new movement command cancels the current one.</p>
+                            </div>
+                        </div>
+                <pre><code>robot.moveDistAsync(50, 500);
+robot.rotateAsync(50, 90);   // cancels the line above: the robot only turns</code></pre>
+                        <p>To run both, put <code>robot.waitMove();</code> between them.</p>
+                    </li>
+                    <li>
+                        <h3>Read the distance sensor</h3>
+                <pre><code>UniDev module;
+
+int dist = module.ultraSonic(P6, P7);   // millimetres; 0 means "no echo"</code></pre>
+                        <p>The sensor measures from 20 to 4000 mm. Zero is not “an obstacle right in front” but no answer at
+                            all, so it is always checked separately.</p>
+                    </li>
+                    <li>
+                        <h3>Put the obstacle stop together</h3>
+                <pre><code>#include &lt;UNI.h&gt;
+
+UniBase robot("UNI");
+UniDev module;
+
+const int OBSTACLE_MM = 150;   // stop distance
+const int TARGET_MM   = 1500;  // total travel distance
+const int FINISH_MM   = 5;     // closer than this to the goal counts as arrived
+
+void setup() {
+  robot.begin();
+  robot.resetDistance();
+}
+
+void loop() {
+  // Goal reached — stay stopped. A move ends with a small residual to the goal,
+  // so the remainder is compared with a margin rather than with zero:
+  // otherwise the robot would keep "finishing" the last millimetre forever
+  int remaining = TARGET_MM - (int)robot.getDistance();
+  if (remaining &lt;= FINISH_MM) {
+    robot.displayPrint("DONE");
+    delay(500);
+    return;
+  }
+
+  int dist = module.ultraSonic(P6, P7);
+  bool blocked = (dist &gt; 0 &amp;&amp; dist &lt; OBSTACLE_MM);
+
+  if (blocked) {
+    if (robot.isMoving()) {
+      robot.stop(HARD);
+      robot.displayPrint("Obstacle", dist);
+    }
+  } else {
+    if (!robot.isMoving()) {
+      // Drive the rest of the way asynchronously while still watching the sensor
+      robot.moveDistAsync(50, remaining);
+      robot.displayClear();
+    }
+  }
+
+  delay(50);
+}</code></pre>
+                        <p>Twenty times a second the loop reads the sensor. With an obstacle it stops the robot; with a clear
+                            path and a standing robot it sends it off to cover the rest.</p>
+                    </li>
+                </ol>
+                <p>Finished sketches: <span class="menu-path">File › Examples › UNI › AsyncMovement</span> and
+                    <span class="menu-path">ObstacleStop</span>. The code is on the
+                    <a href="examples.html#async">Examples</a> page.</p>
+
+                <h2 id="result">What should happen</h2>
+                <figure class="figure">
+                <div class="figure-scroll"><svg viewBox="0 0 560 308" role="img" aria-label="The robot stops in front of a hand, drives on once it is gone and shows DONE at 1.5 m" style="max-width: 672px"><circle class="dg-accent-soft" cx="49.0" cy="30.0" r="9"/><text class="dg-text dg-small dg-text-accent" x="49.0" y="33.8" text-anchor="middle">1</text><text class="dg-text dg-small dg-strong" x="64.0" y="34.0">Hand closer than 15 cm — stop, the screen shows Obstacle and the distance</text><line class="dg-dash" x1="185.6" y1="64.0" x2="430.0" y2="64.0"/><line class="dg-accent" x1="40.0" y1="64.0" x2="185.6" y2="64.0"/><line class="dg-line" x1="430.0" y1="54.0" x2="430.0" y2="74.0"/><g transform="translate(185.6 64.0) rotate(90)"><rect class="dg-wheel" x="-14.7" y="-5.9" width="3.8" height="11.8" rx="1.1"/><rect class="dg-wheel" x="10.9" y="-5.9" width="3.8" height="11.8" rx="1.1"/><rect class="dg-body" x="-10.9" y="-13.0" width="21.8" height="26.0" rx="3.8"/><polygon class="dg-ink" points="0,-10.5 -2.9,-5.9 2.9,-5.9"/></g><rect class="dg-box" x="217.5" y="47.0" width="9" height="34" rx="4.5"/><text class="dg-text dg-small dg-faint" x="231.0" y="81.0">hand</text><line class="dg-line" x1="200.6" y1="88.0" x2="216.0" y2="88.0"/><line class="dg-line" x1="200.6" y1="84.0" x2="200.6" y2="92.0"/><line class="dg-line" x1="216.0" y1="84.0" x2="216.0" y2="92.0"/><text class="dg-text dg-small dg-text-accent" x="208.3" y="104.0" text-anchor="middle">< 15 cm</text><rect class="dg-screen" x="455.0" y="38.0" width="90.8" height="52.4" rx="5.2"/><text class="dg-pixel" x="500.4" y="53.4" font-size="10.8" text-anchor="middle" font-weight="600">Obstacle</text><text class="dg-pixel" x="500.4" y="70.8" font-size="10.8" text-anchor="middle" font-weight="600">140</text><circle class="dg-accent-soft" cx="49.0" cy="126.0" r="9"/><text class="dg-text dg-small dg-text-accent" x="49.0" y="129.8" text-anchor="middle">2</text><text class="dg-text dg-small dg-strong" x="64.0" y="130.0">Hand removed — it drives on</text><line class="dg-dash" x1="289.6" y1="160.0" x2="430.0" y2="160.0"/><line class="dg-accent" x1="40.0" y1="160.0" x2="289.6" y2="160.0"/><line class="dg-line" x1="430.0" y1="150.0" x2="430.0" y2="170.0"/><rect class="dg-dash" x="217.5" y="143.0" width="9" height="34" rx="4.5"/><circle class="dg-accent-fill" cx="185.6" cy="160.0" r="3"/><text class="dg-text dg-small dg-faint" x="185.6" y="182.0" text-anchor="middle">stood</text><g transform="translate(289.6 160.0) rotate(90)"><rect class="dg-wheel" x="-14.7" y="-5.9" width="3.8" height="11.8" rx="1.1"/><rect class="dg-wheel" x="10.9" y="-5.9" width="3.8" height="11.8" rx="1.1"/><rect class="dg-body" x="-10.9" y="-13.0" width="21.8" height="26.0" rx="3.8"/><polygon class="dg-ink" points="0,-10.5 -2.9,-5.9 2.9,-5.9"/></g><line class="dg-accent" x1="309.6" y1="160.0" x2="333.6" y2="160.0"/><polygon class="dg-accent-fill" points="343.6,160.0 332.6,165.0 332.6,155.0"/><text class="dg-text dg-small dg-faint" x="456.0" y="156.0">the screen is back</text><text class="dg-text dg-small dg-faint" x="456.0" y="171.0">to X, Y and Angle</text><circle class="dg-accent-soft" cx="49.0" cy="222.0" r="9"/><text class="dg-text dg-small dg-text-accent" x="49.0" y="225.8" text-anchor="middle">3</text><text class="dg-text dg-small dg-strong" x="64.0" y="226.0">After 1.5 m — stop, the screen shows DONE</text><line class="dg-dash" x1="430.0" y1="256.0" x2="430.0" y2="256.0"/><line class="dg-accent" x1="40.0" y1="256.0" x2="430.0" y2="256.0"/><line class="dg-line" x1="430.0" y1="246.0" x2="430.0" y2="266.0"/><g transform="translate(416.0 256.0) rotate(90)"><rect class="dg-wheel" x="-14.7" y="-5.9" width="3.8" height="11.8" rx="1.1"/><rect class="dg-wheel" x="10.9" y="-5.9" width="3.8" height="11.8" rx="1.1"/><rect class="dg-body" x="-10.9" y="-13.0" width="21.8" height="26.0" rx="3.8"/><polygon class="dg-ink" points="0,-10.5 -2.9,-5.9 2.9,-5.9"/></g><rect class="dg-screen" x="455.0" y="230.0" width="90.8" height="52.4" rx="5.2"/><text class="dg-pixel" x="500.4" y="259.8" font-size="10.8" text-anchor="middle" font-weight="600">DONE</text><line class="dg-line" x1="40.0" y1="280.0" x2="40.0" y2="286.0"/><text class="dg-text dg-small dg-faint" x="40.0" y="300.0" text-anchor="middle">0</text><line class="dg-line" x1="170.0" y1="280.0" x2="170.0" y2="286.0"/><text class="dg-text dg-small dg-faint" x="170.0" y="300.0" text-anchor="middle">50 cm</text><line class="dg-line" x1="300.0" y1="280.0" x2="300.0" y2="286.0"/><text class="dg-text dg-small dg-faint" x="300.0" y="300.0" text-anchor="middle">1 m</text><line class="dg-line" x1="430.0" y1="280.0" x2="430.0" y2="286.0"/><text class="dg-text dg-small dg-faint" x="430.0" y="300.0" text-anchor="middle">1.5 m</text></svg></div>
+                <figcaption>The robot drives forward. A hand closer than 15 cm stops it, and the screen shows Obstacle and the distance in millimetres. Take the hand away and it drives on, with the coordinates back on the screen. After 1.5 m in all it stops and shows DONE.</figcaption>
+                </figure>
+
+                <h2 id="experiments">Try changing it</h2>
+                <ul>
+                    <li>Raise the stopping distance to 300 mm.</li>
+                    <li>Blink the LED while the robot drives: <code>robot.blinkLED(100)</code> starts blinking,
+                        <code>robot.blinkLED(0)</code> stops it.</li>
+                    <li>Go around the obstacle instead of waiting: a 90° turn, an arc, and back on course.</li>
+                    <li>Light the stop with the light ring: <code>module.pixelsAll(255, 0, 0)</code>.</li>
+                </ul>
+
+                <h2 id="problems">If it does not work</h2>
+                <ul>
+                    <li><strong>The sensor always returns 0.</strong> Check that trig goes to P6 and echo to P7. The
+                        DistanceSensors example prints the readings to the Serial Monitor — a handy way to check the
+                        wiring.</li>
+                    <li><strong>The robot ignores the obstacle.</strong> Make sure the condition contains
+                        <code>dist &gt; 0</code> and that the obstacle reflects sound: soft fabric and slanted surfaces return
+                        a poor echo.</li>
+                    <li><strong>Only the last of two commands runs.</strong> Async commands need <code>waitMove()</code>
+                        between them — see <a href="limitations.html#movement">Movement and Commands</a>.</li>
+                    <li><strong>Light ring effects stop the sensor loop.</strong> They block the program for their whole
+                        duration — see <a href="limitations.html#behavior">Behavior and Blocking</a>.</li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script src="nav.js?v=6"></script>
+    <script src="script.js?v=6"></script>
+</body>
+
+</html>

@@ -1,17 +1,20 @@
 <!DOCTYPE html>
-<html lang="ru" data-theme="light">
+<html lang="ru">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Документация библиотеки UNI</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=7">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
+    <link rel="icon" href="logoUni.svg" type="image/svg+xml">
+    <meta name="color-scheme" content="light dark">
+    <script src="boot.js?v=5"></script>
 </head>
 
 <body>
@@ -22,44 +25,21 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Top Header -->
-            <header class="top-header">
-                <button id="mobile-menu-toggle" class="mobile-menu-toggle">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="3" y1="12" x2="21" y2="12"></line>
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
-                </button>
-
-                <div class="search-container">
-                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                    <input type="text" class="search-input" placeholder="Поиск...">
-                </div>
-
-                <button id="theme-toggle" class="theme-toggle" title="Переключить тему">
-                    <!-- Icon injected by JS -->
-                </button>
-            </header>
+            <!-- Header: breadcrumb and page actions, built by script.js -->
+            <header class="top-header"></header>
 
             <!-- Page Content -->
             <div class="page-content">
                 <h1>Библиотека UNI</h1>
-                <p class="lead" style="font-size: 1.25rem; color: var(--text-muted); margin-bottom: 2rem;">
+                <p class="lead">
                     Библиотека Arduino для управления платформами UniBase.
                 </p>
 
                 <div class="flex-gap" style="margin-bottom: 3rem;">
-                    <a href="getting-started_ru.html" class="btn btn-primary">Начало работы</a><br>
-                    <a href="unibase_ru.html" class="btn btn-secondary">API Справочник</a>
+                    <a href="getting-started_ru.html" class="btn btn-primary">Начало работы</a>
+                    <a href="reference_ru.html" class="btn btn-secondary">Справочник UNI.h</a>
                 </div>
-                <h2>Что такое UNI?</h2>
+                <h2 id="what-is-uni">Что такое UNI?</h2>
                 <p>
                     Библиотека UNI разработана для обучения робототехнике и создания проектов на платформе
                     UniBase. Она предоставляет интуитивно понятный C++ API высокого уровня для управления
@@ -70,27 +50,45 @@
                     предоставляет инструменты, чтобы ваш UniBase поехал за считанные минуты.
                 </p>
 
-                <h2>Поддерживаемые платформы</h2>
-                <ul>
-                    <li><strong>ESP32</strong>: Основной контроллер для робота UniBase (управление моторами, датчиками и
-                        дисплеем).</li>
-                </ul>
-
-                <h2>Ключевые особенности</h2>
-                <ul>
-                    <li><strong>Точное управление моторами</strong>: Движение со стабилизацией PID с использованием
-                        энкодеров.</li>
-                    <li><strong>Одометрия</strong>: Отслеживание положения (X, Y) и ориентации (Theta) в реальном
-                        времени.</li>
-                    <li><strong>Интеграция OLED</strong>: Простые методы для отладки и отображения статуса.</li>
-                    <li><strong>Модульность</strong>: Бесшовная интеграция с платами расширения UniDev.</li>
-                </ul>
+                <h2 id="next-steps">Что дальше</h2>
+                <div class="card-grid cols-3">
+                    <a href="getting-started_ru.html" class="nav-card">
+                        <span class="nav-card-icon" data-icon="start"></span>
+                        <span class="nav-card-title">Начало работы</span>
+                        <span class="nav-card-desc">Установите библиотеку и загрузите первый скетч.</span>
+                    </a>
+                    <a href="reference_ru.html" class="nav-card">
+                        <span class="nav-card-icon" data-icon="reference"></span>
+                        <span class="nav-card-title">Справочник UNI.h</span>
+                        <span class="nav-card-desc">Все функции библиотеки на одной странице.</span>
+                    </a>
+                    <a href="tutorial-first-drive_ru.html" class="nav-card">
+                        <span class="nav-card-icon" data-icon="lesson"></span>
+                        <span class="nav-card-title">Уроки</span>
+                        <span class="nav-card-desc">Четыре разбора по шагам: от первого заезда до движения без ожидания.</span>
+                    </a>
+                    <a href="examples_ru.html" class="nav-card">
+                        <span class="nav-card-icon" data-icon="examples"></span>
+                        <span class="nav-card-title">Примеры</span>
+                        <span class="nav-card-desc">Готовые скетчи для типовых задач робота.</span>
+                    </a>
+                    <div class="nav-card is-soon">
+                        <span class="nav-card-icon" data-icon="hardware"></span>
+                        <span class="nav-card-title">Hardware <span class="soon-badge">скоро</span></span>
+                        <span class="nav-card-desc">Платформа UniBase, насадки, своя насадка и протокол соединения.</span>
+                    </div>
+                    <a href="faq_ru.html" class="nav-card">
+                        <span class="nav-card-icon" data-icon="faq"></span>
+                        <span class="nav-card-title">FAQ</span>
+                        <span class="nav-card-desc">Частые проблемы с загрузкой, движением и датчиками.</span>
+                    </a>
+                </div>
             </div>
         </main>
     </div>
 
-    <script src="nav.js"></script>
-    <script src="script.js"></script>
+    <script src="nav.js?v=6"></script>
+    <script src="script.js?v=6"></script>
 </body>
 
 </html>

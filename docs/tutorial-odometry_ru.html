@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Урок 2. Повороты и езда по точкам - Библиотека UNI</title>
+    <link rel="stylesheet" href="styles.css?v=7">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="icon" href="logoUni.svg" type="image/svg+xml">
+    <meta name="color-scheme" content="light dark">
+    <script src="boot.js?v=5"></script>
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar"></aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header: breadcrumb and page actions, built by script.js -->
+            <header class="top-header"></header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <h1>Повороты и езда по точкам</h1>
+                <p class="lead">Робот постоянно считает, где он находится. В этом уроке вы научитесь этим пользоваться:
+                    поворачивать к точному курсу и ездить по координатам.</p>
+
+                <h2 id="how">Как робот знает, где он</h2>
+                <p>По энкодерам колёс робот всё время пересчитывает три числа — они же показаны на экране: <code>X</code>,
+                    <code>Y</code> в миллиметрах и <code>Angle</code> в градусах. Это называется одометрией.</p>
+                <figure class="figure">
+                <svg viewBox="0 0 330 244" role="img" aria-label="Система координат робота: ось X вперёд, ось Y вправо, положительный угол по часовой стрелке" style="max-width: 440px"><g transform="translate(150.0 160.0) rotate(0)"><rect class="dg-wheel" x="-35.0" y="-14.0" width="9.0" height="28.0" rx="2.5"/><rect class="dg-wheel" x="26.0" y="-14.0" width="9.0" height="28.0" rx="2.5"/><rect class="dg-body" x="-26.0" y="-31.0" width="52.0" height="62.0" rx="9.0"/><polygon class="dg-ink" points="0,-25.0 -7.0,-14.0 7.0,-14.0"/></g><line class="dg-accent" x1="150.0" y1="160.0" x2="150.0" y2="42.0"/><polygon class="dg-accent-fill" points="150.0,32.0 155.0,43.0 145.0,43.0"/><line class="dg-accent" x1="150.0" y1="160.0" x2="302.0" y2="160.0"/><polygon class="dg-accent-fill" points="312.0,160.0 301.0,165.0 301.0,155.0"/><path class="dg-accent" d="M150.0 94.0 A66 66 0 0 1 207.8 126.9"/><polygon class="dg-accent-fill" points="211.2,135.3 202.4,126.9 211.7,123.2"/><circle class="dg-accent-fill" cx="150.0" cy="160.0" r="3.5"/><text class="dg-text dg-strong" x="162.0" y="40.0">+X</text><text class="dg-text dg-small dg-faint" x="162.0" y="55.0">вперёд</text><text class="dg-text dg-strong" x="312.0" y="148.0" text-anchor="end">+Y</text><text class="dg-text dg-small dg-faint" x="312.0" y="180.0" text-anchor="end">вправо</text><text class="dg-text dg-text-accent" x="219.2" y="119.3">+угол</text><text class="dg-text dg-small dg-faint" x="150.0" y="232.0" text-anchor="middle">старт: X = 0, Y = 0, угол = 0°</text></svg>
+                <figcaption>Ось X направлена вперёд от стартового положения, ось Y — вправо. Положительный угол — поворот направо.</figcaption>
+                </figure>
+                <ul>
+                    <li>При включении робот считает, что стоит в точке (0, 0) и смотрит вдоль оси X.</li>
+                    <li>Текущие значения возвращают <code>getAbsX()</code>, <code>getAbsY()</code> и
+                        <code>getAbsAngle()</code>, а все три сразу — <code>getOdometry()</code>.</li>
+                </ul>
+
+                <h2 id="steps">Шаги</h2>
+                <ol class="steps">
+                    <li>
+                        <h3>Сравните два поворота</h3>
+                <pre><code>robot.rotate(50, 90);     // ещё на 90 градусов вправо от того, как робот стоит сейчас
+robot.rotateTo(50, 90);   // встать на курс 90 градусов, как бы он ни стоял сейчас</code></pre>
+                        <p><code>rotate()</code> поворачивает <em>на</em> угол, отсчитанный от цели предыдущего манёвра, поэтому в
+                            серии манёвров ошибки не копятся. <code>rotateTo()</code> поворачивает <em>к</em> курсу
+                            одометрии и не зависит от того, что было раньше: годится и после <code>motors()</code>,
+                            <code>stop()</code> или толчка.</p>
+                    </li>
+                    <li>
+                        <h3>Проедьте квадрат на абсолютных курсах</h3>
+                <pre><code>robot.setPosition(0, 0, 0);
+for (int i = 0; i &lt; 4; i++) {
+  robot.moveDist(50, 300);
+  robot.rotateTo(50, (i + 1) * 90);   // курсы 90, 180, 270, 360
+}
+robot.displayPrint("Angle", robot.getAngle());</code></pre>
+                        <p>В конце на экране появится накопленный угол. Чем он ближе к 360, тем точнее робот вернулся
+                            к исходному направлению.</p>
+                    </li>
+                    <li>
+                        <h3>Привяжите координаты к полю</h3>
+                <pre><code>robot.setPosition(0, 0, 0);   // x, y в миллиметрах и курс в градусах</code></pre>
+                        <p><code>setPosition()</code> сообщает роботу, где он стоит. Можно задать настоящие координаты
+                            стартовой клетки — например, <code>robot.setPosition(150, 150, 90)</code>.</p>
+                    </li>
+                    <li>
+                        <h3>Задайте маршрут точками</h3>
+                <pre><code>const float route[][2] = {
+  {400, 0},
+  {400, 400},
+  {0, 400},
+  {0, 0},
+};
+
+void setup() {
+  robot.begin();
+  robot.setPosition(0, 0, 0);
+
+  for (int i = 0; i &lt; 4; i++) {
+    robot.moveTo(50, route[i][0], route[i][1]);
+    delay(300);
+  }
+  robot.rotateTo(50, 0);   // в конце вернуть исходный курс
+}</code></pre>
+                <figure class="figure">
+                <svg viewBox="0 0 350 270" role="img" aria-label="Маршрут по четырём точкам в координатах робота" style="max-width: 420px"><line class="dg-line" x1="96.0" y1="248.0" x2="96.0" y2="38.0"/><polygon class="dg-ink" points="96.0,30.0 100.0,39.0 92.0,39.0"/><line class="dg-line" x1="74.0" y1="226.0" x2="310.0" y2="226.0"/><polygon class="dg-ink" points="318.0,226.0 309.0,230.0 309.0,222.0"/><text class="dg-text dg-strong" x="86.0" y="36.0" text-anchor="end">X</text><text class="dg-text dg-strong" x="318.0" y="244.0" text-anchor="end">Y</text><g transform="translate(96.0 226.0) rotate(0)"><rect class="dg-wheel" x="-17.5" y="-7.0" width="4.5" height="14.0" rx="1.2"/><rect class="dg-wheel" x="13.0" y="-7.0" width="4.5" height="14.0" rx="1.2"/><rect class="dg-body" x="-13.0" y="-15.5" width="26.0" height="31.0" rx="4.5"/><polygon class="dg-ink" points="0,-12.5 -3.5,-7.0 3.5,-7.0"/></g><line class="dg-accent" x1="96.0" y1="202.0" x2="96.0" y2="102.0"/><polygon class="dg-accent-fill" points="96.0,92.0 101.0,103.0 91.0,103.0"/><circle class="dg-accent-soft" cx="80.0" cy="154.0" r="10"/><text class="dg-text dg-small dg-text-accent" x="80.0" y="158.0" text-anchor="middle">1</text><line class="dg-accent" x1="106.0" y1="82.0" x2="220.0" y2="82.0"/><polygon class="dg-accent-fill" points="230.0,82.0 219.0,87.0 219.0,77.0"/><circle class="dg-accent-soft" cx="168.0" cy="66.0" r="10"/><text class="dg-text dg-small dg-text-accent" x="168.0" y="70.0" text-anchor="middle">2</text><line class="dg-accent" x1="240.0" y1="92.0" x2="240.0" y2="206.0"/><polygon class="dg-accent-fill" points="240.0,216.0 235.0,205.0 245.0,205.0"/><circle class="dg-accent-soft" cx="256.0" cy="154.0" r="10"/><text class="dg-text dg-small dg-text-accent" x="256.0" y="158.0" text-anchor="middle">3</text><line class="dg-accent" x1="230.0" y1="226.0" x2="130.0" y2="226.0"/><polygon class="dg-accent-fill" points="120.0,226.0 131.0,221.0 131.0,231.0"/><circle class="dg-accent-soft" cx="168.0" cy="242.0" r="10"/><text class="dg-text dg-small dg-text-accent" x="168.0" y="246.0" text-anchor="middle">4</text><circle class="dg-accent-fill" cx="96.0" cy="82.0" r="4"/><circle class="dg-accent-fill" cx="240.0" cy="82.0" r="4"/><circle class="dg-accent-fill" cx="240.0" cy="226.0" r="4"/><text class="dg-text dg-small dg-mono" x="70.0" y="260.0" text-anchor="end">(0, 0)</text><text class="dg-text dg-small dg-mono" x="84.0" y="74.0" text-anchor="end">(400, 0)</text><text class="dg-text dg-small dg-mono" x="252.0" y="74.0">(400, 400)</text><text class="dg-text dg-small dg-mono" x="252.0" y="246.0">(0, 400)</text></svg>
+                <figcaption>Маршрут из четырёх точек. Команда moveTo() сама доворачивает робота на цель и ведёт его к ней по прямой.</figcaption>
+                </figure>
+                    </li>
+                    <li>
+                        <h3>Следите за позицией с компьютера</h3>
+                <pre><code>void loop() {
+  robot.printOdometry();
+  delay(1000);
+}</code></pre>
+                        <p>Откройте Монитор порта на скорости 115200 бод. Раз в секунду там появится строка с тиками
+                            энкодеров, координатами и курсом.</p>
+                    </li>
+                </ol>
+                <p>Готовые скетчи: <span class="menu-path">Файл › Примеры › UNI › PrecisionTurns</span> и
+                    <span class="menu-path">DriveToPoint</span>. Тексты — на странице
+                    <a href="examples_ru.html#precision-turns">«Примеры»</a>.</p>
+
+                <h2 id="result">Что должно получиться</h2>
+                <figure class="figure">
+                <div class="figure-scroll"><svg viewBox="0 0 560 338" role="img" aria-label="Робот объезжает четыре точки, возвращается в (0, 0) и доворачивает в исходную сторону; Монитор порта печатает координаты" style="max-width: 672px"><polyline class="dg-accent" points="118.0,186.0 118.0,42.0 262.0,42.0 262.0,186.0 118.0,186.0"/><polygon class="dg-accent-fill" points="118.0,109.0 122.5,119.0 113.5,119.0"/><polygon class="dg-accent-fill" points="195.0,42.0 185.0,46.5 185.0,37.5"/><polygon class="dg-accent-fill" points="262.0,119.0 257.5,109.0 266.5,109.0"/><polygon class="dg-accent-fill" points="185.0,186.0 195.0,181.5 195.0,190.5"/><path class="dg-accent" d="M105.7 50.6 A15.0 15.0 0 0 1 119.2 27.0"/><polygon class="dg-accent-fill" points="126.6,29.7 117.9,28.2 122.2,22.0"/><path class="dg-accent" d="M253.4 29.7 A15.0 15.0 0 0 1 277.0 43.2"/><polygon class="dg-accent-fill" points="274.3,50.6 275.8,41.9 282.0,46.2"/><path class="dg-accent" d="M274.3 177.4 A15.0 15.0 0 0 1 260.8 201.0"/><polygon class="dg-accent-fill" points="253.4,198.3 262.1,199.8 257.8,206.0"/><path class="dg-accent" d="M115.1 218.9 A33.0 33.0 0 0 1 87.2 174.1"/><polygon class="dg-accent-fill" points="91.0,167.1 89.5,175.8 83.3,171.4"/><circle class="dg-accent-fill" cx="118.0" cy="42.0" r="3.5"/><circle class="dg-accent-fill" cx="262.0" cy="42.0" r="3.5"/><circle class="dg-accent-fill" cx="262.0" cy="186.0" r="3.5"/><g transform="translate(118.0 186.0) rotate(0)"><rect class="dg-wheel" x="-21.0" y="-8.4" width="5.4" height="16.8" rx="1.5"/><rect class="dg-wheel" x="15.6" y="-8.4" width="5.4" height="16.8" rx="1.5"/><rect class="dg-body" x="-15.6" y="-18.6" width="31.2" height="37.2" rx="5.4"/><polygon class="dg-ink" points="0,-15.0 -4.2,-8.4 4.2,-8.4"/></g><text class="dg-text dg-small dg-mono" x="96.0" y="30.0" text-anchor="end">(400, 0)</text><text class="dg-text dg-small dg-mono" x="284.0" y="30.0">(400, 400)</text><text class="dg-text dg-small dg-mono" x="284.0" y="208.0">(0, 400)</text><text class="dg-text dg-small dg-mono" x="78.0" y="220.0" text-anchor="end">(0, 0)</text><text class="dg-text dg-small dg-faint" x="118.0" y="238.0" text-anchor="middle">старт и финиш</text><text class="dg-text dg-small dg-mono dg-text-accent" x="76.0" y="184.0" text-anchor="end">rotateTo(50, 0)</text><path class="dg-accent" d="M336.6 65.2 A9.0 9.0 0 0 1 341.5 51.3"/><polygon class="dg-accent-fill" points="349.2,52.6 340.4,51.2 344.8,44.9"/><text class="dg-text dg-small" x="366.0" y="58.0">в каждой точке —</text><text class="dg-text dg-small" x="366.0" y="73.0">доворот на месте</text><circle class="dg-accent-fill" cx="344.0" cy="108.0" r="3.5"/><text class="dg-text dg-small" x="366.0" y="112.0">пауза 0,3 с</text><text class="dg-text dg-small dg-mono dg-text-accent" x="344.0" y="150.0">rotateTo(50, 0)</text><text class="dg-text dg-small" x="344.0" y="166.0">в конце: нос туда же,</text><text class="dg-text dg-small" x="344.0" y="181.0">куда на старте</text><rect class="dg-box" x="20" y="258.0" width="520" height="70" rx="8"/><text class="dg-text dg-small dg-faint" x="32.0" y="276.0">Монитор порта, 115200 бод — после финиша раз в секунду</text><text class="dg-text dg-small dg-mono dg-strong" x="32" y="296.0" style="white-space: pre">encL: 9433   encR: 6185   X: 1.84   Y: -2.31   Theta: 0.62</text><text class="dg-text dg-small dg-mono" x="32" y="312.0" style="white-space: pre">encL: 9433   encR: 6185   X: 1.84   Y: -2.31   Theta: 0.62</text></svg></div>
+                <figcaption>Робот объезжает четыре точки: в каждой стоит 0,3 с и доворачивает на месте к следующей, а в (0, 0) команда rotateTo ставит его носом туда же, куда он смотрел на старте. Строки в Мониторе порта появляются, когда маршрут уже пройден: loop() начинает работать только после setup().</figcaption>
+                </figure>
+
+                <h2 id="experiments">Попробуйте изменить</h2>
+                <ul>
+                    <li>Задайте точками треугольник или букву «П».</li>
+                    <li>Запустите пример PrecisionTurns: он проезжает квадрат сначала на <code>rotate()</code>, потом на
+                        <code>rotateTo()</code> и показывает угол после каждого заезда. Сравните два числа.</li>
+                    <li>Удлините маршрут до десяти точек и посмотрите, как растёт ошибка возврата.</li>
+                </ul>
+
+                <h2 id="problems">Если не получается</h2>
+                <ul>
+                    <li><strong>Робот поехал не в ту сторону.</strong> Сверьтесь с рисунком осей: +Y — это вправо. Проверьте
+                        порядок аргументов: <code>moveTo(мощность, x, y)</code>.</li>
+                    <li><strong>Робот возвращается не точно на старт.</strong> Ошибка одометрии растёт с пробегом
+                        и с проскальзыванием колёс. Почему так, объяснено в разделе
+                        <a href="limitations_ru.html#accuracy">«Точность и одометрия»</a>.</li>
+                    <li><strong>После <code>resetAngle()</code> координаты не обнулились.</strong> <code>resetDistance()</code>
+                        и <code>resetAngle()</code> сбрасывают только счётчики пути и угла. Положение задаёт
+                        <code>setPosition()</code>.</li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script src="nav.js?v=6"></script>
+    <script src="script.js?v=6"></script>
+</body>
+
+</html>

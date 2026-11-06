@@ -1,17 +1,20 @@
 <!DOCTYPE html>
-<html lang="ru" data-theme="light">
+<html lang="ru">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Справочник UniDev - Библиотека UNI</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=7">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
+    <link rel="icon" href="logoUni.svg" type="image/svg+xml">
+    <meta name="color-scheme" content="light dark">
+    <script src="boot.js?v=5"></script>
 </head>
 
 <body>
@@ -22,27 +25,8 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Top Header -->
-            <header class="top-header">
-                <button id="mobile-menu-toggle" class="mobile-menu-toggle">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="3" y1="12" x2="21" y2="12"></line>
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
-                </button>
-                <div class="search-container">
-                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                    <input type="text" class="search-input" placeholder="Поиск...">
-                </div>
-                <button id="theme-toggle" class="theme-toggle" title="Переключить тему"></button>
-            </header>
+            <!-- Header: breadcrumb and page actions, built by script.js -->
+            <header class="top-header"></header>
 
             <!-- Page Content -->
             <div class="page-content">
@@ -54,6 +38,7 @@
                 <p>Значки у каждого порта показывают доступные возможности: аналоговый вход
                     (<strong>ADC</strong>), цифровой ввод/вывод (<strong>DIG</strong>) и сервопривод/ШИМ
                     (<strong>PWM</strong>). Ниже — назначение по умолчанию.</p>
+                <p>Номера GPIO ниже — для платы V1.</p>
                 <div class="port-list">
                     <div class="port-item">
                         <div class="port-head">
@@ -179,8 +164,8 @@
                     </div>
                     <div class="api-details">
                         <p>Инициализирует экземпляр UniDev, создавая объект NeoPixel и настраивая режимы пинов. Эту
-                            функцию вызывать не обязательно, так как она вызывается автоматически при создании объекта
-                            UniDev. </p>
+                            функцию вызывать не обязательно: она выполняется автоматически при первом вызове любой функции
+                            UniDev и в <code>robot.begin()</code>.</p>
                         <h4>Пример</h4>
                         <pre><code>UniDev module;
 void setup() {
@@ -493,7 +478,7 @@ module.pixel(0, 0, 0, 255);</code></pre>
                         <p>Устанавливает глобальное масштабирование яркости.</p>
                         <h4>Параметры</h4>
                         <ul>
-                            <li><code>brightness</code>: от 0 до 100.</li>
+                            <li><code>brightness</code>: от 0 до 255; при запуске установлено 100.</li>
                         </ul>
                         <h4>Пример</h4>
                         <pre><code>module.pixelsBrightness(50); // Приглушить светодиоды</code></pre>
@@ -643,8 +628,8 @@ module.pixelsRotating(255, 0, 0, 2000, 5, 3);</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Анимация спиннера, зажигающая по одному пикселю, пока кольцо не заполнится, затем
-                            перезапускается.
+                        <p>Один горящий пиксель пробегает кольцо один раз — тот же эффект, что и
+                            <code>pixelsRunning()</code>.
                         </p>
                         <h4>Параметры</h4>
                         <ul>
@@ -689,9 +674,7 @@ module.pixelsRotating(255, 0, 0, 2000, 5, 3);</code></pre>
                         <span class="expand-icon">▼</span>
                     </div>
                     <div class="api-details">
-                        <p>Запускает стандартную последовательность светофора (Зеленый -> Желтый -> Красный -> Желтый ->
-                            Зеленый).
-                        </p>
+                        <p>Запускает последовательность светофора: красный, жёлтый, зелёный — по одной секунде на каждый сигнал, затем гасит все. Блокирует программу на три секунды.</p>
                         <h4>Пример</h4>
                         <pre><code>module.trafficLightSequence();</code></pre>
                     </div>
@@ -701,8 +684,8 @@ module.pixelsRotating(255, 0, 0, 2000, 5, 3);</code></pre>
         </main>
     </div>
 
-    <script src="nav.js"></script>
-    <script src="script.js"></script>
+    <script src="nav.js?v=6"></script>
+    <script src="script.js?v=6"></script>
 </body>
 
 </html>

@@ -4,7 +4,7 @@ bool UniDev::_initialized = false;
 Adafruit_NeoPixel* UniDev::_staticNeoPixels = nullptr;
 uint8_t UniDev::_pinModes[40] = {0};
 int8_t UniDev::_servoChannels[40] = {-1}; // Initializes first element, others 0
-uint8_t UniDev::_nextFreeChannel = 4; // 0-3 reserved for UniMotors
+uint8_t UniDev::_nextFreeChannel = 0; // 12-15 are taken by UniMotors (analogWrite)
 
 UniDev::UniDev() {}
 
@@ -55,6 +55,8 @@ void UniDev::ensurePinMode(uint8_t pin, uint8_t mode) {
 
 int UniDev::ultraSonic(int trig, int echo) {
   ensureInitialized();
+  trig = UniBoard::gpio(trig);
+  echo = UniBoard::gpio(echo);
   ensurePinMode(trig, OUTPUT);
   ensurePinMode(echo, INPUT);
   
@@ -86,7 +88,8 @@ int UniDev::ultraSonic(int trig, int echo) {
 }
 
 // На ESP32 АЦП имеют только пины ADC1 (32-39) и ADC2 (0,2,4,12-15,25-27).
-// GPIO 16/17 (порты P5/P6) к АЦП не подключены - analogRead вернет мусор.
+// GPIO 16/17 (порты P5/P6 платы V1) к АЦП не подключены - analogRead вернет мусор.
+// На плате V2 АЦП есть на всех портах P1-P8.
 static bool isAdcCapable(int pin) {
   if (pin >= 32 && pin <= 39) return true; // ADC1
   switch (pin) {                            // ADC2
@@ -102,11 +105,13 @@ static bool isAdcCapable(int pin) {
 static void warnNoAdc(int port) {
   Serial.print(F("[UniDev] WARNING: GPIO "));
   Serial.print(port);
-  Serial.println(F(" has no ADC - analog read will be invalid. Use P1-P4 or P7."));
+  Serial.print(F(" has no ADC - analog read will be invalid. Use "));
+  Serial.println(strcmp(UniBoard::name(), "V2") == 0 ? F("P1-P8.") : F("P1-P4 or P7."));
 }
 
 int UniDev::lineSensor(int port) {
   ensureInitialized();
+  port = UniBoard::gpio(port);
   ensurePinMode(port, INPUT);
 
   if (!isAdcCapable(port)) warnNoAdc(port);
@@ -115,6 +120,7 @@ int UniDev::lineSensor(int port) {
 
 int UniDev::digitalSensor(int port) {
   ensureInitialized();
+  port = UniBoard::gpio(port);
   ensurePinMode(port, INPUT);
 
   return digitalRead(port);
@@ -122,6 +128,7 @@ int UniDev::digitalSensor(int port) {
 
 int UniDev::analogSensor(int port) {
   ensureInitialized();
+  port = UniBoard::gpio(port);
   ensurePinMode(port, INPUT);
 
   if (!isAdcCapable(port)) warnNoAdc(port);
@@ -129,6 +136,7 @@ int UniDev::analogSensor(int port) {
 }
 
 int UniDev::getPinMode(uint8_t pin) {
+  pin = UniBoard::gpio(pin);
   if (pin >= 40) return -1;
   
   return _pinModes[pin];
@@ -138,6 +146,7 @@ int UniDev::getPinMode(uint8_t pin) {
 
 void UniDev::waitButton(int port) {
   ensureInitialized();
+  port = UniBoard::gpio(port);
   ensurePinMode(port, INPUT_PULLUP);
   
   #ifdef DEBUG_MODE
@@ -159,6 +168,7 @@ void UniDev::waitButton(int port) {
 
 bool UniDev::getButtonState(int port) {
   ensureInitialized();
+  port = UniBoard::gpio(port);
   ensurePinMode(port, INPUT_PULLUP);
   return !digitalRead(port);
 }
@@ -167,13 +177,14 @@ bool UniDev::getButtonState(int port) {
 
 void UniDev::servoAttach(int port) {
   ensureInitialized();
+  port = UniBoard::gpio(port);
   if (port < 0 || port >= 40) return;
   ensurePinMode(port, OUTPUT);
 
   // Закрепляем за портом LEDC-канал один раз. servoDetach канал не
   // освобождает, поэтому циклы attach/detach каналы не расходуют
   if (_servoChannels[port] == -1) {
-    if (_nextFreeChannel > 15) return; // ESP32 has max 16 channels (0-15)
+    if (_nextFreeChannel > 11) return; // 16 channels (0-15), the top 4 belong to UniMotors
     _servoChannels[port] = _nextFreeChannel++;
 #if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
     ledcAttach(port, 50, 14); // 50 Hz, 14-bit resolution
@@ -185,6 +196,7 @@ void UniDev::servoAttach(int port) {
 }
 
 void UniDev::servo(int port, int angle) {
+  port = UniBoard::gpio(port);
   servoAttach(port);
   if (port < 0 || port >= 40 || _servoChannels[port] == -1) return;
 
@@ -206,6 +218,7 @@ void UniDev::servo(int port, int angle) {
 
 void UniDev::servoDetach(int port) {
   ensureInitialized();
+  port = UniBoard::gpio(port);
   if (port < 0 || port >= 40) return;
   if (_servoChannels[port] == -1) return; // не был подключен
 

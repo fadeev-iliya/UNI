@@ -5,13 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Примеры - Библиотека UNI</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=7">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
+    <link rel="icon" href="logoUni.svg" type="image/svg+xml">
+    <meta name="color-scheme" content="light dark">
+    <script src="boot.js?v=5"></script>
 </head>
 
 <body>
@@ -21,34 +24,15 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Top Header -->
-            <header class="top-header">
-                <button id="mobile-menu-toggle" class="mobile-menu-toggle">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="3" y1="12" x2="21" y2="12"></line>
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
-                </button>
-                <div class="search-container">
-                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                    <input type="text" class="search-input" placeholder="Поиск...">
-                </div>
-                <button id="theme-toggle" class="theme-toggle" title="Переключить тему"></button>
-            </header>
+            <!-- Header: breadcrumb and page actions, built by script.js -->
+            <header class="top-header"></header>
 
             <!-- Page Content -->
             <div class="page-content">
                 <h1>Примеры</h1>
                 <p class="lead">Все примеры из папки <code>UNI/examples/</code> библиотеки. Открывайте их через <strong>Файл → Примеры → UNI</strong> в Arduino IDE.</p>
 
-                <h2>Основы</h2>
+                <h2 id="basics">Основы</h2>
 
                 <div class="api-card static" id="start">
                     <h3>Start — минимальная программа</h3>
@@ -71,36 +55,11 @@ void loop() {
 }</code></pre>
                 </div>
 
-                <div class="api-card static" id="basic-movement">
-                    <h3>BasicMovement — базовые движения</h3>
-                    <p>Робот проезжает квадрат со стороной 300 мм: четыре прямых участка и четыре поворота на 90°. Все команды блокирующие.</p>
-                    <pre><code>#include &lt;UNI.h&gt;
-
-UniBase robot("UNI");
-
-void setup() {
-  robot.begin();
-
-  for (int i = 0; i &lt; 4; i++) {
-    robot.moveDist(50, 300); // вперед 300 мм на мощности 50
-    robot.rotate(50, 90);    // поворот направо на 90 градусов
-  }
-
-  // Дополнительно: движение назад и по времени
-  robot.moveDist(-50, 200);  // назад 200 мм
-  robot.moveTime(40, 1000);  // вперед 1 секунду
-  robot.moveTime(-40, 1000); // назад 1 секунду
-}
-
-void loop() {
-}</code></pre>
-                </div>
-
-                <h2>Движение</h2>
+                <h2 id="movement">Движение</h2>
 
                 <div class="api-card static" id="precision-turns">
                     <h3>PrecisionTurns — точные повороты</h3>
-                    <p><code>rotate()</code> поворачивает на угол относительно текущего — ошибки накапливаются. <code>rotateTo()</code> поворачивает к абсолютному курсу одометрии — ошибка предыдущих манёвров съедается.</p>
+                    <p><code>rotate()</code> поворачивает на угол, отсчитанный от цели предыдущего манёвра, поэтому ошибки отдельных поворотов не складываются. <code>rotateTo()</code> поворачивает к абсолютному курсу одометрии и годится даже после ручного управления или толчка. <a href="tutorial-odometry_ru.html">Разбор по шагам — в уроке 2.</a></p>
                     <pre><code>#include &lt;UNI.h&gt;
 
 UniBase robot("UNI");
@@ -173,7 +132,7 @@ void loop() {
 
                 <div class="api-card static" id="arcs">
                     <h3>Arcs — дуги</h3>
-                    <p><code>moveArcDist()</code> — дуга через соотношение скоростей колёс. <code>moveArcRadius()</code> — дуга с настоящей геометрией: радиус и угол сектора.</p>
+                    <p><code>moveArcDist()</code> — дуга через соотношение скоростей колёс. <code>moveArcRadius()</code> — дуга с настоящей геометрией: радиус и угол сектора. <a href="tutorial-arcs_ru.html">Разбор по шагам — в уроке 3.</a></p>
                     <pre><code>#include &lt;UNI.h&gt;
 
 UniBase robot("UNI");
@@ -208,7 +167,7 @@ void loop() {
 
                 <div class="api-card static" id="async">
                     <h3>AsyncMovement — асинхронные команды</h3>
-                    <p>Команды с суффиксом <code>Async</code> запускают движение и сразу возвращают управление. <code>isMoving()</code> — проверить, едет ли робот. <code>waitMove(timeout)</code> — ждать с защитой от застревания.</p>
+                    <p>Команды с суффиксом <code>Async</code> запускают движение и сразу возвращают управление. <code>isMoving()</code> — проверить, едет ли робот. <code>waitMove(timeout)</code> — ждать с защитой от застревания. <a href="tutorial-async_ru.html">Разбор по шагам — в уроке 4.</a></p>
                     <pre><code>#include &lt;UNI.h&gt;
 
 UniBase robot("UNI");
@@ -235,7 +194,7 @@ void setup() {
 
   // 3. Ожидание с таймаутом — страховка от застревания
   robot.moveDistAsync(50, 800);
-  if (!robot.waitMove(5000)) {  // не доехал за 5 секунд?
+  if (!robot.waitMove(8000)) {  // не доехал за 8 секунд?
     robot.stop(HARD);
     robot.displayPrint("STUCK!");
     return;
@@ -303,7 +262,7 @@ void loop() {
 }</code></pre>
                 </div>
 
-                <h2>Датчики</h2>
+                <h2 id="sensors">Датчики</h2>
 
                 <div class="api-card static" id="obstacle-stop">
                     <h3>ObstacleStop — реакция на препятствие</h3>
@@ -315,6 +274,7 @@ UniDev module;
 
 const int OBSTACLE_MM = 150;   // дистанция остановки
 const int TARGET_MM   = 1500;  // сколько всего проехать
+const int FINISH_MM   = 5;     // ближе этого к цели — доехали
 
 void setup() {
   robot.begin();
@@ -322,9 +282,13 @@ void setup() {
 }
 
 void loop() {
-  // Цель достигнута — стоим
-  if (robot.getDistance() &gt;= TARGET_MM) {
+  // Цель достигнута — стоим. Движение завершается с небольшим остатком
+  // до цели, поэтому сравниваем его с запасом, а не с нулём:
+  // иначе робот бесконечно «доезжал» бы последний миллиметр
+  int remaining = TARGET_MM - (int)robot.getDistance();
+  if (remaining &lt;= FINISH_MM) {
     robot.displayPrint("DONE");
+    delay(500);
     return;
   }
 
@@ -339,7 +303,6 @@ void loop() {
   } else {
     if (!robot.isMoving()) {
       // Едем остаток пути асинхронно, продолжая опрашивать датчик
-      int remaining = TARGET_MM - (int)robot.getDistance();
       robot.moveDistAsync(50, remaining);
       robot.displayClear();
     }
@@ -437,47 +400,12 @@ void loop() {
 }</code></pre>
                 </div>
 
-                <h2>Настройка</h2>
-
-                <div class="api-card static" id="tuning">
-                    <h3>Tuning — настройка точности движения</h3>
-                    <p>Все параметры ПИД-регуляторов собраны в <code>TuningConfig</code>. Геометрия платформы задаётся в <code>UniConfig</code> и передаётся в конструктор.</p>
-                    <pre><code>#include &lt;UNI.h&gt;
-
-UniConfig cfg;          // значения по умолчанию
-// cfg.trackLengthMM = 106.0f; // при необходимости меняется до создания робота
-
-UniBase robot("UNI", cfg);
-
-void setup() {
-  robot.begin();
-
-  // Берём текущие настройки, меняем нужное и применяем
-  TuningConfig tuning = robot.getTuning();
-  tuning.rotateTolDeg = 0.5f;    // точнее повороты
-  tuning.moveAccel    = 1500.0f; // мягче торможение на прямой
-  robot.setTuning(tuning);
-
-  // Тестовый заезд с новыми настройками
-  robot.moveDist(70, 500);
-  robot.rotate(70, 180);
-  robot.moveDist(70, 500);
-  robot.rotate(70, 180);
-
-  // По одометрии видно качество возврата в исходную точку
-  robot.displayPrint("X err", robot.getAbsX());
-}
-
-void loop() {
-}</code></pre>
-                </div>
-
-                <h2>UniBaseControl — управление по UART</h2>
-                <p>Примеры из папки <code>UniBaseControl/examples/</code>. Прошивка ESP32 — <strong>UniBaseControl_Start</strong>; программа для Arduino Nano — <strong>Start</strong> или <strong>BasicMovement</strong>.</p>
+                <h2 id="unibasecontrol">UniBaseControl — управление по UART</h2>
+                <p>Прошивка ESP32 — <strong>UniBaseControl_Start</strong> из этой библиотеки. Программы для Arduino Nano — <strong>Start</strong> и <strong>BasicMovement</strong> — это примеры отдельной библиотеки UniBaseControl для Nano.</p>
 
                 <div class="api-card static" id="uart-control">
                     <h3>UniBaseControl_Start — сторона ESP32</h3>
-                    <p>Превращает платформу в исполнителя UART-команд. Загружается в ESP32. Подключение: UART2 (RX 16, TX 17, 38400 бод) к TX/RX платы Nano.</p>
+                    <p>Превращает платформу в исполнителя UART-команд. Загружается в ESP32. Подключение: UART2 на 38400 бод к TX/RX платы Nano. RX платформы — порт P6, TX — порт P5 (GPIO 16/17 на плате V1, GPIO 14/27 на плате V2).</p>
                     <pre><code>#include &lt;UNI.h&gt;
 
 UniBase robot;
@@ -533,8 +461,8 @@ void loop() {
 
             </div>
         </main>
-        <script src="nav.js"></script>
-    <script src="script.js"></script>
+        <script src="nav.js?v=6"></script>
+    <script src="script.js?v=6"></script>
 </body>
 
 </html>

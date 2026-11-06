@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 2. Turns and waypoints - UNI Library</title>
+    <link rel="stylesheet" href="styles.css?v=7">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="icon" href="logoUni.svg" type="image/svg+xml">
+    <meta name="color-scheme" content="light dark">
+    <script src="boot.js?v=5"></script>
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar"></aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header: breadcrumb and page actions, built by script.js -->
+            <header class="top-header"></header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <h1>Turns and waypoints</h1>
+                <p class="lead">The robot keeps track of where it is at all times. In this lesson you learn to use that: turn
+                    to an exact heading and drive by coordinates.</p>
+
+                <h2 id="how">How the robot knows where it is</h2>
+                <p>From the wheel encoders the robot keeps recomputing three numbers — the same ones shown on the screen:
+                    <code>X</code> and <code>Y</code> in millimetres and <code>Angle</code> in degrees. This is called
+                    odometry.</p>
+                <figure class="figure">
+                <svg viewBox="0 0 330 244" role="img" aria-label="Robot coordinate system: X axis forward, Y axis to the right, positive angle clockwise" style="max-width: 440px"><g transform="translate(150.0 160.0) rotate(0)"><rect class="dg-wheel" x="-35.0" y="-14.0" width="9.0" height="28.0" rx="2.5"/><rect class="dg-wheel" x="26.0" y="-14.0" width="9.0" height="28.0" rx="2.5"/><rect class="dg-body" x="-26.0" y="-31.0" width="52.0" height="62.0" rx="9.0"/><polygon class="dg-ink" points="0,-25.0 -7.0,-14.0 7.0,-14.0"/></g><line class="dg-accent" x1="150.0" y1="160.0" x2="150.0" y2="42.0"/><polygon class="dg-accent-fill" points="150.0,32.0 155.0,43.0 145.0,43.0"/><line class="dg-accent" x1="150.0" y1="160.0" x2="302.0" y2="160.0"/><polygon class="dg-accent-fill" points="312.0,160.0 301.0,165.0 301.0,155.0"/><path class="dg-accent" d="M150.0 94.0 A66 66 0 0 1 207.8 126.9"/><polygon class="dg-accent-fill" points="211.2,135.3 202.4,126.9 211.7,123.2"/><circle class="dg-accent-fill" cx="150.0" cy="160.0" r="3.5"/><text class="dg-text dg-strong" x="162.0" y="40.0">+X</text><text class="dg-text dg-small dg-faint" x="162.0" y="55.0">forward</text><text class="dg-text dg-strong" x="312.0" y="148.0" text-anchor="end">+Y</text><text class="dg-text dg-small dg-faint" x="312.0" y="180.0" text-anchor="end">right</text><text class="dg-text dg-text-accent" x="219.2" y="119.3">+angle</text><text class="dg-text dg-small dg-faint" x="150.0" y="232.0" text-anchor="middle">start: X = 0, Y = 0, angle = 0°</text></svg>
+                <figcaption>The X axis points forward from the starting pose, the Y axis points right. A positive angle is a turn to the right.</figcaption>
+                </figure>
+                <ul>
+                    <li>At power-on the robot assumes it stands at (0, 0) facing along the X axis.</li>
+                    <li>The current values are returned by <code>getAbsX()</code>, <code>getAbsY()</code> and
+                        <code>getAbsAngle()</code>, and all three at once by <code>getOdometry()</code>.</li>
+                </ul>
+
+                <h2 id="steps">Steps</h2>
+                <ol class="steps">
+                    <li>
+                        <h3>Compare the two turns</h3>
+                <pre><code>robot.rotate(50, 90);     // another 90 degrees to the right of where the robot faces now
+robot.rotateTo(50, 90);   // face heading 90 degrees, wherever it faces now</code></pre>
+                        <p><code>rotate()</code> turns <em>by</em> an angle counted from the previous target, so in a series of
+                            moves the errors do not pile up. <code>rotateTo()</code> turns <em>to</em> a heading of the
+                            odometry and does not depend on what came before: it also works after <code>motors()</code>,
+                            <code>stop()</code> or after the robot was pushed.</p>
+                    </li>
+                    <li>
+                        <h3>Drive a square on absolute headings</h3>
+                <pre><code>robot.setPosition(0, 0, 0);
+for (int i = 0; i &lt; 4; i++) {
+  robot.moveDist(50, 300);
+  robot.rotateTo(50, (i + 1) * 90);   // headings 90, 180, 270, 360
+}
+robot.displayPrint("Angle", robot.getAngle());</code></pre>
+                        <p>At the end the screen shows the accumulated angle. The closer it is to 360, the more exactly the
+                            robot has returned to its original direction.</p>
+                    </li>
+                    <li>
+                        <h3>Tie the coordinates to the field</h3>
+                <pre><code>robot.setPosition(0, 0, 0);   // x, y in millimetres and heading in degrees</code></pre>
+                        <p><code>setPosition()</code> tells the robot where it stands. You can give the real coordinates of
+                            the start cell — for example, <code>robot.setPosition(150, 150, 90)</code>.</p>
+                    </li>
+                    <li>
+                        <h3>Describe a route as points</h3>
+                <pre><code>const float route[][2] = {
+  {400, 0},
+  {400, 400},
+  {0, 400},
+  {0, 0},
+};
+
+void setup() {
+  robot.begin();
+  robot.setPosition(0, 0, 0);
+
+  for (int i = 0; i &lt; 4; i++) {
+    robot.moveTo(50, route[i][0], route[i][1]);
+    delay(300);
+  }
+  robot.rotateTo(50, 0);   // restore the original heading at the end
+}</code></pre>
+                <figure class="figure">
+                <svg viewBox="0 0 350 270" role="img" aria-label="A route of four points in robot coordinates" style="max-width: 420px"><line class="dg-line" x1="96.0" y1="248.0" x2="96.0" y2="38.0"/><polygon class="dg-ink" points="96.0,30.0 100.0,39.0 92.0,39.0"/><line class="dg-line" x1="74.0" y1="226.0" x2="310.0" y2="226.0"/><polygon class="dg-ink" points="318.0,226.0 309.0,230.0 309.0,222.0"/><text class="dg-text dg-strong" x="86.0" y="36.0" text-anchor="end">X</text><text class="dg-text dg-strong" x="318.0" y="244.0" text-anchor="end">Y</text><g transform="translate(96.0 226.0) rotate(0)"><rect class="dg-wheel" x="-17.5" y="-7.0" width="4.5" height="14.0" rx="1.2"/><rect class="dg-wheel" x="13.0" y="-7.0" width="4.5" height="14.0" rx="1.2"/><rect class="dg-body" x="-13.0" y="-15.5" width="26.0" height="31.0" rx="4.5"/><polygon class="dg-ink" points="0,-12.5 -3.5,-7.0 3.5,-7.0"/></g><line class="dg-accent" x1="96.0" y1="202.0" x2="96.0" y2="102.0"/><polygon class="dg-accent-fill" points="96.0,92.0 101.0,103.0 91.0,103.0"/><circle class="dg-accent-soft" cx="80.0" cy="154.0" r="10"/><text class="dg-text dg-small dg-text-accent" x="80.0" y="158.0" text-anchor="middle">1</text><line class="dg-accent" x1="106.0" y1="82.0" x2="220.0" y2="82.0"/><polygon class="dg-accent-fill" points="230.0,82.0 219.0,87.0 219.0,77.0"/><circle class="dg-accent-soft" cx="168.0" cy="66.0" r="10"/><text class="dg-text dg-small dg-text-accent" x="168.0" y="70.0" text-anchor="middle">2</text><line class="dg-accent" x1="240.0" y1="92.0" x2="240.0" y2="206.0"/><polygon class="dg-accent-fill" points="240.0,216.0 235.0,205.0 245.0,205.0"/><circle class="dg-accent-soft" cx="256.0" cy="154.0" r="10"/><text class="dg-text dg-small dg-text-accent" x="256.0" y="158.0" text-anchor="middle">3</text><line class="dg-accent" x1="230.0" y1="226.0" x2="130.0" y2="226.0"/><polygon class="dg-accent-fill" points="120.0,226.0 131.0,221.0 131.0,231.0"/><circle class="dg-accent-soft" cx="168.0" cy="242.0" r="10"/><text class="dg-text dg-small dg-text-accent" x="168.0" y="246.0" text-anchor="middle">4</text><circle class="dg-accent-fill" cx="96.0" cy="82.0" r="4"/><circle class="dg-accent-fill" cx="240.0" cy="82.0" r="4"/><circle class="dg-accent-fill" cx="240.0" cy="226.0" r="4"/><text class="dg-text dg-small dg-mono" x="70.0" y="260.0" text-anchor="end">(0, 0)</text><text class="dg-text dg-small dg-mono" x="84.0" y="74.0" text-anchor="end">(400, 0)</text><text class="dg-text dg-small dg-mono" x="252.0" y="74.0">(400, 400)</text><text class="dg-text dg-small dg-mono" x="252.0" y="246.0">(0, 400)</text></svg>
+                <figcaption>A route of four points. moveTo() turns the robot towards the target by itself and drives to it in a straight line.</figcaption>
+                </figure>
+                    </li>
+                    <li>
+                        <h3>Watch the position from the computer</h3>
+                <pre><code>void loop() {
+  robot.printOdometry();
+  delay(1000);
+}</code></pre>
+                        <p>Open the Serial Monitor at 115200 baud. Once a second it prints a line with the encoder ticks,
+                            the coordinates and the heading.</p>
+                    </li>
+                </ol>
+                <p>Finished sketches: <span class="menu-path">File › Examples › UNI › PrecisionTurns</span> and
+                    <span class="menu-path">DriveToPoint</span>. The code is on the
+                    <a href="examples.html#precision-turns">Examples</a> page.</p>
+
+                <h2 id="result">What should happen</h2>
+                <figure class="figure">
+                <div class="figure-scroll"><svg viewBox="0 0 560 338" role="img" aria-label="The robot visits four points, returns to (0, 0) and turns back to its starting heading; the Serial Monitor prints the position" style="max-width: 672px"><polyline class="dg-accent" points="118.0,186.0 118.0,42.0 262.0,42.0 262.0,186.0 118.0,186.0"/><polygon class="dg-accent-fill" points="118.0,109.0 122.5,119.0 113.5,119.0"/><polygon class="dg-accent-fill" points="195.0,42.0 185.0,46.5 185.0,37.5"/><polygon class="dg-accent-fill" points="262.0,119.0 257.5,109.0 266.5,109.0"/><polygon class="dg-accent-fill" points="185.0,186.0 195.0,181.5 195.0,190.5"/><path class="dg-accent" d="M105.7 50.6 A15.0 15.0 0 0 1 119.2 27.0"/><polygon class="dg-accent-fill" points="126.6,29.7 117.9,28.2 122.2,22.0"/><path class="dg-accent" d="M253.4 29.7 A15.0 15.0 0 0 1 277.0 43.2"/><polygon class="dg-accent-fill" points="274.3,50.6 275.8,41.9 282.0,46.2"/><path class="dg-accent" d="M274.3 177.4 A15.0 15.0 0 0 1 260.8 201.0"/><polygon class="dg-accent-fill" points="253.4,198.3 262.1,199.8 257.8,206.0"/><path class="dg-accent" d="M115.1 218.9 A33.0 33.0 0 0 1 87.2 174.1"/><polygon class="dg-accent-fill" points="91.0,167.1 89.5,175.8 83.3,171.4"/><circle class="dg-accent-fill" cx="118.0" cy="42.0" r="3.5"/><circle class="dg-accent-fill" cx="262.0" cy="42.0" r="3.5"/><circle class="dg-accent-fill" cx="262.0" cy="186.0" r="3.5"/><g transform="translate(118.0 186.0) rotate(0)"><rect class="dg-wheel" x="-21.0" y="-8.4" width="5.4" height="16.8" rx="1.5"/><rect class="dg-wheel" x="15.6" y="-8.4" width="5.4" height="16.8" rx="1.5"/><rect class="dg-body" x="-15.6" y="-18.6" width="31.2" height="37.2" rx="5.4"/><polygon class="dg-ink" points="0,-15.0 -4.2,-8.4 4.2,-8.4"/></g><text class="dg-text dg-small dg-mono" x="96.0" y="30.0" text-anchor="end">(400, 0)</text><text class="dg-text dg-small dg-mono" x="284.0" y="30.0">(400, 400)</text><text class="dg-text dg-small dg-mono" x="284.0" y="208.0">(0, 400)</text><text class="dg-text dg-small dg-mono" x="78.0" y="220.0" text-anchor="end">(0, 0)</text><text class="dg-text dg-small dg-faint" x="118.0" y="238.0" text-anchor="middle">start and finish</text><text class="dg-text dg-small dg-mono dg-text-accent" x="76.0" y="184.0" text-anchor="end">rotateTo(50, 0)</text><path class="dg-accent" d="M336.6 65.2 A9.0 9.0 0 0 1 341.5 51.3"/><polygon class="dg-accent-fill" points="349.2,52.6 340.4,51.2 344.8,44.9"/><text class="dg-text dg-small" x="366.0" y="58.0">at each point it</text><text class="dg-text dg-small" x="366.0" y="73.0">turns on the spot</text><circle class="dg-accent-fill" cx="344.0" cy="108.0" r="3.5"/><text class="dg-text dg-small" x="366.0" y="112.0">a 0.3 s pause</text><text class="dg-text dg-small dg-mono dg-text-accent" x="344.0" y="150.0">rotateTo(50, 0)</text><text class="dg-text dg-small" x="344.0" y="166.0">at the end: facing</text><text class="dg-text dg-small" x="344.0" y="181.0">where it started</text><rect class="dg-box" x="20" y="258.0" width="520" height="70" rx="8"/><text class="dg-text dg-small dg-faint" x="32.0" y="276.0">Serial Monitor, 115200 baud — once a second after the finish</text><text class="dg-text dg-small dg-mono dg-strong" x="32" y="296.0" style="white-space: pre">encL: 9433   encR: 6185   X: 1.84   Y: -2.31   Theta: 0.62</text><text class="dg-text dg-small dg-mono" x="32" y="312.0" style="white-space: pre">encL: 9433   encR: 6185   X: 1.84   Y: -2.31   Theta: 0.62</text></svg></div>
+                <figcaption>The robot visits the four points: at each it waits 0.3 s and turns on the spot towards the next, and at (0, 0) rotateTo turns it back to the heading it started with. Lines appear in the Serial Monitor once the route is done: loop() only starts after setup().</figcaption>
+                </figure>
+
+                <h2 id="experiments">Try changing it</h2>
+                <ul>
+                    <li>Describe a triangle or a U shape with points.</li>
+                    <li>Run the PrecisionTurns example: it drives a square first with <code>rotate()</code>, then with
+                        <code>rotateTo()</code>, and shows the angle after each run. Compare the two numbers.</li>
+                    <li>Stretch the route to ten points and watch how the return error grows.</li>
+                </ul>
+
+                <h2 id="problems">If it does not work</h2>
+                <ul>
+                    <li><strong>The robot drove the wrong way.</strong> Check the axes figure: +Y is to the right. Check the
+                        argument order: <code>moveTo(power, x, y)</code>.</li>
+                    <li><strong>The robot does not return exactly to the start.</strong> Odometry error grows with distance
+                        and with wheel slip. The reasons are explained in
+                        <a href="limitations.html#accuracy">Accuracy and Odometry</a>.</li>
+                    <li><strong>The coordinates did not reset after <code>resetAngle()</code>.</strong>
+                        <code>resetDistance()</code> and <code>resetAngle()</code> only clear the distance and angle counters.
+                        The pose is set by <code>setPosition()</code>.</li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script src="nav.js?v=6"></script>
+    <script src="script.js?v=6"></script>
+</body>
+
+</html>

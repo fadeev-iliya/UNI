@@ -4,18 +4,21 @@
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
 
+#include "UniBoard.h"
+
 // Debug mode - раскомментируйте для вывода отладочных сообщений
 // #define DEBUG_MODE
 
-// Порты UniDev
-#define P1 12  // GPIO_NUM_12 - Traffic light red
-#define P2 13  // GPIO_NUM_13 - Traffic light yellow
-#define P3 14  // GPIO_NUM_14 - Traffic light green / side ultrasonic trig
-#define P4 15  // GPIO_NUM_15 - Side ultrasonic echo
-#define P5 17  // GPIO_NUM_17 - Button
-#define P6 16  // GPIO_NUM_16 - Front ultrasonic trig
-#define P7 32  // GPIO_NUM_32 - Front ultrasonic echo
-#define P8 23  // GPIO_NUM_23 - NeoPixel ring
+// Порты UniDev. GPIO порта зависит от версии платы (V1 / V2), поэтому
+// он подставляется во время работы программы, а не при компиляции
+#define P1 (UniBoard::port(1))  // GPIO 12 / 32 - Traffic light red
+#define P2 (UniBoard::port(2))  // GPIO 13 / 33 - Traffic light yellow
+#define P3 (UniBoard::port(3))  // GPIO 14 / 25 - Traffic light green / side ultrasonic trig
+#define P4 (UniBoard::port(4))  // GPIO 15 / 26 - Side ultrasonic echo
+#define P5 (UniBoard::port(5))  // GPIO 17 / 27 - Button
+#define P6 (UniBoard::port(6))  // GPIO 16 / 14 - Front ultrasonic trig
+#define P7 (UniBoard::port(7))  // GPIO 32 / 13 - Front ultrasonic echo
+#define P8 (UniBoard::port(8))  // GPIO 23 / 4  - NeoPixel ring
 
 #define NEOPIXEL_COUNT 24
 
@@ -159,7 +162,7 @@ public:
   
   /**
    * @brief Установить яркость.
-   * @param brightness Яркость (0-100)
+   * @param brightness Яркость (0-255, при запуске 100)
    */
   void pixelsBrightness(int brightness);
   

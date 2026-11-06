@@ -1,17 +1,20 @@
 <!DOCTYPE html>
-<html lang="ru" data-theme="light">
+<html lang="ru">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FAQ и Устранение неполадок - Библиотека UNI</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>FAQ и устранение неполадок - Библиотека UNI</title>
+    <link rel="stylesheet" href="styles.css?v=7">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
+    <link rel="icon" href="logoUni.svg" type="image/svg+xml">
+    <meta name="color-scheme" content="light dark">
+    <script src="boot.js?v=5"></script>
 </head>
 
 <body>
@@ -22,81 +25,134 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Top Header -->
-            <header class="top-header">
-                <button id="mobile-menu-toggle" class="mobile-menu-toggle">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="3" y1="12" x2="21" y2="12"></line>
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
-                </button>
-                <div class="search-container">
-                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                    <input type="text" class="search-input" placeholder="Поиск...">
-                </div>
-                <button id="theme-toggle" class="theme-toggle" title="Переключить тему"></button>
-            </header>
+            <!-- Header: breadcrumb and page actions, built by script.js -->
+            <header class="top-header"></header>
 
             <!-- Page Content -->
             <div class="page-content">
-                <h1>FAQ и Устранение неполадок</h1>
+                <h1>FAQ и устранение неполадок</h1>
+                <p class="lead">Короткие ответы на то, что чаще всего идёт не так. Если вашего случая здесь нет, загляните
+                    в раздел <a href="limitations_ru.html">«Ограничения»</a>: там описано, как библиотека ведёт себя на границах
+                    возможностей.</p>
 
-                <h2>Частые проблемы</h2>
+                <h2 id="install">Установка и загрузка</h2>
 
-                <div class="api-card mb-4"
-                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
-                    <h3 style="margin-top: 0;">Робот не двигается, но экран включен</h3>
-                    <p><strong>Возможная причина:</strong> Переключатель батареи выключен или низкий заряд.</p>
-                    <p><strong>Решение:</strong> Проверьте физический переключатель на UniBase. Убедитесь, что иконка
-                        батареи показывает заряженное состояние.</p>
+                <div class="api-card static">
+                    <h3>Ошибка компиляции: «UNI.h: No such file or directory»</h3>
+                    <p><strong>Возможная причина:</strong> Библиотека не установлена или лежит не в той папке. То же относится
+                        к ошибке про <code>UniBase.h</code>.</p>
+                    <p><strong>Решение:</strong> Установите UNI через Менеджер библиотек. При ручной установке убедитесь, что
+                        папка <code>UNI</code> находится в каталоге <code>Arduino/libraries</code>, и перезапустите Arduino
+                        IDE.</p>
                 </div>
 
-                <div class="api-card mb-4"
-                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
-                    <h3 style="margin-top: 0;">Ошибка компиляции: "UniBase.h: No such file"</h3>
-                    <p><strong>Возможная причина:</strong> Библиотека установлена неправильно.</p>
-                    <p><strong>Решение:</strong> Убедитесь, что папка <code>UNI</code> находится в директории
-                        <code>Arduino/libraries</code>. Перезапустите Arduino IDE.
-                    </p>
+                <div class="api-card static">
+                    <h3>Ошибка компиляции: «Adafruit_SSD1306.h: No such file or directory»</h3>
+                    <p><strong>Возможная причина:</strong> Не установлены зависимости. Так бывает после установки из
+                        ZIP-архива.</p>
+                    <p><strong>Решение:</strong> Установите через Менеджер библиотек три библиотеки: Adafruit GFX Library,
+                        Adafruit SSD1306 и Adafruit NeoPixel.</p>
                 </div>
 
-                <div class="api-card mb-4"
-                    style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.5rem;">
-                    <h3 style="margin-top: 0;">Команды UART игнорируются</h3>
-                    <p><strong>Возможная причина:</strong> Проблема с проводкой или неправильная скорость (baud rate).
-                    </p>
-                    <p><strong>Решение:</strong>
+                <h2 id="movement">Движение</h2>
+
+                <div class="api-card static">
+                    <h3>Робот не двигается, но экран включён</h3>
+                    <p><strong>Возможная причина:</strong> Переключатель батареи выключен или батарея разряжена.</p>
+                    <p><strong>Решение:</strong> Проверьте физический переключатель на UniBase. Убедитесь, что значок батареи
+                        на экране показывает заряд.</p>
+                </div>
+
+                <div class="api-card static" id="calibrate">
+                    <h3>Робот проезжает или поворачивает неточно</h3>
+                    <p><strong>Возможная причина:</strong> Колёса проскальзывают по полу, загрязнились или стёрлись, либо
+                        робота толкнули. Одометрия считает обороты колёс и проскальзывания не видит.</p>
+                    <p><strong>Решение:</strong> Проверьте на том покрытии, где робот будет работать, с заряженной батареей:
+                        колёса должны быть чистыми и не проскальзывать. Диаметр колёс (45 мм) и колея (107 мм) стандартной
+                        платформы UniBase зашиты в библиотеку, поэтому в скетче настраивать ничего не нужно.</p>
+                    <p>Если на экране ровно 300 мм или 90°, а на полу получилось иначе, робот выполнил то, что просила
+                        программа: разница возникает из-за проскальзывания или из-за колёс, отличающихся от стандартной
+                        платформы. Для точного курса после нескольких манёвров используйте <code>rotateTo()</code>, для
+                        точной позиции — <code>moveTo()</code>.</p>
+                </div>
+
+                <div class="api-card static">
+                    <h3>Выполняется только последняя из двух команд</h3>
+                    <p><strong>Возможная причина:</strong> Очереди команд нет: новая команда движения отменяет текущую.</p>
+                    <p><strong>Решение:</strong> Между асинхронными командами вызывайте <code>waitMove()</code> или используйте
+                        блокирующие версии — <code>moveDist()</code>, <code>rotate()</code>. Подробнее — в разделе
+                        <a href="limitations_ru.html#movement">«Движение и команды»</a>.</p>
+                </div>
+
+                <div class="api-card static">
+                    <h3>Робот не едет медленнее определённой скорости</h3>
+                    <p><strong>Возможная причина:</strong> <code>motors()</code> подаёт мощность прямо на моторы: ниже
+                        примерно 15 % они не преодолевают трение, и колёса стоят.</p>
+                    <p><strong>Решение:</strong> Для медленной езды используйте <code>motorsSync()</code> или
+                        <code>motorsSpeed()</code> — они удерживают скорость по энкодерам. Команды движения, например
+                        <code>moveDist()</code>, работают так же: мощность — это скорость в процентах от максимальной,
+                        поэтому и с малой мощностью робот едет медленно.</p>
+                </div>
+
+                <h2 id="peripherals">Датчики, экран и связь</h2>
+
+                <div class="api-card static">
+                    <h3>Датчик расстояния возвращает 0</h3>
+                    <p><strong>Возможная причина:</strong> Эхо не пришло: цель ближе 20 мм, дальше 4 м или не отражает звук.
+                        Ноль бывает и тогда, когда перепутаны выводы trig и echo.</p>
+                    <p><strong>Решение:</strong> Проверьте подключение примером DistanceSensors. В условиях всегда отсекайте
+                        ноль: <code>dist &gt; 0 &amp;&amp; dist &lt; 150</code>.</p>
+                </div>
+
+                <div class="api-card static">
+                    <h3>Датчик линии показывает случайные числа</h3>
+                    <p><strong>Возможная причина:</strong> Датчик подключён к порту без аналогового входа — P5, P6 или P8.
+                        Библиотека при этом пишет предупреждение в Монитор порта.</p>
+                    <p><strong>Решение:</strong> Переключите датчик на P1–P4 или P7.</p>
+                </div>
+
+                <div class="api-card static">
+                    <h3>Текст на экране обрезается</h3>
+                    <p><strong>Возможная причина:</strong> <code>displayPrint()</code> показывает не больше 15 символов.</p>
+                    <p><strong>Решение:</strong> Сократите подпись. Длинные сообщения удобнее выводить в Монитор порта.</p>
+                </div>
+
+                <div class="api-card static">
+                    <h3>Экран остаётся тёмным</h3>
+                    <p><strong>Возможная причина:</strong> Экран не найден при запуске — тогда в Монитор порта (115200 бод)
+                        выводится сообщение <code>SSD1306 allocation failed</code>, а робот продолжает работать без экрана.
+                        Или скетч не вызывает ни одной команды робота, и инициализация не запускалась.</p>
+                    <p><strong>Решение:</strong> Проверьте, что робот включён. Добавьте <code>robot.begin()</code>
+                        в <code>setup()</code>.</p>
+                </div>
+
+                <div class="api-card static">
+                    <h3>Команды UART игнорируются</h3>
+                    <p><strong>Возможная причина:</strong> Проблема с проводкой или неправильная скорость связи.</p>
+                    <p><strong>Решение:</strong></p>
                     <ul>
-                        <li>Убедитесь, что RX подключен к TX, а TX к RX.</li>
-                        <li>Проверьте, вызываете ли вы <code>robot.UniBaseControl()</code> в цикле ESP32.</li>
+                        <li>Убедитесь, что RX подключён к TX, а TX к RX.</li>
+                        <li>Проверьте, что <code>robot.UniBaseControl()</code> вызывается в <code>setup()</code> скетча ESP32.</li>
                         <li>Убедитесь, что GND (земля) общая между платами.</li>
+                        <li>Не подключайте модули к портам P5 и P6: это те же выводы, по которым идёт UART.</li>
                     </ul>
-                    </p>
                 </div>
 
-                <h2>Советы по отладке</h2>
+                <h2 id="debug-tips">Советы по отладке</h2>
                 <ul>
-                    <li>Используйте <code>robot.displayPrint("Debug Info")</code> для вывода статуса на OLED, если
-                        Serial монитор
-                        недоступен.</li>
-                    <li>В режиме UART, ESP32 выводит полученные команды в основной Serial монитор (USB), если включен
-                        <code>DEBUG_MODE</code> в `UniBase.h`.
-                    </li>
+                    <li>Используйте <code>robot.displayPrint("Debug Info")</code>, чтобы вывести состояние на экран, когда
+                        Монитор порта недоступен.</li>
+                    <li><code>robot.printOdometry()</code> печатает в Монитор порта тики энкодеров, координаты и курс.
+                        Скорость порта — 115200 бод.</li>
+                    <li>Если в <code>UniBase.h</code> включён <code>DEBUG_MODE</code>, библиотека выводит в Монитор порта
+                        сведения о запуске (имя робота, версию платы).</li>
                 </ul>
-
             </div>
         </main>
     </div>
 
-    <script src="nav.js"></script>
-    <script src="script.js"></script>
+    <script src="nav.js?v=6"></script>
+    <script src="script.js?v=6"></script>
 </body>
 
 </html>

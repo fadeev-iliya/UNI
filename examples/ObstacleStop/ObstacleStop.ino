@@ -1,13 +1,3 @@
-/*
-  ObstacleStop — асинхронное движение с реакцией на препятствие.
-
-  Робот едет вперед и постоянно следит за ультразвуковым датчиком.
-  Препятствие ближе 150 мм — остановка и ожидание; препятствие
-  убрали — продолжает движение к цели.
-
-  Подключение: ультразвуковой датчик на портах P6 (trig) и P7 (echo).
-*/
-
 #include <UNI.h>
 
 UniBase robot("UNI");
@@ -15,6 +5,7 @@ UniDev module;
 
 const int OBSTACLE_MM = 150;   // дистанция остановки
 const int TARGET_MM   = 1500;  // сколько всего проехать
+const int FINISH_MM   = 5;     // ближе этого к цели - доехали
 
 void setup() {
   robot.begin();
@@ -22,9 +13,13 @@ void setup() {
 }
 
 void loop() {
-  // Цель достигнута - стоим
-  if (robot.getDistance() >= TARGET_MM) {
+  // Цель достигнута - стоим. Движение завершается с небольшим остатком
+  // до цели, поэтому сравниваем его с запасом, а не с нулем:
+  // иначе робот бесконечно "доезжал" бы последний миллиметр
+  int remaining = TARGET_MM - (int)robot.getDistance();
+  if (remaining <= FINISH_MM) {
     robot.displayPrint("DONE");
+    delay(500);
     return;
   }
 
@@ -39,7 +34,6 @@ void loop() {
   } else {
     if (!robot.isMoving()) {
       // Едем остаток пути асинхронно, продолжая опрашивать датчик
-      int remaining = TARGET_MM - (int)robot.getDistance();
       robot.moveDistAsync(50, remaining);
       robot.displayClear();
     }

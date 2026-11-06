@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Урок 3. Дуги - Библиотека UNI</title>
+    <link rel="stylesheet" href="styles.css?v=7">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="icon" href="logoUni.svg" type="image/svg+xml">
+    <meta name="color-scheme" content="light dark">
+    <script src="boot.js?v=5"></script>
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar"></aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header: breadcrumb and page actions, built by script.js -->
+            <header class="top-header"></header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <h1>Дуги</h1>
+                <p class="lead">Поворот на месте — это остановка. Дуга меняет направление на ходу: скругляет углы и ведёт
+                    робота по плавной траектории.</p>
+
+                <h2 id="two-ways">Два способа задать дугу</h2>
+                <p><strong>Через соотношение скоростей колёс.</strong> Так работают <code>moveArcDist()</code>,
+                    <code>moveArcTime()</code> и <code>motorsArc()</code>. Параметр <code>angle</code> от −90 до 90 задаёт
+                    крутизну: левое колесо получает <code>power × (1 + angle / 90)</code>, правое —
+                    <code>power × (1 − angle / 90)</code>.</p>
+                <div class="table-scroll">
+                    <table class="constants-table prose-table">
+                        <thead>
+                            <tr>
+                                <th>angle</th>
+                                <th>Левое колесо</th>
+                                <th>Правое колесо</th>
+                                <th>Что делает робот</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>0</td><td>× 1</td><td>× 1</td><td>Едет прямо</td></tr>
+                            <tr><td>30</td><td>× 1,33</td><td>× 0,67</td><td>Плавная дуга вправо</td></tr>
+                            <tr><td>45</td><td>× 1,5</td><td>× 0,5</td><td>Крутая дуга вправо</td></tr>
+                            <tr><td>90</td><td>× 2</td><td>0</td><td>Разворот вокруг правого колеса</td></tr>
+                            <tr><td>-30</td><td>× 0,67</td><td>× 1,33</td><td>Плавная дуга влево</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p><strong>Через геометрию.</strong> <code>moveArcRadius()</code> принимает радиус дуги по центру робота
+                    и угол сектора.</p>
+                <figure class="figure">
+                <svg viewBox="0 0 360 262" role="img" aria-label="Дуга заданного радиуса: центр робота движется по окружности радиуса R" style="max-width: 430px"><path class="dg-dash" d="M153.0 206.0 A109 109 0 0 1 262.0 97.0"/><path class="dg-dash" d="M115.0 206.0 A147 147 0 0 1 262.0 59.0"/><line class="dg-line" x1="262.0" y1="206.0" x2="164.0" y2="206.0"/><line class="dg-line" x1="262.0" y1="206.0" x2="262.0" y2="112.0"/><path class="dg-accent" d="M139.0 170.7 A128 128 0 0 1 216.1 86.5"/><polygon class="dg-accent-fill" points="231.0,81.8 221.6,89.3 219.2,79.6"/><g transform="translate(134.0 206.0) rotate(0)"><rect class="dg-wheel" x="-19.2" y="-7.7" width="5.0" height="15.4" rx="1.4"/><rect class="dg-wheel" x="14.3" y="-7.7" width="5.0" height="15.4" rx="1.4"/><rect class="dg-body" x="-14.3" y="-17.1" width="28.6" height="34.1" rx="5.0"/><polygon class="dg-ink" points="0,-13.8 -3.9,-7.7 3.9,-7.7"/></g><g transform="translate(262.0 78.0) rotate(90)"><rect class="dg-wheel" x="-19.2" y="-7.7" width="5.0" height="15.4" rx="1.4"/><rect class="dg-wheel" x="14.3" y="-7.7" width="5.0" height="15.4" rx="1.4"/><rect class="dg-body" x="-14.3" y="-17.1" width="28.6" height="34.1" rx="5.0"/><polygon class="dg-ink" points="0,-13.8 -3.9,-7.7 3.9,-7.7"/></g><path class="dg-line" d="M232.0 206.0 A30 30 0 0 1 262.0 176.0"/><circle class="dg-ink" cx="262.0" cy="206.0" r="3.5"/><text class="dg-text dg-text-accent" x="228.0" y="180.0" text-anchor="end">угол</text><text class="dg-text dg-text-accent" x="180.0" y="198.0" text-anchor="middle">R</text><text class="dg-text dg-small dg-faint" x="262.0" y="230.0" text-anchor="middle">центр поворота</text><text class="dg-text dg-small dg-faint" x="134.0" y="250.0" text-anchor="middle">старт</text><text class="dg-text dg-small dg-faint" x="306.0" y="82.0">финиш</text></svg>
+                <figcaption>moveArcRadius(50, R, 90): центр робота идёт по дуге радиуса R, колёса — по внутренней и внешней дорожкам. Положительный угол — дуга вправо.</figcaption>
+                </figure>
+                <p>Оба способа описывают одно и то же: <code>angle = 90 × (колея / 2) / радиус</code>. При стандартной колее
+                    107 мм <code>angle = 30</code> соответствует радиусу около 160 мм.</p>
+
+                <h2 id="steps">Шаги</h2>
+                <ol class="steps">
+                    <li>
+                        <h3>Скруглите углы квадрата</h3>
+                <pre><code>for (int i = 0; i &lt; 4; i++) {
+  robot.moveDist(50, 250);
+  robot.moveArcRadius(50, 100, 90);   // четверть круга радиусом 100 мм
+}</code></pre>
+                <figure class="figure">
+                <svg viewBox="0 0 290 222" role="img" aria-label="Квадрат со скруглёнными углами: четыре прямые по 250 мм и четыре дуги радиусом 100 мм" style="max-width: 350px"><path class="dg-accent" d="M84.0 162.0 L84.0 62.0 A40.0 40.0 0 0 1 124.0 22.0 L224.0 22.0 A40.0 40.0 0 0 1 264.0 62.0 L264.0 162.0 A40.0 40.0 0 0 1 224.0 202.0 L124.0 202.0 A40.0 40.0 0 0 1 84.0 162.0"/><polygon class="dg-accent-fill" points="84.0,107.0 88.5,117.0 79.5,117.0"/><polygon class="dg-accent-fill" points="179.0,22.0 169.0,26.5 169.0,17.5"/><polygon class="dg-accent-fill" points="264.0,77.0 259.5,67.0 268.5,67.0"/><polygon class="dg-accent-fill" points="169.0,202.0 179.0,197.5 179.0,206.5"/><line class="dg-line" x1="124.0" y1="62.0" x2="95.7" y2="33.7"/><circle class="dg-ink" cx="124.0" cy="62.0" r="2.5"/><text class="dg-text dg-small dg-text-accent" x="130.0" y="76.0">R 100</text><text class="dg-text dg-small dg-strong" x="62.0" y="116.0" text-anchor="end">250 мм</text><g transform="translate(84.0 162.0) rotate(0)"><rect class="dg-wheel" x="-17.5" y="-7.0" width="4.5" height="14.0" rx="1.2"/><rect class="dg-wheel" x="13.0" y="-7.0" width="4.5" height="14.0" rx="1.2"/><rect class="dg-body" x="-13.0" y="-15.5" width="26.0" height="31.0" rx="4.5"/><polygon class="dg-ink" points="0,-12.5 -3.5,-7.0 3.5,-7.0"/></g><text class="dg-text dg-small dg-faint" x="62.0" y="192.0" text-anchor="end">старт</text></svg>
+                <figcaption>Четыре прямые по 250 мм и четыре дуги радиусом 100 мм: робот обходит квадрат 45 × 45 см и возвращается к старту.</figcaption>
+                </figure>
+                        <p>Вместо разворота на месте робот проходит угол по четверти окружности.</p>
+                    </li>
+                    <li>
+                        <h3>Проедьте змейкой</h3>
+                <pre><code>for (int i = 0; i &lt; 3; i++) {
+  robot.moveArcDist(50, 30, 250);    // дуга вправо
+  robot.moveArcDist(50, -30, 250);   // дуга влево
+}</code></pre>
+                <figure class="figure">
+                <svg viewBox="0 0 330 284" role="img" aria-label="Змейка из трёх пар дуг вправо и влево уходит по диагонали: около 95 см вперёд и 95 см вправо" style="max-width: 396px"><line class="dg-dash" x1="78.0" y1="240.0" x2="78.0" y2="49.2"/><line class="dg-dash" x1="78.0" y1="49.2" x2="269.1" y2="49.2"/><path class="dg-accent" d="M78.0 240.0 A31.8 31.8 0 0 1 109.8 208.2 A31.8 31.8 0 0 0 141.7 176.4 A31.8 31.8 0 0 1 173.5 144.6 A31.8 31.8 0 0 0 205.4 112.8 A31.8 31.8 0 0 1 237.2 81.0 A31.8 31.8 0 0 0 269.1 49.2"/><polygon class="dg-accent-fill" points="114.8,208.2 105.8,212.2 105.8,204.2"/><polygon class="dg-accent-fill" points="178.4,144.6 169.4,148.6 169.4,140.6"/><polygon class="dg-accent-fill" points="242.0,81.0 233.0,85.0 233.0,77.0"/><line class="dg-line" x1="109.8" y1="240.0" x2="87.3" y2="217.5"/><circle class="dg-ink" cx="109.8" cy="240.0" r="2.5"/><text class="dg-text dg-small dg-text-accent" x="117.8" y="244.0">R ≈ 160 мм</text><text class="dg-text dg-small dg-faint" x="100.3" y="198.2" text-anchor="middle">вправо</text><text class="dg-text dg-small dg-faint" x="140.3" y="208.9">влево</text><g transform="translate(78.0 240.0) rotate(0)"><rect class="dg-wheel" x="-14.7" y="-5.9" width="3.8" height="11.8" rx="1.1"/><rect class="dg-wheel" x="10.9" y="-5.9" width="3.8" height="11.8" rx="1.1"/><rect class="dg-body" x="-10.9" y="-13.0" width="21.8" height="26.0" rx="3.8"/><polygon class="dg-ink" points="0,-10.5 -2.9,-5.9 2.9,-5.9"/></g><g transform="translate(269.1 49.2) rotate(0.0)"><rect class="dg-wheel" x="-14.7" y="-5.9" width="3.8" height="11.8" rx="1.1"/><rect class="dg-wheel" x="10.9" y="-5.9" width="3.8" height="11.8" rx="1.1"/><rect class="dg-body" x="-10.9" y="-13.0" width="21.8" height="26.0" rx="3.8"/><polygon class="dg-ink" points="0,-10.5 -2.9,-5.9 2.9,-5.9"/></g><text class="dg-text dg-small dg-strong" x="68.0" y="148.6" text-anchor="end">≈ 95 см</text><text class="dg-text dg-small dg-strong" x="173.5" y="37.2" text-anchor="middle">≈ 95 см</text><text class="dg-text dg-small dg-faint" x="78.0" y="274.0" text-anchor="middle">старт</text><text class="dg-text dg-small dg-faint" x="289.1" y="53.2">финиш</text></svg>
+                <figcaption>Змейка уходит по диагонали: за три пары дуг робот смещается примерно на 95 см вперёд и на столько же вправо, а в конце смотрит туда же, куда на старте. Освободите место около метра на метр.</figcaption>
+                </figure>
+                        <p>Третье число — длина дуги по центру робота в миллиметрах. При <code>angle = 30</code> дуга длиной
+                            250 мм — это примерно четверть окружности.</p>
+                    </li>
+                    <li>
+                        <h3>Ведите дугу вручную</h3>
+                <pre><code>robot.motorsArc(40, 20);   // едет по дуге, пока его не остановят
+delay(2000);
+robot.stop(SOFT);</code></pre>
+                        <p><code>motorsArc()</code> не имеет цели: робот едет по дуге до вызова <code>stop()</code>.
+                            <code>SOFT</code> останавливает без блокировки колёс, <code>HARD</code> — тормозом.</p>
+                    </li>
+                </ol>
+                <p>Готовые скетчи: <span class="menu-path">Файл › Примеры › UNI › Arcs</span> и
+                    <span class="menu-path">ManualControl</span>. Тексты — на странице
+                    <a href="examples_ru.html#arcs">«Примеры»</a>.</p>
+
+                <h2 id="experiments">Попробуйте изменить</h2>
+                <ul>
+                    <li>Сравните радиусы 60, 150 и 300 мм в <code>moveArcRadius()</code>.</li>
+                    <li>Проедьте полный круг: <code>robot.moveArcRadius(50, 150, 360)</code>, а затем такой же влево
+                        с углом <code>-360</code> — получится восьмёрка.</li>
+                    <li>Задайте <code>angle</code> больше 90 в <code>moveArcDist()</code> и посмотрите, что делает внутреннее
+                        колесо.</li>
+                </ul>
+
+                <h2 id="problems">Если не получается</h2>
+                <ul>
+                    <li><strong><code>moveArcRadius()</code> ничего не делает.</strong> Радиус должен быть не меньше половины
+                        колеи — 53 мм, а угол не равен нулю. Для разворота на месте используйте <code>rotate()</code>.</li>
+                    <li><strong>Дуга получается не той кривизны.</strong> Кривизна зависит от колеи: проверьте, что колёса не
+                        проскальзывают, — см. <a href="faq_ru.html#calibrate">FAQ</a>.</li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script src="nav.js?v=6"></script>
+    <script src="script.js?v=6"></script>
+</body>
+
+</html>

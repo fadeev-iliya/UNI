@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Урок 1. Первый заезд - Библиотека UNI</title>
+    <link rel="stylesheet" href="styles.css?v=7">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="icon" href="logoUni.svg" type="image/svg+xml">
+    <meta name="color-scheme" content="light dark">
+    <script src="boot.js?v=5"></script>
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar"></aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header: breadcrumb and page actions, built by script.js -->
+            <header class="top-header"></header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <h1>Первый заезд: квадрат</h1>
+                <p class="lead">Робот проедет квадрат со стороной 30 см и вернётся на старт. По пути вы освоите две главные
+                    команды: проехать расстояние и повернуть на угол.</p>
+                <div class="callout note">
+                    <div class="callout-body">
+                        <p>Перед уроком пройдите <a href="getting-started_ru.html">«Начало работы»</a>: библиотека установлена, пример
+                            Start загружается. Понадобится ровный пол примерно метр на метр.</p>
+                    </div>
+                </div>
+
+                <h2 id="goal">Что получится</h2>
+                <figure class="figure">
+                <svg viewBox="0 0 360 258" role="img" aria-label="Робот проезжает квадрат 300 мм по часовой стрелке, на углах поворачивается на месте и останавливается на старте" style="max-width: 432px"><polyline class="dg-accent" points="82.0,196.0 82.0,46.0 232.0,46.0 232.0,196.0 82.0,196.0"/><polygon class="dg-accent-fill" points="82.0,116.0 86.5,126.0 77.5,126.0"/><polygon class="dg-accent-fill" points="162.0,46.0 152.0,50.5 152.0,41.5"/><polygon class="dg-accent-fill" points="232.0,126.0 227.5,116.0 236.5,116.0"/><polygon class="dg-accent-fill" points="152.0,196.0 162.0,191.5 162.0,200.5"/><path class="dg-accent" d="M69.7 54.6 A15.0 15.0 0 0 1 83.2 31.0"/><polygon class="dg-accent-fill" points="90.6,33.7 81.9,32.2 86.2,26.0"/><path class="dg-accent" d="M223.4 33.7 A15.0 15.0 0 0 1 247.0 47.2"/><polygon class="dg-accent-fill" points="244.3,54.6 245.8,45.9 252.0,50.2"/><path class="dg-accent" d="M244.3 187.4 A15.0 15.0 0 0 1 230.8 211.0"/><polygon class="dg-accent-fill" points="223.4,208.3 232.1,209.8 227.8,216.0"/><path class="dg-accent" d="M79.1 228.9 A33.0 33.0 0 0 1 51.2 184.1"/><polygon class="dg-accent-fill" points="55.0,177.1 53.5,185.8 47.3,181.4"/><g transform="translate(82.0 196.0) rotate(0)"><rect class="dg-wheel" x="-21.0" y="-8.4" width="5.4" height="16.8" rx="1.5"/><rect class="dg-wheel" x="15.6" y="-8.4" width="5.4" height="16.8" rx="1.5"/><rect class="dg-body" x="-15.6" y="-18.6" width="31.2" height="37.2" rx="5.4"/><polygon class="dg-ink" points="0,-15.0 -4.2,-8.4 4.2,-8.4"/></g><text class="dg-text dg-strong" x="60.0" y="125.0" text-anchor="end">300 мм</text><text class="dg-text dg-strong" x="157.0" y="32.0" text-anchor="middle">300 мм</text><text class="dg-text dg-small dg-faint" x="252.0" y="24.0">поворот на месте</text><text class="dg-text dg-small dg-faint" x="82.0" y="246.0" text-anchor="middle">старт и финиш</text></svg>
+                <figcaption>Четыре отрезка по 300 мм и четыре поворота направо на 90°, каждый — на месте. Робот останавливается там же, где начал, носом в ту же сторону.</figcaption>
+                </figure>
+
+                <h2 id="steps">Шаги</h2>
+                <ol class="steps">
+                    <li>
+                        <h3>Создайте робота</h3>
+                <pre><code>#include &lt;UNI.h&gt;
+
+UniBase robot("UNI");
+
+void setup() {
+  robot.begin();
+}
+
+void loop() {
+}</code></pre>
+                        <p>Объект <code>robot</code> — это вся платформа: моторы, энкодеры и экран. Имя в кавычках появится
+                            на экране. <code>robot.begin()</code> включает всё это; его можно и не вызывать — первая же команда
+                            сделает это сама.</p>
+                    </li>
+                    <li>
+                        <h3>Проедьте прямо</h3>
+                <pre><code>robot.moveDist(50, 300);   // мощность 50, расстояние 300 мм</code></pre>
+                        <p>Первое число — мощность в процентах от −100 до 100, второе — расстояние в миллиметрах. Команда
+                            блокирующая: следующая строка выполнится только тогда, когда робот доедет.</p>
+                        <p>Мощность — это скорость в процентах от максимальной: 100 — около 0.3 м/с. Робот удерживает эту скорость
+                            по энкодерам, поэтому с малой мощностью он просто едет медленно.</p>
+                    </li>
+                    <li>
+                        <h3>Повернитесь</h3>
+                <pre><code>robot.rotate(50, 90);      // мощность 50, поворот на 90 градусов</code></pre>
+                        <p>Положительный угол — поворот направо, отрицательный — налево. Робот поворачивает на месте: колёса
+                            вращаются в разные стороны.</p>
+                    </li>
+                    <li>
+                        <h3>Повторите четыре раза</h3>
+                <pre><code>void setup() {
+  robot.begin();
+
+  for (int i = 0; i &lt; 4; i++) {
+    robot.moveDist(50, 300);
+    robot.rotate(50, 90);
+  }
+}</code></pre>
+                        <p>Загрузите скетч и поставьте робота на пол.</p>
+                    </li>
+                </ol>
+                <p>Это и есть весь скетч: цикл ставится в <code>setup()</code> скетча из первого шага. Квадрат с поворотами
+                    проезжает и пример <span class="menu-path">Файл › Примеры › UNI › PrecisionTurns</span>; его текст — на
+                    странице <a href="examples_ru.html#precision-turns">«Примеры»</a>.</p>
+
+                <h2 id="experiments">Попробуйте изменить</h2>
+                <ul>
+                    <li>Сделайте сторону 500 мм. Сравните мощность 30 и 80: как меняется точность остановки?</li>
+                    <li>Проедьте квадрат против часовой стрелки: <code>robot.rotate(50, -90)</code>.</li>
+                    <li>Нарисуйте треугольник: три стороны и три поворота на 120°.</li>
+                    <li>Добавьте движение назад и по времени:
+                <pre><code>robot.moveDist(-50, 200);  // назад 200 мм
+robot.moveTime(40, 1000);  // вперёд одну секунду</code></pre>
+                        Отрицательная мощность — это задний ход. <code>moveTime()</code> едет заданное время, а не расстояние;
+                        робот плавно замедляется так, чтобы остановиться к концу времени.</li>
+                </ul>
+
+                <h2 id="problems">Если не получается</h2>
+                <ul>
+                    <li><strong>Экран работает, а робот не едет.</strong> Проверьте выключатель батареи и её заряд —
+                        см. <a href="faq_ru.html#movement">FAQ</a>.</li>
+                    <li><strong>Квадрат не замыкается, углы заметно больше или меньше 90°.</strong> Проверьте колёса и покрытие —
+                        см. <a href="faq_ru.html#calibrate">FAQ</a>.</li>
+                    <li><strong>На скользком полу робота уводит.</strong> Одометрия считает по вращению колёс и
+                        проскальзывания не видит — см. <a href="limitations_ru.html#accuracy">«Точность и одометрия»</a>.</li>
+                    <li><strong>Робот упёрся и примерно через секунду перешёл к следующей команде.</strong> Библиотека
+                        заметила, что колёса остановились, и завершила команду — см.
+                        <a href="limitations_ru.html#movement">«Движение и команды»</a>.</li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script src="nav.js?v=6"></script>
+    <script src="script.js?v=6"></script>
+</body>
+
+</html>

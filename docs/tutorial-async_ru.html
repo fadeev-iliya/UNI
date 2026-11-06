@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Урок 4. Движение без ожидания - Библиотека UNI</title>
+    <link rel="stylesheet" href="styles.css?v=7">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="icon" href="logoUni.svg" type="image/svg+xml">
+    <meta name="color-scheme" content="light dark">
+    <script src="boot.js?v=5"></script>
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar"></aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header: breadcrumb and page actions, built by script.js -->
+            <header class="top-header"></header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <h1>Движение без ожидания и остановка перед препятствием</h1>
+                <p class="lead">Пока выполняется <code>moveDist()</code>, программа стоит на месте. Команды с окончанием
+                    <code>Async</code> запускают движение и сразу возвращают управление: робот едет, а программа в это время
+                    читает датчики.</p>
+                <div class="callout note">
+                    <div class="callout-body">
+                        <p>Для второй половины урока нужен ультразвуковой датчик расстояния, подключённый к портам P6 (trig)
+                            и P7 (echo).</p>
+                    </div>
+                </div>
+
+                <h2 id="blocking-vs-async">Блокирующие и асинхронные команды</h2>
+                <figure class="figure">
+                <div class="figure-scroll"><svg viewBox="0 0 560 236" role="img" aria-label="Сравнение блокирующей и асинхронной команд во времени"><text class="dg-text dg-mono dg-strong" x="150.0" y="18.0">moveDist(50, 500)</text><text class="dg-text dg-small dg-faint" x="138.0" y="44.0" text-anchor="end">программа</text><text class="dg-text dg-small dg-faint" x="138.0" y="74.0" text-anchor="end">робот</text><rect class="dg-box" x="150.0" y="28.0" width="60.0" height="24" rx="6"/><text class="dg-text dg-small" x="180.0" y="44.0" text-anchor="middle">вызов</text><rect class="dg-dash" x="214.0" y="28.0" width="206.0" height="24" rx="6"/><text class="dg-text dg-small dg-faint" x="317.0" y="44.0" text-anchor="middle">ждёт</text><rect class="dg-box" x="424.0" y="28.0" width="124.0" height="24" rx="6"/><text class="dg-text dg-small" x="486.0" y="44.0" text-anchor="middle">следующая строка</text><rect class="dg-accent-soft" x="214.0" y="58.0" width="206.0" height="24" rx="6"/><text class="dg-text dg-small dg-text-accent" x="317.0" y="74.0" text-anchor="middle">едет</text><text class="dg-text dg-mono dg-strong" x="150.0" y="122.0">moveDistAsync(50, 500)</text><text class="dg-text dg-small dg-faint" x="138.0" y="148.0" text-anchor="end">программа</text><text class="dg-text dg-small dg-faint" x="138.0" y="178.0" text-anchor="end">робот</text><rect class="dg-box" x="150.0" y="132.0" width="60.0" height="24" rx="6"/><text class="dg-text dg-small" x="180.0" y="148.0" text-anchor="middle">вызов</text><rect class="dg-box" x="214.0" y="132.0" width="334.0" height="24" rx="6"/><text class="dg-text dg-small" x="381.0" y="148.0" text-anchor="middle">ваш код выполняется дальше</text><rect class="dg-accent-soft" x="214.0" y="162.0" width="206.0" height="24" rx="6"/><text class="dg-text dg-small dg-text-accent" x="317.0" y="178.0" text-anchor="middle">едет</text><line class="dg-line" x1="150.0" y1="210.0" x2="540.0" y2="210.0"/><polygon class="dg-ink" points="548.0,210.0 539.0,214.0 539.0,206.0"/><text class="dg-text dg-small dg-faint" x="548.0" y="228.0" text-anchor="end">время</text></svg></div>
+                <figcaption>Блокирующая команда держит программу до конца движения. Асинхронная только запускает его.</figcaption>
+                </figure>
+                <p>У каждой команды движения есть асинхронная пара: <code>moveDist()</code> и <code>moveDistAsync()</code>,
+                    <code>rotate()</code> и <code>rotateAsync()</code>, <code>moveTo()</code> и <code>moveToAsync()</code>.
+                    К ним добавляются три помощника:</p>
+                <ul>
+                    <li><code>isMoving()</code> — едет ли робот прямо сейчас;</li>
+                    <li><code>waitMove()</code> — дождаться конца движения;</li>
+                    <li><code>stop()</code> — прервать движение.</li>
+                </ul>
+
+                <h2 id="steps">Шаги</h2>
+                <ol class="steps">
+                    <li>
+                        <h3>Показывайте прогресс во время движения</h3>
+                <pre><code>robot.moveDistAsync(50, 800);
+while (robot.isMoving()) {
+  robot.displayPrint("Dist", robot.getDistance());
+  delay(100);
+}
+robot.displayClear();</code></pre>
+                        <p>Робот едет, а цикл десять раз в секунду выводит на экран пройденный путь.</p>
+                    </li>
+                    <li>
+                        <h3>Подстрахуйтесь от застревания</h3>
+                <pre><code>robot.moveDistAsync(50, 800);
+if (!robot.waitMove(5000)) {   // не доехал за 5 секунд?
+  robot.stop(HARD);
+  robot.displayPrint("STUCK!");
+}</code></pre>
+                        <p><code>waitMove()</code> с числом ждёт не дольше указанного времени в миллисекундах и возвращает
+                            <code>false</code>, если робот так и не доехал.</p>
+                    </li>
+                    <li>
+                        <h3>Запомните: команда всегда одна</h3>
+                        <div class="callout warning">
+                            <div class="callout-body">
+                                <p>Очереди команд нет. Новая команда движения отменяет текущую.</p>
+                            </div>
+                        </div>
+                <pre><code>robot.moveDistAsync(50, 500);
+robot.rotateAsync(50, 90);   // отменит строку выше: робот только повернёт</code></pre>
+                        <p>Чтобы выполнить обе, поставьте между ними <code>robot.waitMove();</code>.</p>
+                    </li>
+                    <li>
+                        <h3>Прочитайте датчик расстояния</h3>
+                <pre><code>UniDev module;
+
+int dist = module.ultraSonic(P6, P7);   // миллиметры; 0 означает «эха нет»</code></pre>
+                        <p>Датчик измеряет от 20 до 4000 мм. Ноль — это не «препятствие вплотную», а отсутствие ответа,
+                            поэтому его всегда проверяют отдельно.</p>
+                    </li>
+                    <li>
+                        <h3>Соберите остановку перед препятствием</h3>
+                <pre><code>#include &lt;UNI.h&gt;
+
+UniBase robot("UNI");
+UniDev module;
+
+const int OBSTACLE_MM = 150;   // дистанция остановки
+const int TARGET_MM   = 1500;  // сколько всего проехать
+const int FINISH_MM   = 5;     // ближе этого к цели — доехали
+
+void setup() {
+  robot.begin();
+  robot.resetDistance();
+}
+
+void loop() {
+  // Цель достигнута — стоим. Движение завершается с небольшим остатком
+  // до цели, поэтому сравниваем его с запасом, а не с нулём:
+  // иначе робот бесконечно «доезжал» бы последний миллиметр
+  int remaining = TARGET_MM - (int)robot.getDistance();
+  if (remaining &lt;= FINISH_MM) {
+    robot.displayPrint("DONE");
+    delay(500);
+    return;
+  }
+
+  int dist = module.ultraSonic(P6, P7);
+  bool blocked = (dist &gt; 0 &amp;&amp; dist &lt; OBSTACLE_MM);
+
+  if (blocked) {
+    if (robot.isMoving()) {
+      robot.stop(HARD);
+      robot.displayPrint("Obstacle", dist);
+    }
+  } else {
+    if (!robot.isMoving()) {
+      // Едем остаток пути асинхронно, продолжая опрашивать датчик
+      robot.moveDistAsync(50, remaining);
+      robot.displayClear();
+    }
+  }
+
+  delay(50);
+}</code></pre>
+                        <p>Цикл двадцать раз в секунду читает датчик. Есть препятствие — останавливает робота; путь
+                            свободен, а робот стоит — отправляет его проехать остаток.</p>
+                    </li>
+                </ol>
+                <p>Готовые скетчи: <span class="menu-path">Файл › Примеры › UNI › AsyncMovement</span> и
+                    <span class="menu-path">ObstacleStop</span>. Тексты — на странице
+                    <a href="examples_ru.html#async">«Примеры»</a>.</p>
+
+                <h2 id="result">Что должно получиться</h2>
+                <figure class="figure">
+                <div class="figure-scroll"><svg viewBox="0 0 560 308" role="img" aria-label="Робот останавливается перед ладонью, едет дальше, когда её убирают, и на 1,5 м показывает DONE" style="max-width: 672px"><circle class="dg-accent-soft" cx="49.0" cy="30.0" r="9"/><text class="dg-text dg-small dg-text-accent" x="49.0" y="33.8" text-anchor="middle">1</text><text class="dg-text dg-small dg-strong" x="64.0" y="34.0">Ладонь ближе 15 см — стоп, на экране Obstacle и расстояние</text><line class="dg-dash" x1="185.6" y1="64.0" x2="430.0" y2="64.0"/><line class="dg-accent" x1="40.0" y1="64.0" x2="185.6" y2="64.0"/><line class="dg-line" x1="430.0" y1="54.0" x2="430.0" y2="74.0"/><g transform="translate(185.6 64.0) rotate(90)"><rect class="dg-wheel" x="-14.7" y="-5.9" width="3.8" height="11.8" rx="1.1"/><rect class="dg-wheel" x="10.9" y="-5.9" width="3.8" height="11.8" rx="1.1"/><rect class="dg-body" x="-10.9" y="-13.0" width="21.8" height="26.0" rx="3.8"/><polygon class="dg-ink" points="0,-10.5 -2.9,-5.9 2.9,-5.9"/></g><rect class="dg-box" x="217.5" y="47.0" width="9" height="34" rx="4.5"/><text class="dg-text dg-small dg-faint" x="231.0" y="81.0">ладонь</text><line class="dg-line" x1="200.6" y1="88.0" x2="216.0" y2="88.0"/><line class="dg-line" x1="200.6" y1="84.0" x2="200.6" y2="92.0"/><line class="dg-line" x1="216.0" y1="84.0" x2="216.0" y2="92.0"/><text class="dg-text dg-small dg-text-accent" x="208.3" y="104.0" text-anchor="middle">< 15 см</text><rect class="dg-screen" x="455.0" y="38.0" width="90.8" height="52.4" rx="5.2"/><text class="dg-pixel" x="500.4" y="53.4" font-size="10.8" text-anchor="middle" font-weight="600">Obstacle</text><text class="dg-pixel" x="500.4" y="70.8" font-size="10.8" text-anchor="middle" font-weight="600">140</text><circle class="dg-accent-soft" cx="49.0" cy="126.0" r="9"/><text class="dg-text dg-small dg-text-accent" x="49.0" y="129.8" text-anchor="middle">2</text><text class="dg-text dg-small dg-strong" x="64.0" y="130.0">Ладонь убрали — едет дальше</text><line class="dg-dash" x1="289.6" y1="160.0" x2="430.0" y2="160.0"/><line class="dg-accent" x1="40.0" y1="160.0" x2="289.6" y2="160.0"/><line class="dg-line" x1="430.0" y1="150.0" x2="430.0" y2="170.0"/><rect class="dg-dash" x="217.5" y="143.0" width="9" height="34" rx="4.5"/><circle class="dg-accent-fill" cx="185.6" cy="160.0" r="3"/><text class="dg-text dg-small dg-faint" x="185.6" y="182.0" text-anchor="middle">стоял</text><g transform="translate(289.6 160.0) rotate(90)"><rect class="dg-wheel" x="-14.7" y="-5.9" width="3.8" height="11.8" rx="1.1"/><rect class="dg-wheel" x="10.9" y="-5.9" width="3.8" height="11.8" rx="1.1"/><rect class="dg-body" x="-10.9" y="-13.0" width="21.8" height="26.0" rx="3.8"/><polygon class="dg-ink" points="0,-10.5 -2.9,-5.9 2.9,-5.9"/></g><line class="dg-accent" x1="309.6" y1="160.0" x2="333.6" y2="160.0"/><polygon class="dg-accent-fill" points="343.6,160.0 332.6,165.0 332.6,155.0"/><text class="dg-text dg-small dg-faint" x="456.0" y="156.0">на экране снова</text><text class="dg-text dg-small dg-faint" x="456.0" y="171.0">X, Y и Angle</text><circle class="dg-accent-soft" cx="49.0" cy="222.0" r="9"/><text class="dg-text dg-small dg-text-accent" x="49.0" y="225.8" text-anchor="middle">3</text><text class="dg-text dg-small dg-strong" x="64.0" y="226.0">Проехал 1,5 м — стоп, на экране DONE</text><line class="dg-dash" x1="430.0" y1="256.0" x2="430.0" y2="256.0"/><line class="dg-accent" x1="40.0" y1="256.0" x2="430.0" y2="256.0"/><line class="dg-line" x1="430.0" y1="246.0" x2="430.0" y2="266.0"/><g transform="translate(416.0 256.0) rotate(90)"><rect class="dg-wheel" x="-14.7" y="-5.9" width="3.8" height="11.8" rx="1.1"/><rect class="dg-wheel" x="10.9" y="-5.9" width="3.8" height="11.8" rx="1.1"/><rect class="dg-body" x="-10.9" y="-13.0" width="21.8" height="26.0" rx="3.8"/><polygon class="dg-ink" points="0,-10.5 -2.9,-5.9 2.9,-5.9"/></g><rect class="dg-screen" x="455.0" y="230.0" width="90.8" height="52.4" rx="5.2"/><text class="dg-pixel" x="500.4" y="259.8" font-size="10.8" text-anchor="middle" font-weight="600">DONE</text><line class="dg-line" x1="40.0" y1="280.0" x2="40.0" y2="286.0"/><text class="dg-text dg-small dg-faint" x="40.0" y="300.0" text-anchor="middle">0</text><line class="dg-line" x1="170.0" y1="280.0" x2="170.0" y2="286.0"/><text class="dg-text dg-small dg-faint" x="170.0" y="300.0" text-anchor="middle">50 см</text><line class="dg-line" x1="300.0" y1="280.0" x2="300.0" y2="286.0"/><text class="dg-text dg-small dg-faint" x="300.0" y="300.0" text-anchor="middle">1 м</text><line class="dg-line" x1="430.0" y1="280.0" x2="430.0" y2="286.0"/><text class="dg-text dg-small dg-faint" x="430.0" y="300.0" text-anchor="middle">1,5 м</text></svg></div>
+                <figcaption>Робот едет вперёд. Ладонь ближе 15 см — он останавливается и показывает Obstacle и расстояние в миллиметрах. Уберите ладонь — робот поедет дальше, а экран снова покажет координаты. Проехав всего 1,5 м, он останавливается и показывает DONE.</figcaption>
+                </figure>
+
+                <h2 id="experiments">Попробуйте изменить</h2>
+                <ul>
+                    <li>Увеличьте дистанцию остановки до 300 мм.</li>
+                    <li>Мигайте светодиодом, пока робот едет: <code>robot.blinkLED(100)</code> включает мигание,
+                        <code>robot.blinkLED(0)</code> выключает.</li>
+                    <li>Вместо ожидания объезжайте препятствие: поворот на 90°, дуга и возврат на курс.</li>
+                    <li>Подсветите остановку световым кольцом: <code>module.pixelsAll(255, 0, 0)</code>.</li>
+                </ul>
+
+                <h2 id="problems">Если не получается</h2>
+                <ul>
+                    <li><strong>Датчик всегда возвращает 0.</strong> Проверьте, что trig подключён к P6, а echo — к P7. Пример
+                        DistanceSensors печатает показания в Монитор порта — им удобно проверять подключение.</li>
+                    <li><strong>Робот не замечает препятствие.</strong> Убедитесь, что в условии есть <code>dist &gt; 0</code>
+                        и что препятствие отражает звук: мягкая ткань и наклонные поверхности возвращают эхо плохо.</li>
+                    <li><strong>Выполняется только последняя из двух команд.</strong> Между асинхронными командами нужен
+                        <code>waitMove()</code> — см. <a href="limitations_ru.html#movement">«Движение и команды»</a>.</li>
+                    <li><strong>Эффекты светового кольца останавливают слежение за датчиком.</strong> Они блокируют программу
+                        на всю свою длительность — см. <a href="limitations_ru.html#behavior">«Поведение и блокировки»</a>.</li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script src="nav.js?v=6"></script>
+    <script src="script.js?v=6"></script>
+</body>
+
+</html>

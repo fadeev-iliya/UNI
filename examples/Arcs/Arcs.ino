@@ -1,14 +1,3 @@
-/*
-  Arcs — дуги: moveArcDist и moveArcRadius.
-
-  moveArcDist(power, angle, mm) — дуга через соотношение скоростей
-  колес (angle от -90 до 90), дистанция по центру робота.
-
-  moveArcRadius(power, radiusMM, angleDeg) — дуга с настоящей
-  геометрией: радиус по центру робота и угол сектора. Знак угла
-  задает сторону поворота. Удобно планировать траектории.
-*/
-
 #include <UNI.h>
 
 UniBase robot("UNI");
